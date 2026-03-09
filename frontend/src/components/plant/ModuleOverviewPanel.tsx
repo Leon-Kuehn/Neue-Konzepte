@@ -53,8 +53,8 @@ export function ModuleOverviewPanel({ module, definition }: ModuleOverviewPanelP
           <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">State Historie</p>
           <div className="mt-2 max-h-32 space-y-1 overflow-auto rounded-lg border border-slate-100 bg-slate-50 p-3 text-xs text-slate-700">
             {stateHistory.length === 0 && <p className="text-slate-500">Noch keine Werte empfangen.</p>}
-            {stateHistory.slice(0, 10).map((entry) => (
-              <div key={entry.timestamp.getTime()} className="flex items-center justify-between">
+            {stateHistory.slice(0, 10).map((entry, idx) => (
+              <div key={`${entry.timestamp.getTime()}-${idx}`} className="flex items-center justify-between">
                 <span>{formatTime(entry.timestamp)}</span>
                 <span className="font-mono">{entry.raw}</span>
               </div>
@@ -65,8 +65,8 @@ export function ModuleOverviewPanel({ module, definition }: ModuleOverviewPanelP
           <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Meta Historie</p>
           <div className="mt-2 max-h-32 space-y-1 overflow-auto rounded-lg border border-slate-100 bg-slate-50 p-3 text-xs text-slate-700">
             {metaHistory.length === 0 && <p className="text-slate-500">Noch keine Werte empfangen.</p>}
-            {metaHistory.slice(0, 10).map((entry) => (
-              <div key={entry.timestamp.getTime()} className="flex items-center justify-between">
+            {metaHistory.slice(0, 10).map((entry, idx) => (
+              <div key={`${entry.timestamp.getTime()}-${idx}`} className="flex items-center justify-between">
                 <span>{formatTime(entry.timestamp)}</span>
                 <span className="font-mono">{entry.raw}</span>
               </div>

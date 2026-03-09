@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useReducer } from 'react'
+import { createContext, useCallback, useContext, useEffect, useMemo, useReducer } from 'react'
 import { defaultBindings, defaultModules } from '../config/modules'
 import type { ModuleBinding, ModuleType, PlantState, PlacedModule, Rotation } from '../types/modules'
 import { plantStorage } from './persistence'
@@ -64,7 +64,7 @@ export function PlantStoreProvider({ children }: { children: React.ReactNode }) 
     plantStorage.save(state)
   }, [state])
 
-  const addModule: PlantStoreValue['addModule'] = (type, position, rotation = 0 as Rotation, label) => {
+  const addModule = useCallback<PlantStoreValue['addModule']>((type, position, rotation = 0 as Rotation, label) => {
     const id = typeof crypto !== 'undefined' && 'randomUUID' in crypto ? crypto.randomUUID() : `${type}-${Date.now()}-${Math.round(Math.random() * 1000)}`
     const module: PlacedModule = {
       id,
@@ -82,27 +82,25 @@ export function PlantStoreProvider({ children }: { children: React.ReactNode }) 
           : { deviceType: 'actuator' }
     dispatch({ type: 'ADD_MODULE', module, binding })
     return id
-  }
+  }, [])
 
-  const updateModule: PlantStoreValue['updateModule'] = (id, patch) => dispatch({ type: 'UPDATE_MODULE', id, patch })
-  const updateBinding: PlantStoreValue['updateBinding'] = (id, binding) =>
-    dispatch({ type: 'UPDATE_BINDING', id, binding })
-  const removeModule: PlantStoreValue['removeModule'] = (id) => dispatch({ type: 'REMOVE_MODULE', id })
-  const reset = () => {
+  const updateModule = useCallback<PlantStoreValue['updateModule']>((id, patch) => dispatch({ type: 'UPDATE_MODULE', id, patch }), [])
+  const updateBinding = useCallback<PlantStoreValue['updateBinding']>((id, binding) => dispatch({ type: 'UPDATE_BINDING', id, binding }), [])
+  const removeModule = useCallback<PlantStoreValue['removeModule']>((id) => dispatch({ type: 'REMOVE_MODULE', id }), [])
+  const reset = useCallback(() => {
     plantStorage.clear()
     dispatch({ type: 'RESET' })
-  }
-  const save = () => {
+  }, [])
+  const save = useCallback(() => {
     plantStorage.save(state)
-  }
+  }, [state])
 
-  return (
-    <PlantStoreContext.Provider
-      value={{ state, addModule, updateModule, updateBinding, removeModule, reset, save }}
-    >
-      {children}
-    </PlantStoreContext.Provider>
+  const value = useMemo(
+    () => ({ state, addModule, updateModule, updateBinding, removeModule, reset, save }),
+    [addModule, reset, removeModule, save, state, updateBinding, updateModule]
   )
+
+  return <PlantStoreContext.Provider value={value}>{children}</PlantStoreContext.Provider>
 }
 
 // eslint-disable-next-line react-refresh/only-export-components
