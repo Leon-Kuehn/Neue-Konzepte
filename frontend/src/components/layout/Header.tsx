@@ -14,8 +14,10 @@ export function Header({ status, lastMessageAt }: HeaderProps) {
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <p className="text-xs uppercase tracking-wide text-red-700">DHBW IoT Monitoring Dashboard</p>
-          <h2 className="text-3xl font-bold text-slate-900">Live Monitoring &amp; Anlagen-Schaltplan</h2>
-          <p className="text-sm text-slate-500">Förderband-/Pumpen-Demo mit MQTT-Sensoren &amp; Aktoren.</p>
+          <h2 className="text-3xl font-bold text-slate-900">Digital Twin Builder &amp; Live Monitoring</h2>
+          <p className="text-sm text-slate-500">
+            Fördertechnik, Pumpen, Sensoren &amp; Hochregallager als digitale Zwillinge – verbunden per MQTT.
+          </p>
         </div>
         <div className="flex flex-col items-end gap-2">
           <MqttStatusBadge status={status} />

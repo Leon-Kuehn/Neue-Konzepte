@@ -1,7 +1,6 @@
 import { systemTopics } from '../../config/devices'
 import { useTopicHistory } from '../../hooks/useTopicHistory'
 import { useMqttContext } from '../../mqtt/MqttProvider'
-import { mqttConfig } from '../../mqtt/mqttConfig'
 import { MqttStatusBadge } from './MqttStatusBadge'
 import { NamedIcon } from '../common/Icon'
 
@@ -9,7 +8,7 @@ const formatDateTime = (date?: Date) =>
   date ? new Intl.DateTimeFormat('de-DE', { dateStyle: 'short', timeStyle: 'medium' }).format(date) : '–'
 
 export function SystemStatusCard() {
-  const { status, lastMessageAt } = useMqttContext()
+  const { status, lastMessageAt, config } = useMqttContext()
   const { latest: statusMsg } = useTopicHistory(systemTopics.status)
   const { latest: heartbeatMsg } = useTopicHistory(systemTopics.heartbeat)
 
@@ -31,8 +30,8 @@ export function SystemStatusCard() {
       <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-3">
         <div className="rounded-xl border border-slate-100 bg-slate-50/60 p-4">
           <p className="text-xs uppercase tracking-wide text-slate-500">Broker</p>
-          <p className="text-sm font-semibold text-slate-900">{mqttConfig.url}</p>
-          <p className="text-xs text-slate-500">Username: {mqttConfig.username ?? '–'}</p>
+          <p className="text-sm font-semibold text-slate-900">{config.url}</p>
+          <p className="text-xs text-slate-500">Username: {config.username ?? '–'}</p>
         </div>
         <div className="rounded-xl border border-slate-100 bg-slate-50/60 p-4">
           <p className="text-xs uppercase tracking-wide text-slate-500">Heartbeat</p>
