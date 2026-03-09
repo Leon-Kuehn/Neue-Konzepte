@@ -17,6 +17,7 @@ import { getDeviceById, isActiveValue } from './utils/deviceState'
 import { SettingsView } from './components/settings/SettingsView'
 import { useTheme } from './hooks/useTheme'
 import { LogisticsModelView } from './components/logistics/LogisticsModelView'
+import { LogisticsLayoutBuilder } from './components/logistics/LogisticsLayoutBuilder'
 
 const formatNumber = (value?: string | number, digits = 1) => {
   if (value === undefined) return '–'
@@ -25,7 +26,7 @@ const formatNumber = (value?: string | number, digits = 1) => {
   return numeric.toFixed(digits)
 }
 
-type TabKey = 'overview' | 'builder' | 'warehouse' | 'status' | 'settings'
+type TabKey = 'overview' | 'builder' | 'layout' | 'warehouse' | 'status' | 'settings'
 
 const MiniHistory = ({
   title,
@@ -116,6 +117,7 @@ function App() {
   const tabs = [
     { key: 'overview', label: 'Overview – Logistics Model' },
     { key: 'builder', label: 'Plant Builder' },
+    { key: 'layout', label: 'Layout Builder' },
     { key: 'warehouse', label: 'Warehouse' },
     { key: 'status', label: 'MQTT & Status' },
     { key: 'settings', label: 'Settings' },
@@ -190,6 +192,7 @@ function App() {
         )}
 
         {activeTab === 'builder' && <PlantBuilderView />}
+        {activeTab === 'layout' && <LogisticsLayoutBuilder />}
         {activeTab === 'warehouse' && <WarehouseView />}
         {activeTab === 'status' && (
           <section className="space-y-4">
