@@ -48,7 +48,7 @@ export function LogisticsLayoutBuilder() {
       setItems((prev) => [
         ...prev,
         {
-          id: `${type}-${Date.now()}`,
+          id: `${type}-${crypto.randomUUID()}`,
           type,
           x: Math.max(0, x),
           y: Math.max(0, y),
@@ -132,9 +132,11 @@ export function LogisticsLayoutBuilder() {
       const parsed = JSON.parse(exportText) as LogisticsLayoutItem[]
       if (Array.isArray(parsed)) {
         setItems(parsed)
+      } else {
+        console.error('Layout JSON is not an array')
       }
     } catch (error) {
-      console.error('Invalid JSON', error)
+      console.error('Invalid JSON in layout import', error)
     }
   }
 
@@ -259,7 +261,8 @@ export function LogisticsLayoutBuilder() {
                     <ModuleIcon type={item.type} />
                   </div>
                 </div>
-                <div
+                <button
+                  type="button"
                   className="absolute bottom-1 right-1 h-4 w-4 cursor-se-resize rounded bg-slate-200 opacity-0 transition group-hover:opacity-100"
                   onMouseDown={(e) => startResize(e, item)}
                   aria-label="Resize handle"
