@@ -1,6 +1,6 @@
 import type { PlantState } from '../types/modules'
 
-const STORAGE_KEY = 'plant-builder-state-v1'
+const STORAGE_KEY = 'plant-builder-state-v2'
 
 const isBrowser = typeof window !== 'undefined'
 

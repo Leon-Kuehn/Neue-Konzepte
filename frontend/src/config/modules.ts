@@ -1,87 +1,157 @@
-import type { ModuleBinding, ModuleDefinition, PlacedModule } from '../types/modules'
+import type { ModuleBinding, ModuleDefinition, ModuleType, PlacedModule } from '../types/modules'
+import { getDefaultTopicsForModule } from './mqttTopics'
 
-export const modulePalette: ModuleDefinition[] = [
+export const moduleDefinitions: ModuleDefinition[] = [
   {
-    type: 'conveyor',
-    label: 'Gerades Förderband',
-    description: 'Lineares Band für den Materialfluss',
+    type: 'conveyor-infeed',
+    label: 'Eingangsförderband',
+    description: 'Zuführung aus dem Puffer ins Modell',
     icon: 'conveyor',
+    color: 'from-indigo-500 to-blue-500',
+    category: 'actuator',
+    expectedTopics: { state: ['conveyor-infeed-state'], meta: ['presence-infeed'] },
+    valueLabels: { '0': 'steht', '1': 'läuft' },
   },
   {
-    type: 'turntable',
-    label: 'Drehteller / Kurve',
-    description: 'Rotierendes Modul für Richtungswechsel',
+    type: 'conveyor-transfer',
+    label: 'Transferband',
+    description: 'Segment zwischen Zuführung und Verteiler',
+    icon: 'conveyor',
+    color: 'from-blue-500 to-cyan-500',
+    category: 'actuator',
+    expectedTopics: { state: ['conveyor-transfer-state'] },
+    valueLabels: { '0': 'steht', '1': 'läuft' },
+  },
+  {
+    type: 'turntable-diverter',
+    label: 'Drehteller / Verteiler',
+    description: 'Logistik-Distributor mit 0/1 Stellung',
     icon: 'motor',
+    color: 'from-amber-500 to-orange-500',
+    category: 'actuator',
+    expectedTopics: { state: ['diverter-turntable-state'] },
+    valueLabels: { '0': 'Grundstellung', '1': 'gedreht' },
   },
   {
-    type: 'pump',
-    label: 'Pumpe / Füller',
-    description: 'Flüssigkeits- oder Kugel-Förderung',
-    icon: 'pump',
+    type: 'conveyor-outfeed',
+    label: 'Ausgangsförderband',
+    description: 'Abtransport zur Entnahme',
+    icon: 'conveyor',
+    color: 'from-emerald-500 to-teal-500',
+    category: 'actuator',
+    expectedTopics: { state: ['conveyor-outfeed-state'], meta: ['presence-outfeed'] },
+    valueLabels: { '0': 'steht', '1': 'läuft' },
   },
   {
-    type: 'motor',
-    label: 'Motor / Antrieb',
-    description: 'Generischer Motor oder Hubwerk',
+    type: 'lift',
+    label: 'Hub / Lift',
+    description: 'Hochregallift, vertikale Achse',
     icon: 'motor',
+    color: 'from-purple-500 to-indigo-500',
+    category: 'actuator',
+    expectedTopics: { state: ['lift-state'], meta: ['warehouse-axis-z'] },
+    valueLabels: { '0': 'ruht', '1': 'fährt' },
   },
   {
-    type: 'sensor',
-    label: 'Binärsensor',
-    description: 'Lichtschranke, Endschalter, Präsenz',
+    type: 'warehouse-axis',
+    label: 'Hochregal Achse',
+    description: 'X-Achse / Shuttle des Hochregals',
+    icon: 'position',
+    color: 'from-slate-500 to-slate-600',
+    category: 'logical',
+    expectedTopics: { meta: ['warehouse-axis-x'] },
+  },
+  {
+    type: 'warehouse-slot',
+    label: 'Lagerplatz',
+    description: 'Belegung eines Regalplatzes',
+    icon: 'position',
+    color: 'from-slate-500 to-slate-700',
+    category: 'logical',
+    expectedTopics: { state: ['warehouse-slot-occupied'] },
+    valueLabels: { '0': 'frei', '1': 'belegt' },
+  },
+  {
+    type: 'presence-sensor',
+    label: 'Präsenzsensor',
+    description: 'Lichtschranke / Gabellichtschranke',
     icon: 'presence',
+    color: 'from-cyan-500 to-blue-500',
+    category: 'sensor',
+    expectedTopics: { state: ['presence-infeed', 'presence-outfeed'] },
+    valueLabels: { '0': 'frei', '1': 'Werkstück erkannt' },
   },
   {
-    type: 'nfc',
+    type: 'position-sensor',
+    label: 'Positionssensor',
+    description: 'Endschalter / Nullpunkt',
+    icon: 'position',
+    color: 'from-amber-500 to-yellow-500',
+    category: 'sensor',
+    expectedTopics: { state: ['position-lift-upper', 'position-lift-lower'] },
+    valueLabels: { '0': 'nicht erreicht', '1': 'aktiv' },
+  },
+  {
+    type: 'nfc-reader',
     label: 'NFC / RFID Leser',
-    description: 'Chip- oder ID-Erkennung',
+    description: 'UID der Palette lesen',
     icon: 'nfc',
+    color: 'from-rose-500 to-pink-500',
+    category: 'sensor',
+    expectedTopics: { state: ['nfc-tag'], meta: ['nfc-meta'] },
+  },
+  {
+    type: 'energy-sensor',
+    label: 'Energiezähler',
+    description: 'Energieverbrauch des Modells',
+    icon: 'energy',
+    color: 'from-emerald-500 to-green-500',
+    category: 'sensor',
+    expectedTopics: { state: ['energy-total'] },
+  },
+  {
+    type: 'temperature-sensor',
+    label: 'Temperatursensor',
+    description: 'Umgebung des Modells',
+    icon: 'temperature',
+    color: 'from-red-500 to-orange-500',
+    category: 'sensor',
+    expectedTopics: { state: ['temperature-ambient'] },
   },
 ]
+
+export const modulePalette = moduleDefinitions
+
+export const moduleDefinitionMap: Record<ModuleType, ModuleDefinition> = Object.fromEntries(
+  moduleDefinitions.map((def) => [def.type, def])
+) as Record<ModuleType, ModuleDefinition>
 
 export const defaultModules: PlacedModule[] = [
-  { id: 'conv-main', type: 'conveyor', x: 14, y: 58, rotation: 0, label: 'Förderband Eingang' },
-  { id: 'sensor-entry', type: 'sensor', x: 25, y: 52, rotation: 0, label: 'Lichtschranke' },
-  { id: 'turn-1', type: 'turntable', x: 42, y: 50, rotation: 90, label: 'Drehteller' },
-  { id: 'pump-1', type: 'pump', x: 66, y: 60, rotation: 0, label: 'Pumpe / Befüllung' },
-  { id: 'nfc-1', type: 'nfc', x: 58, y: 40, rotation: 0, label: 'NFC Reader' },
-  { id: 'conv-out', type: 'conveyor', x: 78, y: 48, rotation: 270, label: 'Auslauf Förderband' },
-  { id: 'motor-elevator', type: 'motor', x: 48, y: 28, rotation: 0, label: 'Hub-Motor' },
+  { id: 'conv-in', type: 'conveyor-infeed', x: 14, y: 62, rotation: 0, label: 'Eingang' },
+  { id: 'presence-in', type: 'presence-sensor', x: 24, y: 58, rotation: 0, label: 'Lichtschranke Eingang' },
+  { id: 'conv-transfer', type: 'conveyor-transfer', x: 34, y: 62, rotation: 0, label: 'Transferband' },
+  { id: 'turntable-1', type: 'turntable-diverter', x: 48, y: 58, rotation: 0, label: 'Verteiler' },
+  { id: 'lift-1', type: 'lift', x: 52, y: 36, rotation: 0, label: 'Lift' },
+  { id: 'axis-x', type: 'warehouse-axis', x: 66, y: 32, rotation: 0, label: 'X-Achse' },
+  { id: 'slot-a1', type: 'warehouse-slot', x: 82, y: 32, rotation: 0, label: 'Lagerplatz A1' },
+  { id: 'conv-out', type: 'conveyor-outfeed', x: 68, y: 62, rotation: 0, label: 'Ausgang' },
+  { id: 'presence-out', type: 'presence-sensor', x: 78, y: 58, rotation: 0, label: 'Lichtschranke Ausgang' },
+  { id: 'position-top', type: 'position-sensor', x: 52, y: 26, rotation: 0, label: 'Lift oben' },
+  { id: 'nfc-1', type: 'nfc-reader', x: 36, y: 44, rotation: 0, label: 'NFC Leser' },
+  { id: 'energy-1', type: 'energy-sensor', x: 16, y: 32, rotation: 0, label: 'Energie' },
+  { id: 'temp-1', type: 'temperature-sensor', x: 24, y: 28, rotation: 0, label: 'Temperatur' },
 ]
 
-export const defaultBindings: Record<string, ModuleBinding> = {
-  'conv-main': {
-    deviceType: 'actuator',
-    commandTopic: 'dhbw/iot/actuators/conveyor/set',
-    stateTopic: 'dhbw/iot/actuators/conveyor/state',
-  },
-  'turn-1': {
-    deviceType: 'actuator',
-    commandTopic: 'dhbw/iot/actuators/rotary/set',
-    stateTopic: 'dhbw/iot/actuators/rotary/state',
-  },
-  'pump-1': {
-    deviceType: 'actuator',
-    commandTopic: 'dhbw/iot/actuators/pump/set',
-    stateTopic: 'dhbw/iot/actuators/pump/state',
-  },
-  'motor-elevator': {
-    deviceType: 'actuator',
-    commandTopic: 'dhbw/iot/actuators/motor/set',
-    stateTopic: 'dhbw/iot/actuators/motor/state',
-  },
-  'sensor-entry': {
-    deviceType: 'sensor',
-    stateTopic: 'dhbw/iot/sensors/presence/belt',
-  },
-  'nfc-1': {
-    deviceType: 'sensor',
-    stateTopic: 'dhbw/iot/sensors/nfc',
-    metaTopic: 'dhbw/iot/sensors/nfc/meta',
-  },
-  'conv-out': {
-    deviceType: 'actuator',
-    commandTopic: 'dhbw/iot/actuators/outfeed/set',
-    stateTopic: 'dhbw/iot/actuators/outfeed/state',
-  },
+export const bindingForModuleType = (type: ModuleType): ModuleBinding => {
+  const topics = getDefaultTopicsForModule(type)
+  const definition = moduleDefinitionMap[type]
+  return {
+    deviceType: definition?.category ?? 'sensor',
+    stateTopic: topics.stateTopic,
+    metaTopic: topics.metaTopic,
+  }
 }
+
+export const defaultBindings: Record<string, ModuleBinding> = Object.fromEntries(
+  defaultModules.map((module) => [module.id, bindingForModuleType(module.type)])
+)

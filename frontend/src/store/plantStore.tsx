@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useReducer } from 'react'
-import { defaultBindings, defaultModules } from '../config/modules'
+import { bindingForModuleType, defaultBindings, defaultModules, moduleDefinitionMap } from '../config/modules'
 import type { ModuleBinding, ModuleType, PlantState, PlacedModule, Rotation } from '../types/modules'
 import { plantStorage } from './persistence'
 
@@ -12,7 +12,7 @@ type PlantAction =
 
 const createInitialState = (): PlantState => {
   const fromStorage = plantStorage.load()
-  if (fromStorage) return fromStorage
+  if (fromStorage && Array.isArray(fromStorage.modules)) return fromStorage
   return { modules: defaultModules, bindings: defaultBindings }
 }
 
@@ -28,7 +28,9 @@ const reducer = (state: PlantState, action: PlantAction): PlantState => {
       return { ...state, modules }
     }
     case 'UPDATE_BINDING': {
-      const existing = state.bindings[action.id] ?? { deviceType: 'sensor' }
+      const moduleType = state.modules.find((m) => m.id === action.id)?.type
+      const fallbackType = moduleType ? moduleDefinitionMap[moduleType]?.category ?? 'sensor' : 'sensor'
+      const existing = state.bindings[action.id] ?? { deviceType: fallbackType }
       return { ...state, bindings: { ...state.bindings, [action.id]: { ...existing, ...action.binding } } }
     }
     case 'REMOVE_MODULE': {
@@ -74,12 +76,7 @@ export function PlantStoreProvider({ children }: { children: React.ReactNode }) 
       rotation,
       label: label ?? type,
     }
-    const binding: ModuleBinding =
-      type === 'sensor'
-        ? { deviceType: 'sensor' }
-        : type === 'nfc'
-          ? { deviceType: 'sensor', metaTopic: '' }
-          : { deviceType: 'actuator' }
+    const binding: ModuleBinding = bindingForModuleType(type)
     dispatch({ type: 'ADD_MODULE', module, binding })
     return id
   }, [])

@@ -25,6 +25,11 @@ const formatNumber = (value?: string | number, digits = 1) => {
   return numeric.toFixed(digits)
 }
 
+const formatPresence = (value?: string | number, activeLabel = 'belegt', inactiveLabel = 'frei') => {
+  if (value === undefined) return '–'
+  return isActiveValue(value) ? activeLabel : inactiveLabel
+}
+
 type TabKey = 'overview' | 'builder' | 'warehouse' | 'status' | 'settings'
 
 const MiniHistory = ({
@@ -93,24 +98,35 @@ function App() {
     } as const)
 
   const temperatureStatus = useDeviceStatus(getDeviceById(sensorDevices, 'temperature', sensorFallback))
-  const soilStatus = useDeviceStatus(getDeviceById(sensorDevices, 'soil', sensorFallback))
   const energyStatus = useDeviceStatus(getDeviceById(sensorDevices, 'energy', sensorFallback))
-  const humidityStatus = useDeviceStatus(getDeviceById(sensorDevices, 'humidity', sensorFallback))
+  const presenceInStatus = useDeviceStatus(getDeviceById(sensorDevices, 'presence-infeed', sensorFallback))
 
-  const pumpStatus = useDeviceStatus(getDeviceById(actuatorDevices, 'pump', actuatorFallback))
-  const conveyorStatus = useDeviceStatus(getDeviceById(actuatorDevices, 'conveyor-main', actuatorFallback))
-  const rotaryStatus = useDeviceStatus(getDeviceById(actuatorDevices, 'rotary-table', actuatorFallback))
+  const infeedStatus = useDeviceStatus(getDeviceById(actuatorDevices, 'conveyor-infeed', actuatorFallback))
+  const transferStatus = useDeviceStatus(getDeviceById(actuatorDevices, 'conveyor-transfer', actuatorFallback))
+  const outfeedStatus = useDeviceStatus(getDeviceById(actuatorDevices, 'conveyor-outfeed', actuatorFallback))
+  const turntableStatus = useDeviceStatus(getDeviceById(actuatorDevices, 'turntable-diverter', actuatorFallback))
+  const liftStatus = useDeviceStatus(getDeviceById(actuatorDevices, 'lift', actuatorFallback))
 
   const activeActuators = useMemo(() => {
-    const states = [pumpStatus.state ?? pumpStatus.lastValue, conveyorStatus.state ?? conveyorStatus.lastValue, rotaryStatus.state ?? rotaryStatus.lastValue]
+    const states = [
+      infeedStatus.state ?? infeedStatus.lastValue,
+      transferStatus.state ?? transferStatus.lastValue,
+      outfeedStatus.state ?? outfeedStatus.lastValue,
+      turntableStatus.state ?? turntableStatus.lastValue,
+      liftStatus.state ?? liftStatus.lastValue,
+    ]
     return states.filter((value) => isActiveValue(value)).length
   }, [
-    pumpStatus.lastValue,
-    pumpStatus.state,
-    conveyorStatus.lastValue,
-    conveyorStatus.state,
-    rotaryStatus.lastValue,
-    rotaryStatus.state,
+    infeedStatus.lastValue,
+    infeedStatus.state,
+    transferStatus.lastValue,
+    transferStatus.state,
+    outfeedStatus.lastValue,
+    outfeedStatus.state,
+    turntableStatus.lastValue,
+    turntableStatus.state,
+    liftStatus.lastValue,
+    liftStatus.state,
   ])
 
   const tabs = [
@@ -147,14 +163,31 @@ function App() {
 
             <section className="space-y-4">
               <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-                <KpiCard title="Temperatur" value={formatNumber(temperatureStatus.lastValue)} unit="°C" helper="dhbw/iot/sensors/temperature" />
-                <KpiCard title="Bodenfeuchte" value={formatNumber(soilStatus.lastValue)} unit="%" helper="dhbw/iot/sensors/soil" />
-                <KpiCard title="Energieverbrauch" value={formatNumber(energyStatus.lastValue)} unit="kWh" helper="dhbw/iot/sensors/energy" icon="energy" />
-                <KpiCard title="Aktive Aktoren" value={activeActuators} unit="" tone="neutral" helper="Status via .../state Topics" />
+                <KpiCard
+                  title="Temperatur"
+                  value={formatNumber(temperatureStatus.lastValue)}
+                  unit="°C"
+                  helper="iot-logistikmodel/telemetry/environment/temperature"
+                />
+                <KpiCard
+                  title="Energieverbrauch"
+                  value={formatNumber(energyStatus.lastValue)}
+                  unit="kWh"
+                  helper="iot-logistikmodel/telemetry/energy/total"
+                  icon="energy"
+                />
+                <KpiCard
+                  title="Zuführung"
+                  value={formatPresence(presenceInStatus.lastValue, 'Werkstück', 'frei')}
+                  helper="dhbw-hbs/sensors/presence/infeed"
+                  icon="presence"
+                  tone="neutral"
+                />
+                <KpiCard title="Aktive Aktoren" value={activeActuators} unit="" tone="neutral" helper="Status via echte /state Topics" />
               </div>
               <div className="grid gap-4 md:grid-cols-2">
                 <MiniHistory title="Verlauf Temperatur" unit="°C" history={temperatureStatus.valueHistory.map((h) => ({ value: h.value, timestamp: h.timestamp }))} />
-                <MiniHistory title="Verlauf Luftfeuchte" unit="%" history={humidityStatus.valueHistory.map((h) => ({ value: h.value, timestamp: h.timestamp }))} />
+                <MiniHistory title="Verlauf Energie" unit="kWh" history={energyStatus.valueHistory.map((h) => ({ value: h.value, timestamp: h.timestamp }))} />
               </div>
             </section>
 
@@ -176,9 +209,9 @@ function App() {
               <div className="flex items-baseline justify-between">
                 <div>
                   <p className="text-sm font-medium text-slate-500">Aktoren</p>
-                  <h3 className="text-2xl font-semibold text-slate-900">Steuerung &amp; States</h3>
+                  <h3 className="text-2xl font-semibold text-slate-900">States (read-only)</h3>
                 </div>
-                <p className="text-xs text-slate-500">Kommandos werden an .../set Topics gesendet, States via .../state gelesen.</p>
+                <p className="text-xs text-slate-500">Nur Anzeige der echten /state Topics, keine Kommandos.</p>
               </div>
               <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
                 {actuatorDevices.map((actuator) => (

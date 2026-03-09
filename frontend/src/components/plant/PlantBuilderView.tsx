@@ -1,13 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import clsx from 'clsx'
-import { modulePalette } from '../../config/modules'
+import { moduleDefinitionMap, modulePalette } from '../../config/modules'
 import { usePlantStore } from '../../store/plantStore'
 import type { ModuleDefinition, ModuleType, PlacedModule, Rotation } from '../../types/modules'
 import type { IconName } from '../../types/devices'
 import { useModuleSignal } from '../../hooks/useModuleSignal'
 import { NamedIcon } from '../common/Icon'
-import { useActuatorControl } from '../../hooks/useActuatorControl'
 import { isActiveValue } from '../../utils/deviceState'
+import { getDefaultTopicsForModule, getTopicOptionsForModule, getValueLabelsForTopic, mqttTopicOptions } from '../../config/mqttTopics'
 
 const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value))
 const snap = (value: number, step = 2) => Math.round(value / step) * step
@@ -15,6 +15,18 @@ const nextRotation = (rotation: Rotation): Rotation => {
   const order: Rotation[] = [0, 90, 180, 270]
   const idx = order.indexOf(rotation)
   return order[(idx + 1) % order.length]
+}
+
+const formatValue = (value: string | number | undefined, moduleType?: ModuleType, topic?: string) => {
+  if (value === undefined || value === null) return '–'
+  const labelsFromTopic = getValueLabelsForTopic(topic)
+  const labelsFromDefinition = moduleType ? moduleDefinitionMap[moduleType]?.valueLabels : undefined
+  const lookup = labelsFromTopic ?? labelsFromDefinition
+  if (lookup) {
+    const mapped = lookup[String(value)]
+    if (mapped !== undefined) return mapped
+  }
+  return value
 }
 
 type PaletteProps = {
@@ -44,12 +56,18 @@ function ModulePalette({ onAdd }: PaletteProps) {
             className="group flex cursor-grab items-center justify-between rounded-xl border border-slate-100 bg-slate-50 px-3 py-2 transition hover:-translate-y-0.5 hover:border-red-200 hover:bg-red-50"
           >
             <div className="flex items-center gap-3">
-              <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-white text-red-700 ring-1 ring-red-100">
+              <span
+                className={clsx(
+                  'flex h-10 w-10 items-center justify-center rounded-lg text-white ring-1 ring-red-100',
+                  `bg-gradient-to-br ${module.color}`
+                )}
+              >
                 <NamedIcon name={module.icon} className="h-5 w-5" />
               </span>
               <div>
                 <p className="text-sm font-semibold text-slate-900">{module.label}</p>
                 <p className="text-xs text-slate-500">{module.description}</p>
+                <p className="text-[11px] text-slate-500">Kategorie: {module.category}</p>
               </div>
             </div>
             <button
@@ -71,17 +89,23 @@ type ModuleBlockProps = {
   selected: boolean
   onSelect: (id: string) => void
   onMove: (id: string, pos: { x: number; y: number }) => void
+  onRotate: (id: string, rotation: Rotation) => void
+  onRemove: (id: string) => void
+  onConfigure: (id: string) => void
   canvasRect?: DOMRect
 }
 
-function ModuleBlock({ module, definition, onSelect, onMove, selected, canvasRect }: ModuleBlockProps) {
-  const { active, lastValue, recent, binding, lastMessageAt } = useModuleSignal(module.id)
-  const isUnconfigured = (!binding?.stateTopic && !binding?.commandTopic) || !lastMessageAt
+function ModuleBlock({ module, definition, onSelect, onMove, selected, canvasRect, onRotate, onRemove, onConfigure }: ModuleBlockProps) {
+  const { active, lastValue, recent, lastMessageAt, stateTopic, metaTopic } = useModuleSignal(module.id)
+  const isUnconfigured = (!stateTopic && !metaTopic) || !lastMessageAt
   const color = isUnconfigured ? 'bg-amber-300' : active ? 'bg-emerald-500' : 'bg-slate-300'
+  const [showMoveHint, setShowMoveHint] = useState(false)
+  const displayValue = formatValue(lastValue, module.type, stateTopic)
 
-  const onMouseDown = (e: React.MouseEvent<HTMLButtonElement>) => {
+  const onHandleMouseDown = (e: React.MouseEvent<HTMLButtonElement>) => {
     if (!canvasRect) return
     e.preventDefault()
+    e.stopPropagation()
     const startX = e.clientX
     const startY = e.clientY
     const startPos = { x: module.x, y: module.y }
@@ -104,12 +128,11 @@ function ModuleBlock({ module, definition, onSelect, onMove, selected, canvasRec
   }
 
   return (
-    <button
-      onMouseDown={onMouseDown}
+    <div
       onClick={() => onSelect(module.id)}
       style={{ left: `${module.x}%`, top: `${module.y}%`, transform: `translate(-50%, -50%) rotate(${module.rotation}deg)` }}
       className={clsx(
-        'absolute flex h-16 w-24 cursor-grab flex-col justify-between rounded-xl px-3 py-2 text-left text-xs font-semibold text-white shadow-lg ring-2 ring-black/5 transition focus:outline-none focus:ring-4 focus:ring-red-300',
+        'absolute flex h-16 w-24 flex-col justify-between rounded-xl px-3 py-2 text-left text-xs font-semibold text-white shadow-lg ring-2 ring-black/5 transition focus:outline-none focus:ring-4 focus:ring-red-300',
         color,
         selected ? 'ring-4 ring-red-400' : isUnconfigured ? 'shadow-amber-300/50' : active ? 'shadow-emerald-300/50' : 'shadow-slate-200'
       )}
@@ -119,13 +142,70 @@ function ModuleBlock({ module, definition, onSelect, onMove, selected, canvasRec
         <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-white/20">
           <NamedIcon name={definition.icon} className="h-4 w-4" />
         </span>
-        <span className="truncate">{module.label}</span>
+        <div className="flex items-center gap-1">
+          <span className="truncate">{module.label}</span>
+          <button
+            title="Bewegen (Drag über Griff)"
+            aria-label="Modul verschieben"
+            className={clsx(
+              'flex h-7 w-7 items-center justify-center rounded-lg border border-white/30 bg-white/10 text-[10px] font-bold leading-none text-white transition hover:bg-white/20',
+              showMoveHint && 'ring-2 ring-white'
+            )}
+            onMouseDown={onHandleMouseDown}
+          >
+            ⇕
+          </button>
+        </div>
       </div>
       <div className="flex items-center justify-between">
-        <span className="rounded-full bg-white/20 px-2 py-0.5 text-[10px] font-mono">{lastValue ?? '–'}</span>
+        <span className="rounded-full bg-white/20 px-2 py-0.5 text-[10px] font-mono">{displayValue}</span>
         <span className={clsx('h-2.5 w-2.5 rounded-full', recent ? 'bg-white animate-pulse' : 'bg-white/60')} title="MQTT Signal" />
       </div>
-    </button>
+      {selected && (
+        <div className="absolute left-1/2 top-full z-10 mt-2 w-56 -translate-x-1/2 rounded-xl border border-slate-200 bg-white/95 p-2 text-[11px] text-slate-700 shadow-lg backdrop-blur">
+          <p className="text-[10px] font-semibold uppercase tracking-wide text-red-700">Aktionen</p>
+          <div className="mt-1 grid grid-cols-2 gap-2">
+            <button
+              className="rounded-lg border border-slate-200 px-2 py-1 font-semibold text-slate-700 hover:border-red-200 hover:text-red-700"
+              onClick={(e) => {
+                e.stopPropagation()
+                setShowMoveHint(true)
+                setTimeout(() => setShowMoveHint(false), 1200)
+              }}
+            >
+              Move (Griff)
+            </button>
+            <button
+              className="rounded-lg border border-slate-200 px-2 py-1 font-semibold text-slate-700 hover:border-red-200 hover:text-red-700"
+              onClick={(e) => {
+                e.stopPropagation()
+                onRotate(module.id, nextRotation(module.rotation))
+              }}
+            >
+              Rotieren
+            </button>
+            <button
+              className="rounded-lg border border-slate-200 px-2 py-1 font-semibold text-slate-700 hover:border-red-200 hover:text-red-700"
+              onClick={(e) => {
+                e.stopPropagation()
+                onConfigure(module.id)
+              }}
+            >
+              Binding konfigurieren
+            </button>
+            <button
+              className="rounded-lg border border-rose-200 bg-rose-50 px-2 py-1 font-semibold text-rose-700 hover:bg-rose-100"
+              onClick={(e) => {
+                e.stopPropagation()
+                onRemove(module.id)
+              }}
+            >
+              Löschen
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
   )
 }
 
@@ -135,12 +215,15 @@ type PlantCanvasProps = {
   onSelect: (id: string) => void
   onMove: (id: string, pos: { x: number; y: number }) => void
   onCreate: (type: ModuleType, position: { x: number; y: number }) => void
+  onRotate: (id: string, rotation: Rotation) => void
+  onRemove: (id: string) => void
+  onConfigure: (id: string) => void
 }
 
-function PlantCanvas({ modules, selectedId, onSelect, onMove, onCreate }: PlantCanvasProps) {
+function PlantCanvas({ modules, selectedId, onSelect, onMove, onCreate, onRotate, onRemove, onConfigure }: PlantCanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const [canvasRect, setCanvasRect] = useState<DOMRect>()
-  const definitionMap = useMemo<Partial<Record<ModuleType, ModuleDefinition>>>(() => Object.fromEntries(modulePalette.map((m) => [m.type, m])), [])
+  const definitionMap = useMemo<Partial<Record<ModuleType, ModuleDefinition>>>(() => moduleDefinitionMap, [])
 
   const refreshRect = () => {
     if (containerRef.current) {
@@ -177,7 +260,13 @@ function PlantCanvas({ modules, selectedId, onSelect, onMove, onCreate }: PlantC
       <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_top_left,rgba(198,0,31,0.05),transparent_45%),radial-gradient(circle_at_bottom_right,rgba(79,70,229,0.05),transparent_40%)]" />
       <div className="relative h-full w-full">
         {modules.map((module) => {
-          const fallback: ModuleDefinition = { type: module.type, label: module.label, icon: 'status' as IconName }
+          const fallback: ModuleDefinition = {
+            type: module.type,
+            label: module.label,
+            icon: 'status' as IconName,
+            color: 'from-slate-500 to-slate-600',
+            category: 'logical',
+          }
           const definition = definitionMap[module.type] ?? fallback
           return (
             <ModuleBlock
@@ -187,6 +276,9 @@ function PlantCanvas({ modules, selectedId, onSelect, onMove, onCreate }: PlantC
               selected={selectedId === module.id}
               onSelect={onSelect}
               onMove={onMove}
+              onRotate={onRotate}
+              onRemove={onRemove}
+              onConfigure={onConfigure}
               canvasRect={canvasRect}
             />
           )
@@ -206,12 +298,20 @@ type ModuleDetailProps = {
   onRotate: (id: string, rotation: Rotation) => void
   onRemove: (id: string) => void
   onLabelChange: (id: string, label: string) => void
-  onBindingChange: (id: string, patch: { stateTopic?: string; commandTopic?: string; metaTopic?: string; deviceType?: 'sensor' | 'actuator' }) => void
+  onBindingChange: (id: string, patch: { stateTopic?: string; metaTopic?: string; deviceType?: 'sensor' | 'actuator' | 'logical' }) => void
+  configRef?: React.RefObject<HTMLDivElement | null>
 }
 
-function ModuleDetailPanel({ module, onRotate, onRemove, onLabelChange, onBindingChange }: ModuleDetailProps) {
-  const { binding, lastValue, metaValue, lastMessageAt, commandTopic, stateTopic } = useModuleSignal(module?.id ?? '')
-  const { publishCommand, isSending } = useActuatorControl(stateTopic, commandTopic)
+function ModuleDetailPanel({ module, onRotate, onRemove, onLabelChange, onBindingChange, configRef }: ModuleDetailProps) {
+  const { binding, lastValue, metaValue, lastMessageAt } = useModuleSignal(module?.id ?? '')
+  const definition = module ? moduleDefinitionMap[module.type] : undefined
+  const stateOptions = module ? getTopicOptionsForModule(module.type, 'state') : []
+  const metaOptions = module ? getTopicOptionsForModule(module.type, 'meta') : []
+  const defaults = module ? getDefaultTopicsForModule(module.type) : {}
+  const displayState = formatValue(lastValue, module?.type, binding?.stateTopic ?? defaults.stateTopic)
+  const displayMeta = formatValue(metaValue, module?.type, binding?.metaTopic ?? defaults.metaTopic)
+  const moduleCategory: 'sensor' | 'actuator' | 'logical' = definition?.category ?? 'sensor'
+  const resolveTopicId = (id: string) => mqttTopicOptions.find((opt) => opt.id === id)?.topic ?? id
 
   if (!module) {
     return (
@@ -222,14 +322,20 @@ function ModuleDetailPanel({ module, onRotate, onRemove, onLabelChange, onBindin
   }
 
   const rotation = nextRotation(module.rotation)
+  const stateTopicValue = binding?.stateTopic ?? defaults.stateTopic ?? ''
+  const metaTopicValue = binding?.metaTopic ?? defaults.metaTopic ?? ''
 
   return (
-    <div className="rounded-2xl border border-slate-100 bg-white p-5 shadow-card">
+    <div ref={configRef} className="rounded-2xl border border-slate-100 bg-white p-5 shadow-card">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <p className="text-xs font-semibold uppercase tracking-wide text-red-700">Modul</p>
           <p className="text-lg font-semibold text-slate-900">{module.label}</p>
-          <p className="text-xs text-slate-500">Typ: {module.type}</p>
+          <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-slate-500">
+            <span className="rounded-full bg-slate-100 px-2 py-1 font-semibold text-slate-700">{module.type}</span>
+            <span className="rounded-full bg-red-50 px-2 py-1 font-semibold text-red-700">{moduleCategory.toUpperCase()}</span>
+            {definition?.description && <span className="text-slate-500">{definition.description}</span>}
+          </div>
         </div>
         <div className="flex gap-2">
           <button
@@ -258,91 +364,92 @@ function ModuleDetailPanel({ module, onRotate, onRemove, onLabelChange, onBindin
           />
         </label>
 
-        <label className="block text-xs font-semibold text-slate-500">
-          Gerätetyp
-          <select
-            value={binding?.deviceType ?? 'sensor'}
-            onChange={(e) => onBindingChange(module.id, { deviceType: e.target.value as 'sensor' | 'actuator' })}
-            className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-red-400 focus:outline-none"
-          >
-            <option value="sensor">Sensor</option>
-            <option value="actuator">Aktor</option>
-          </select>
-        </label>
+        <div className="rounded-xl border border-slate-100 bg-slate-50 p-3 text-xs text-slate-600">
+          <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Logischer Typ</p>
+          <p className="mt-1 text-sm font-semibold text-slate-900">{definition?.label ?? module.type}</p>
+          <p className="text-[11px] text-slate-500">
+            Kategorie: {moduleCategory === 'logical' ? 'Logik' : moduleCategory === 'actuator' ? 'Aktor' : 'Sensor'}
+          </p>
+        </div>
+      </div>
 
+      <div className="mt-4 grid gap-3 md:grid-cols-2">
         <label className="block text-xs font-semibold text-slate-500">
           State-Topic
-          <input
-            type="text"
-            value={binding?.stateTopic ?? ''}
-            onChange={(e) => onBindingChange(module.id, { stateTopic: e.target.value })}
-            placeholder="z.B. dhbw/iot/sensors/..."
+          <select
+            value={stateTopicValue}
+            onChange={(e) => onBindingChange(module.id, { stateTopic: e.target.value, deviceType: moduleCategory })}
             className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-red-400 focus:outline-none"
-          />
-        </label>
-
-        <label className="block text-xs font-semibold text-slate-500">
-          Command-Topic (Aktor)
-          <input
-            type="text"
-            value={binding?.commandTopic ?? ''}
-            onChange={(e) => onBindingChange(module.id, { commandTopic: e.target.value })}
-            placeholder="z.B. dhbw/iot/actuators/.../set"
-            className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-red-400 focus:outline-none"
-          />
+          >
+            <option value="">State-Topic auswählen</option>
+            {stateOptions.map((option) => (
+              <option key={option.id} value={option.topic}>
+                {option.label} — {option.topic}
+              </option>
+            ))}
+          </select>
+          <p className="mt-1 text-[11px] text-slate-500">Aus den bekannten Topics der DHBW-Logistikstrecke.</p>
         </label>
 
         <label className="block text-xs font-semibold text-slate-500">
           Meta-Topic (optional)
-          <input
-            type="text"
-            value={binding?.metaTopic ?? ''}
-            onChange={(e) => onBindingChange(module.id, { metaTopic: e.target.value })}
-            placeholder="NFC / Zusatzinfos"
+          <select
+            value={metaTopicValue}
+            onChange={(e) => onBindingChange(module.id, { metaTopic: e.target.value, deviceType: moduleCategory })}
             className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-red-400 focus:outline-none"
-          />
+          >
+            <option value="">Meta-Topic auswählen</option>
+            {metaOptions.map((option) => (
+              <option key={option.id} value={option.topic}>
+                {option.label} — {option.topic}
+              </option>
+            ))}
+          </select>
+          <p className="mt-1 text-[11px] text-slate-500">Zusatzinfos wie Position oder NFC-Metadaten.</p>
         </label>
       </div>
+
+      {definition?.expectedTopics && (
+        <div className="mt-3 rounded-xl border border-dashed border-slate-200 bg-slate-50 p-3 text-xs text-slate-600">
+          <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Erwartete Topics</p>
+          <div className="mt-2 flex flex-wrap gap-2">
+            {(definition.expectedTopics.state ?? []).map((topicId) => (
+              <span key={topicId} className="rounded-full bg-white px-3 py-1 font-mono text-[11px] text-slate-700">
+                {resolveTopicId(topicId)}
+              </span>
+            ))}
+            {(definition.expectedTopics.meta ?? []).map((topicId) => (
+              <span key={topicId} className="rounded-full bg-white px-3 py-1 font-mono text-[11px] text-slate-700">
+                {resolveTopicId(topicId)}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="mt-4 grid gap-3 md:grid-cols-3">
         <div className="rounded-xl bg-slate-50 p-3 text-xs text-slate-600">
           <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Status</p>
           <p className="mt-1 text-lg font-semibold text-slate-900">
-            {binding?.deviceType === 'actuator' ? (isActiveValue(lastValue) ? 'Aktiv' : 'Inaktiv') : lastValue ?? '–'}
+            {moduleCategory === 'actuator' ? (isActiveValue(lastValue) ? 'Aktiv' : 'Inaktiv') : displayState}
           </p>
           <p className="text-[11px] text-slate-500">Letzte Nachricht: {lastMessageAt?.toLocaleTimeString() ?? '–'}</p>
         </div>
         <div className="rounded-xl bg-slate-50 p-3 text-xs text-slate-600">
           <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">State</p>
-          <p className="mt-1 text-lg font-semibold text-slate-900">{lastValue ?? '–'}</p>
-          <p className="text-[11px] text-slate-500 break-all">{binding?.stateTopic || 'kein Topic gesetzt'}</p>
+          <p className="mt-1 text-lg font-semibold text-slate-900">{displayState}</p>
+          <p className="text-[11px] text-slate-500 break-all">{binding?.stateTopic || defaults.stateTopic || 'kein Topic gesetzt'}</p>
         </div>
         <div className="rounded-xl bg-slate-50 p-3 text-xs text-slate-600">
           <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Meta</p>
-          <p className="mt-1 text-lg font-semibold text-slate-900">{metaValue ?? '–'}</p>
-          <p className="text-[11px] text-slate-500 break-all">{binding?.metaTopic || 'kein Topic gesetzt'}</p>
+          <p className="mt-1 text-lg font-semibold text-slate-900">{displayMeta}</p>
+          <p className="text-[11px] text-slate-500 break-all">{binding?.metaTopic || defaults.metaTopic || 'kein Topic gesetzt'}</p>
         </div>
       </div>
 
-      {binding?.deviceType === 'actuator' && (binding.commandTopic || binding.stateTopic) && (
-        <div className="mt-4 flex flex-wrap items-center gap-3">
-          <button
-            onClick={() => publishCommand(isActiveValue(lastValue) ? '0' : '1')}
-            disabled={isSending}
-            className={clsx(
-              'rounded-xl px-4 py-3 text-sm font-semibold shadow-sm transition',
-              isActiveValue(lastValue) ? 'bg-red-600 text-white hover:bg-red-700' : 'bg-emerald-500 text-white hover:bg-emerald-600',
-              isSending && 'opacity-70'
-            )}
-          >
-            {isSending ? 'Sende…' : isActiveValue(lastValue) ? 'AUS schalten' : 'EIN schalten'}
-          </button>
-          <div className="text-xs text-slate-500">
-            Kommandos gehen an <span className="font-mono">{binding.commandTopic ?? '–'}</span> / State von{' '}
-            <span className="font-mono">{binding.stateTopic ?? '–'}</span>
-          </div>
-        </div>
-      )}
+      <div className="mt-4 rounded-xl border border-slate-100 bg-slate-50 px-4 py-3 text-xs text-slate-600">
+        Dashboard ist read-only: es werden nur MQTT-Werte aus den echten Topics angezeigt, keine Kommandos gesendet.
+      </div>
     </div>
   )
 }
@@ -350,6 +457,7 @@ function ModuleDetailPanel({ module, onRotate, onRemove, onLabelChange, onBindin
 export function PlantBuilderView() {
   const { state, addModule, updateModule, updateBinding, removeModule, reset, save } = usePlantStore()
   const [selectedId, setSelectedId] = useState<string | null>(state.modules[0]?.id ?? null)
+  const configPanelRef = useRef<HTMLDivElement | null>(null)
   const effectiveSelectedId = useMemo(() => {
     if (selectedId && state.modules.some((m) => m.id === selectedId)) return selectedId
     return state.modules[0]?.id ?? null
@@ -361,6 +469,11 @@ export function PlantBuilderView() {
     const definition = modulePalette.find((m) => m.type === type)
     const id = addModule(type, position, definition?.defaultRotation, definition?.label)
     setSelectedId(id)
+  }
+
+  const handleConfigure = (id: string) => {
+    setSelectedId(id)
+    configPanelRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }
 
   return (
@@ -397,6 +510,12 @@ export function PlantBuilderView() {
           onSelect={setSelectedId}
           onMove={(id, pos) => updateModule(id, pos)}
           onCreate={handleCreate}
+          onRotate={(id, rotation) => updateModule(id, { rotation })}
+          onRemove={(id) => {
+            removeModule(id)
+            setSelectedId((prev) => (prev === id ? null : prev))
+          }}
+          onConfigure={handleConfigure}
         />
       </div>
 
@@ -409,10 +528,11 @@ export function PlantBuilderView() {
         }}
         onLabelChange={(id, label) => updateModule(id, { label })}
         onBindingChange={(id, patch) => updateBinding(id, patch)}
+        configRef={configPanelRef}
       />
 
       <div className="flex flex-wrap gap-2 text-xs text-slate-500">
-        <span className="rounded-full bg-slate-100 px-3 py-1">Drag &amp; Drop + Raster-Snap (2%)</span>
+        <span className="rounded-full bg-slate-100 px-3 py-1">Verschieben per Griff + Raster-Snap (2%)</span>
         <span className="rounded-full bg-slate-100 px-3 py-1">Signal-Dot blinkt bei neuen MQTT-Messages</span>
         <span className="rounded-full bg-slate-100 px-3 py-1">Persistenz via LocalStorage (später ersetzbar durch Backend)</span>
       </div>
