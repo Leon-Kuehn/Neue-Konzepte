@@ -11,7 +11,7 @@
     <line x1="40" y1="150" x2="80" y2="150" />
     <line x1="40" y1="180" x2="80" y2="180" />
   </g>
-  <!-- Dreh‑Kreis -->
+  <!-- Dreh-Kreis -->
   <circle cx="60" cy="100" r="40"
           fill="none" stroke="#E11E26" stroke-width="4" />
 </svg>
