@@ -24,6 +24,19 @@ const stateLabelByType: Partial<Record<LogisticsModule['type'], { active: string
   NfcSensor: { active: 'Tag erkannt', inactive: 'kein Tag' },
 }
 
+const typeLabel: Record<LogisticsModule['type'], string> = {
+  InputStation: 'Input Station',
+  ProductSensor: 'Produkt / Box',
+  ConveyorLong: 'Conveyor Long',
+  ConveyorShort: 'Conveyor Short',
+  ConveyorTurntable: 'Turntable Conveyor',
+  FillingUnit: 'Pneumatische Füllung',
+  Lift: 'Lift',
+  WarehouseColumn: 'Hochregal-Säule',
+  BinarySensor: 'Binärsensor',
+  NfcSensor: 'NFC Sensor',
+}
+
 const formatStateValue = (module: LogisticsModule, value?: string | number) => {
   const labels = stateLabelByType[module.type]
   if (!labels) return value ?? '–'
@@ -41,7 +54,7 @@ export function ModuleDetailPanel({ module, stateValue, metaValue, lastMessageAt
     <div className="fixed right-4 top-24 z-30 w-80 rounded-2xl bg-white p-4 shadow-2xl ring-1 ring-slate-200">
       <div className="flex items-start justify-between">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{module.type}</p>
+          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{typeLabel[module.type]}</p>
           <h3 className="text-xl font-bold text-slate-900">{module.name}</h3>
         </div>
         <button
