@@ -1,5 +1,20 @@
-import { AdjustmentsHorizontalIcon, BeakerIcon, BoltIcon, CloudIcon, HeartIcon, LightBulbIcon, SparklesIcon, SunIcon, SwatchIcon } from '@heroicons/react/24/outline'
-import type { IconName } from '../config/devices'
+import {
+  AdjustmentsHorizontalIcon,
+  ArrowPathIcon,
+  ArrowsRightLeftIcon,
+  BeakerIcon,
+  BoltIcon,
+  CloudIcon,
+  EyeIcon,
+  HeartIcon,
+  LightBulbIcon,
+  MapPinIcon,
+  SparklesIcon,
+  SunIcon,
+  SwatchIcon,
+  WifiIcon,
+} from '@heroicons/react/24/outline'
+import type { IconName } from '../../types/devices'
 
 const iconMap: Record<IconName, typeof SunIcon> = {
   temperature: SunIcon,
@@ -10,6 +25,11 @@ const iconMap: Record<IconName, typeof SunIcon> = {
   pump: BeakerIcon,
   streetlight: SunIcon,
   ventilation: AdjustmentsHorizontalIcon,
+  conveyor: ArrowsRightLeftIcon,
+  motor: ArrowPathIcon,
+  presence: EyeIcon,
+  position: MapPinIcon,
+  nfc: WifiIcon,
   status: SparklesIcon,
   heartbeat: HeartIcon,
   kpi: SparklesIcon,

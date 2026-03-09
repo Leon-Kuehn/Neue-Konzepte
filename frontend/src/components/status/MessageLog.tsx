@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { useMqttContext } from '../mqtt/MqttProvider'
+import { useMqttContext } from '../../mqtt/MqttProvider'
 
 const topicTone = (topic: string) => {
   if (topic.includes('/sensors/')) return 'text-sky-700 bg-sky-50'

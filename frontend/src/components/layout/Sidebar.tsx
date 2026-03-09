@@ -1,5 +1,6 @@
 const navItems = [
   { href: '#overview', label: 'Übersicht' },
+  { href: '#plant', label: 'Anlagenansicht (Schaltplan)' },
   { href: '#sensors', label: 'Sensoren' },
   { href: '#actuators', label: 'Aktoren' },
   { href: '#system', label: 'Systemstatus' },

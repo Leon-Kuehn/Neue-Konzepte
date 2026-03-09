@@ -1,5 +1,5 @@
 import clsx from 'clsx'
-import type { ConnectionStatus } from '../mqtt/MqttProvider'
+import type { ConnectionStatus } from '../../mqtt/MqttProvider'
 
 const statusConfig: Record<
   ConnectionStatus,

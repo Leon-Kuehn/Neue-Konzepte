@@ -1,5 +1,5 @@
-import { MqttStatusBadge } from './MqttStatusBadge'
-import type { ConnectionStatus } from '../mqtt/MqttProvider'
+import { MqttStatusBadge } from '../status/MqttStatusBadge'
+import type { ConnectionStatus } from '../../mqtt/MqttProvider'
 
 const formatDate = (date?: Date) => (date ? new Intl.DateTimeFormat('de-DE', { timeStyle: 'medium' }).format(date) : '—')
 
@@ -14,8 +14,8 @@ export function Header({ status, lastMessageAt }: HeaderProps) {
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <p className="text-xs uppercase tracking-wide text-red-700">DHBW IoT Monitoring Dashboard</p>
-          <h2 className="text-3xl font-bold text-slate-900">Live Monitoring &amp; Steuerung</h2>
-          <p className="text-sm text-slate-500">Sensoren und Aktoren eines Smart-Village / Smart-Campus Projekts.</p>
+          <h2 className="text-3xl font-bold text-slate-900">Live Monitoring &amp; Anlagen-Schaltplan</h2>
+          <p className="text-sm text-slate-500">Förderband-/Pumpen-Demo mit MQTT-Sensoren &amp; Aktoren.</p>
         </div>
         <div className="flex flex-col items-end gap-2">
           <MqttStatusBadge status={status} />

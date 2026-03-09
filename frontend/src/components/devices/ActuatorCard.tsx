@@ -1,17 +1,20 @@
 import { useMemo, useState } from 'react'
 import clsx from 'clsx'
-import type { ActuatorDefinition } from '../config/devices'
-import { useActuatorControl } from '../hooks/useActuatorControl'
-import { NamedIcon } from './Icon'
+import type { ActuatorDevice } from '../../types/devices'
+import { useActuatorControl } from '../../hooks/useActuatorControl'
+import { NamedIcon } from '../common/Icon'
+import { isActiveValue } from '../../utils/deviceState'
 
 const formatTimestamp = (date?: Date) => (date ? new Intl.DateTimeFormat('de-DE', { hour: '2-digit', minute: '2-digit' }).format(date) : '–')
 
 type ActuatorCardProps = {
-  actuator: ActuatorDefinition
+  actuator: ActuatorDevice
 }
 
 export function ActuatorCard({ actuator }: ActuatorCardProps) {
-  const { latest, publishCommand, isSending, error, lastCommand } = useActuatorControl(actuator.topic, actuator.setTopic)
+  const stateTopic = actuator.topics.stateTopic ?? actuator.topics.valueTopic
+  const commandTopic = actuator.topics.commandTopic ?? actuator.topics.stateTopic
+  const { latest, publishCommand, isSending, error, lastCommand } = useActuatorControl(stateTopic, commandTopic)
   const [localSlider, setLocalSlider] = useState<number | null>(null)
 
   const currentValue = useMemo(() => latest?.value ?? '—', [latest])
@@ -30,7 +33,7 @@ export function ActuatorCard({ actuator }: ActuatorCardProps) {
   const renderControl = () => {
     const control = actuator.control
     if (control.type === 'toggle') {
-      const isOn = String(currentValue).toUpperCase() === 'ON'
+      const isOn = isActiveValue(currentValue)
       return (
         <button
           onClick={() => send(isOn ? 'OFF' : 'ON')}
@@ -122,7 +125,7 @@ export function ActuatorCard({ actuator }: ActuatorCardProps) {
             <p className="text-xs text-slate-500">{actuator.description}</p>
           </div>
         </div>
-        <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600">{actuator.setTopic}</span>
+        <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600">{commandTopic ?? 'kein Command-Topic'}</span>
       </div>
 
       <div className="flex items-baseline gap-2">

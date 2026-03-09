@@ -1,16 +1,18 @@
 import './index.css'
 import { useMemo } from 'react'
-import { Line, LineChart, ResponsiveContainer, Tooltip } from 'recharts'
-import { Sidebar } from './components/Sidebar'
-import { Header } from './components/Header'
-import { KpiCard } from './components/KpiCard'
-import { sensors, actuators, kpiTopics } from './config/devices'
-import { SensorCard } from './components/SensorCard'
-import { ActuatorCard } from './components/ActuatorCard'
-import { SystemStatusCard } from './components/SystemStatusCard'
-import { MessageLog } from './components/MessageLog'
-import { useTopicHistory } from './hooks/useTopicHistory'
+import { ResponsiveContainer, LineChart, Line, Tooltip } from 'recharts'
+import { Sidebar } from './components/layout/Sidebar'
+import { Header } from './components/layout/Header'
+import { PlantView } from './components/plant/PlantView'
+import { KpiCard } from './components/devices/KpiCard'
+import { SensorCard } from './components/devices/SensorCard'
+import { ActuatorCard } from './components/devices/ActuatorCard'
+import { SystemStatusCard } from './components/status/SystemStatusCard'
+import { MessageLog } from './components/status/MessageLog'
 import { useMqttContext } from './mqtt/MqttProvider'
+import { actuatorDevices, sensorDevices } from './config/devices'
+import { useDeviceStatus } from './hooks/useDeviceStatus'
+import { getDeviceById, isActiveValue } from './utils/deviceState'
 
 const formatNumber = (value?: string | number, digits = 1) => {
   if (value === undefined) return '–'
@@ -62,24 +64,46 @@ const MiniHistory = ({
 function App() {
   const { status, lastMessageAt } = useMqttContext()
 
-  const temperature = useTopicHistory(kpiTopics.temperature, { numeric: true })
-  const soil = useTopicHistory(kpiTopics.soil, { numeric: true })
-  const energy = useTopicHistory(kpiTopics.energy, { numeric: true })
-  const humidity = useTopicHistory('dhbw/iot/sensors/humidity', { numeric: true })
+  const sensorFallback =
+    sensorDevices[0] ??
+    ({
+      id: 'sensor-fallback',
+      type: 'sensor',
+      name: 'Sensor',
+      icon: 'status',
+      topics: {},
+    } as const)
+  const actuatorFallback =
+    actuatorDevices[0] ??
+    ({
+      id: 'actuator-fallback',
+      type: 'actuator',
+      name: 'Aktor',
+      icon: 'status',
+      topics: {},
+      control: { type: 'toggle' },
+    } as const)
 
-  const pumpState = useTopicHistory(actuators.find((a) => a.id === 'pump')?.topic ?? '')
-  const streetState = useTopicHistory(actuators.find((a) => a.id === 'light-street')?.topic ?? '')
-  const ventilationState = useTopicHistory(actuators.find((a) => a.id === 'ventilation')?.topic ?? '', { numeric: true })
+  const temperatureStatus = useDeviceStatus(getDeviceById(sensorDevices, 'temperature', sensorFallback))
+  const soilStatus = useDeviceStatus(getDeviceById(sensorDevices, 'soil', sensorFallback))
+  const energyStatus = useDeviceStatus(getDeviceById(sensorDevices, 'energy', sensorFallback))
+  const humidityStatus = useDeviceStatus(getDeviceById(sensorDevices, 'humidity', sensorFallback))
+
+  const pumpStatus = useDeviceStatus(getDeviceById(actuatorDevices, 'pump', actuatorFallback))
+  const conveyorStatus = useDeviceStatus(getDeviceById(actuatorDevices, 'conveyor-main', actuatorFallback))
+  const rotaryStatus = useDeviceStatus(getDeviceById(actuatorDevices, 'rotary-table', actuatorFallback))
 
   const activeActuators = useMemo(() => {
-    const states = [pumpState.latest?.value, streetState.latest?.value, ventilationState.latest?.value]
-    return states.filter((value) => {
-      if (value === undefined) return false
-      if (typeof value === 'number') return value > 0
-      const normalized = String(value).toUpperCase()
-      return normalized !== 'OFF' && normalized !== '0'
-    }).length
-  }, [pumpState.latest?.value, streetState.latest?.value, ventilationState.latest?.value])
+    const states = [pumpStatus.state ?? pumpStatus.lastValue, conveyorStatus.state ?? conveyorStatus.lastValue, rotaryStatus.state ?? rotaryStatus.lastValue]
+    return states.filter((value) => isActiveValue(value)).length
+  }, [
+    pumpStatus.lastValue,
+    pumpStatus.state,
+    conveyorStatus.lastValue,
+    conveyorStatus.state,
+    rotaryStatus.lastValue,
+    rotaryStatus.state,
+  ])
 
   return (
     <div className="flex bg-slate-50">
@@ -87,22 +111,18 @@ function App() {
       <main className="min-h-screen flex-1 px-4 pb-16 lg:ml-64 lg:px-8">
         <Header status={status} lastMessageAt={lastMessageAt} />
 
-        <section id="overview" className="space-y-4">
+        <PlantView />
+
+        <section id="overview" className="mt-10 space-y-4">
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-            <KpiCard title="Temperatur" value={formatNumber(temperature.latest?.value)} unit="°C" helper="dhbw/iot/sensors/temperature" />
-            <KpiCard title="Bodenfeuchte" value={formatNumber(soil.latest?.value)} unit="%" helper="dhbw/iot/sensors/soil" />
-            <KpiCard
-              title="Energieverbrauch"
-              value={formatNumber(energy.latest?.value)}
-              unit="kWh"
-              helper="dhbw/iot/sensors/energy"
-              icon="energy"
-            />
+            <KpiCard title="Temperatur" value={formatNumber(temperatureStatus.lastValue)} unit="°C" helper="dhbw/iot/sensors/temperature" />
+            <KpiCard title="Bodenfeuchte" value={formatNumber(soilStatus.lastValue)} unit="%" helper="dhbw/iot/sensors/soil" />
+            <KpiCard title="Energieverbrauch" value={formatNumber(energyStatus.lastValue)} unit="kWh" helper="dhbw/iot/sensors/energy" icon="energy" />
             <KpiCard title="Aktive Aktoren" value={activeActuators} unit="" tone="neutral" helper="Status via .../state Topics" />
           </div>
           <div className="grid gap-4 md:grid-cols-2">
-            <MiniHistory title="Verlauf Temperatur" unit="°C" history={temperature.history.map((h) => ({ value: h.value, timestamp: h.timestamp }))} />
-            <MiniHistory title="Verlauf Luftfeuchte" unit="%" history={humidity.history.map((h) => ({ value: h.value, timestamp: h.timestamp }))} />
+            <MiniHistory title="Verlauf Temperatur" unit="°C" history={temperatureStatus.valueHistory.map((h) => ({ value: h.value, timestamp: h.timestamp }))} />
+            <MiniHistory title="Verlauf Luftfeuchte" unit="%" history={humidityStatus.valueHistory.map((h) => ({ value: h.value, timestamp: h.timestamp }))} />
           </div>
         </section>
 
@@ -114,7 +134,7 @@ function App() {
             </div>
           </div>
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {sensors.map((sensor) => (
+            {sensorDevices.map((sensor) => (
               <SensorCard key={sensor.id} sensor={sensor} />
             ))}
           </div>
@@ -129,7 +149,7 @@ function App() {
             <p className="text-xs text-slate-500">Kommandos werden an .../set Topics gesendet, States via .../state gelesen.</p>
           </div>
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {actuators.map((actuator) => (
+            {actuatorDevices.map((actuator) => (
               <ActuatorCard key={actuator.id} actuator={actuator} />
             ))}
           </div>

@@ -13,17 +13,16 @@ type UseTopicHistoryOptions = {
   numeric?: boolean
 }
 
-export const useTopicHistory = (topic: string, options?: UseTopicHistoryOptions) => {
+export const useTopicHistory = (topic?: string, options?: UseTopicHistoryOptions) => {
   const message = useMqttSubscription(topic)
   const limit = options?.limit ?? 20
   const numeric = options?.numeric ?? false
   const [history, setHistory] = useState<TopicHistoryEntry[]>([])
 
   useEffect(() => {
-    if (!message) return
+    if (!topic || !message) return
     const parsed = numeric ? Number(message.payload) : message.payload
-    // State wird hier bewusst aus einer externen MQTT-Nachricht aktualisiert.
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- externe Updates sind hier gewollt
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- rule from eslint-plugin-react-hooks; external MQTT updates are intended
     setHistory((prev) => {
       const next = [
         {
@@ -36,7 +35,7 @@ export const useTopicHistory = (topic: string, options?: UseTopicHistoryOptions)
       ]
       return next.slice(0, limit)
     })
-  }, [limit, message, numeric])
+  }, [limit, message, numeric, topic])
 
   const latest = history[0]
   const isStale = useMemo(() => !latest, [latest])

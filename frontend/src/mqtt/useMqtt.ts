@@ -35,7 +35,7 @@ export const useMqttPublish = () => {
       try {
         await publish(topic, payload, options)
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Unbekannter Fehler')
+        setError(err instanceof Error ? err.message : 'Unknown error')
       } finally {
         setIsSending(false)
       }

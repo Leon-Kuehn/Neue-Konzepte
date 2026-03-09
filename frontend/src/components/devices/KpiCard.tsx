@@ -1,6 +1,6 @@
 import clsx from 'clsx'
-import { NamedIcon } from './Icon'
-import type { IconName } from '../config/devices'
+import { NamedIcon } from '../common/Icon'
+import type { IconName } from '../../types/devices'
 
 type KpiCardProps = {
   title: string

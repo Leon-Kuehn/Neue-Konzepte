@@ -27,7 +27,7 @@ const MqttContext = createContext<MqttContextValue | undefined>(undefined)
 const matchesTopic = (subscription: string, incoming: string) => {
   if (subscription === incoming) return true
   const regex = subscription
-    .replace(/[-/\\^$+?.()|[\]{}]/g, '\\$&')
+    .replace(/[-/\\^$+?.()|\\[\\]{}]/g, '\\$&')
     .replace(/\\\+/g, '[^/]+')
     .replace(/\\#/g, '.*')
   return new RegExp(`^${regex}$`).test(incoming)

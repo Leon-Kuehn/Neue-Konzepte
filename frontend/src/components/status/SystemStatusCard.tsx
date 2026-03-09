@@ -1,9 +1,9 @@
-import { systemTopics } from '../config/devices'
-import { useTopicHistory } from '../hooks/useTopicHistory'
-import { useMqttContext } from '../mqtt/MqttProvider'
-import { mqttConfig } from '../mqtt/mqttConfig'
+import { systemTopics } from '../../config/devices'
+import { useTopicHistory } from '../../hooks/useTopicHistory'
+import { useMqttContext } from '../../mqtt/MqttProvider'
+import { mqttConfig } from '../../mqtt/mqttConfig'
 import { MqttStatusBadge } from './MqttStatusBadge'
-import { NamedIcon } from './Icon'
+import { NamedIcon } from '../common/Icon'
 
 const formatDateTime = (date?: Date) =>
   date ? new Intl.DateTimeFormat('de-DE', { dateStyle: 'short', timeStyle: 'medium' }).format(date) : '–'

@@ -13,7 +13,8 @@ services:
     restart: unless-stopped
 
   frontend:
-    build: .
+    build: ./frontend
+    working_dir: /app
     ports:
       - '5173:5173'
     environment:
@@ -21,8 +22,18 @@ services:
       - VITE_MQTT_USERNAME=
       - VITE_MQTT_PASSWORD=
     volumes:
-      - .:/app
+      - ./frontend:/app # Dev bind-mount (overrides image content for hot reload)
       - /app/node_modules
     depends_on:
       - mosquitto
     command: npm run dev -- --host --port 5173
+
+  # backend:
+  #   build: ./backend
+  #   working_dir: /app
+  #   ports:
+  #     - '3001:3001'
+  #   environment:
+  #     - PORT=3001
+  #   command: npm run start
+  #   profiles: ['backend']
