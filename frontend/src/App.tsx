@@ -3,7 +3,6 @@ import { useMemo, useState } from 'react'
 import { ResponsiveContainer, LineChart, Line, Tooltip } from 'recharts'
 import { Sidebar } from './components/layout/Sidebar'
 import { Header } from './components/layout/Header'
-import { PlantView } from './components/plant/PlantView'
 import { PlantBuilderView } from './components/plant/PlantBuilderView'
 import { WarehouseView } from './components/warehouse/WarehouseView'
 import { KpiCard } from './components/devices/KpiCard'
@@ -17,6 +16,7 @@ import { useDeviceStatus } from './hooks/useDeviceStatus'
 import { getDeviceById, isActiveValue } from './utils/deviceState'
 import { SettingsView } from './components/settings/SettingsView'
 import { useTheme } from './hooks/useTheme'
+import { LogisticsModelView } from './components/logistics/LogisticsModelView'
 
 const formatNumber = (value?: string | number, digits = 1) => {
   if (value === undefined) return '–'
@@ -70,7 +70,7 @@ const MiniHistory = ({
 function App() {
   const { status, lastMessageAt } = useMqttContext()
   const { theme } = useTheme()
-  const [activeTab, setActiveTab] = useState<TabKey>('builder')
+  const [activeTab, setActiveTab] = useState<TabKey>('overview')
 
   const sensorFallback =
     sensorDevices[0] ??
@@ -114,7 +114,7 @@ function App() {
   ])
 
   const tabs = [
-    { key: 'overview', label: 'Overview' },
+    { key: 'overview', label: 'Overview – Logistics Model' },
     { key: 'builder', label: 'Plant Builder' },
     { key: 'warehouse', label: 'Warehouse' },
     { key: 'status', label: 'MQTT & Status' },
@@ -143,7 +143,7 @@ function App() {
 
         {activeTab === 'overview' && (
           <div className="space-y-10">
-            <PlantView />
+            <LogisticsModelView />
 
             <section className="space-y-4">
               <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">

@@ -1,0 +1,15 @@
+<svg width="90" height="180" viewBox="0 0 90 180" xmlns="http://www.w3.org/2000/svg">
+  <!-- Rahmen -->
+  <rect x="20" y="10" width="50" height="160" rx="8"
+        fill="#F3F4F6" stroke="#9CA3AF" stroke-width="3" />
+  <!-- Fächer -->
+  <g stroke="#9CA3AF" stroke-width="2">
+    <line x1="20" y1="40" x2="70" y2="40" />
+    <line x1="20" y1="70" x2="70" y2="70" />
+    <line x1="20" y1="100" x2="70" y2="100" />
+    <line x1="20" y1="130" x2="70" y2="130" />
+  </g>
+  <!-- Schlitten -->
+  <rect x="10" y="60" width="20" height="40" rx="4"
+        fill="#E11E26" />
+</svg>

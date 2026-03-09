@@ -6,7 +6,7 @@ type SidebarProps = {
 }
 
 const navItems = [
-  { key: 'overview', label: 'Overview' },
+  { key: 'overview', label: 'Overview – Logistics Model' },
   { key: 'builder', label: 'Plant Builder' },
   { key: 'warehouse', label: 'Warehouse' },
   { key: 'status', label: 'MQTT & Status' },
