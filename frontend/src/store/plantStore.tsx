@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useMemo, useReducer } from 'react'
+import { createContext, useContext, useEffect, useReducer } from 'react'
 import { defaultBindings, defaultModules } from '../config/modules'
 import type { ModuleBinding, ModuleType, PlantState, PlacedModule, Rotation } from '../types/modules'
 import { plantStorage } from './persistence'
@@ -52,6 +52,7 @@ type PlantStoreValue = {
   updateBinding: (id: string, binding: Partial<ModuleBinding>) => void
   removeModule: (id: string) => void
   reset: () => void
+  save: () => void
 }
 
 const PlantStoreContext = createContext<PlantStoreValue | undefined>(undefined)
@@ -91,20 +92,17 @@ export function PlantStoreProvider({ children }: { children: React.ReactNode }) 
     plantStorage.clear()
     dispatch({ type: 'RESET' })
   }
+  const save = () => {
+    plantStorage.save(state)
+  }
 
-  const value = useMemo(
-    () => ({
-      state,
-      addModule,
-      updateModule,
-      updateBinding,
-      removeModule,
-      reset,
-    }),
-    [state]
+  return (
+    <PlantStoreContext.Provider
+      value={{ state, addModule, updateModule, updateBinding, removeModule, reset, save }}
+    >
+      {children}
+    </PlantStoreContext.Provider>
   )
-
-  return <PlantStoreContext.Provider value={value}>{children}</PlantStoreContext.Provider>
 }
 
 // eslint-disable-next-line react-refresh/only-export-components
