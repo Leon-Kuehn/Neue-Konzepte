@@ -53,9 +53,9 @@ export function WarehouseView() {
 
   const handleUpdate = useCallback((id: string, state: SlotState) => {
     setSlotsState((prev) => ({ ...prev, [id]: state }))
-    if (state.lastChange) {
-      setHistory((prev) => [{ id, occupied: state.occupied, timestamp: state.lastChange!, raw: state.raw }, ...prev].slice(0, 12))
-    }
+    const ts = state.lastChange
+    if (!ts) return
+    setHistory((prev) => [{ id, occupied: state.occupied, timestamp: ts, raw: state.raw }, ...prev].slice(0, 12))
   }, [])
 
   const stats = useMemo(() => {

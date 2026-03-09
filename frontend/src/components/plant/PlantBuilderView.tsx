@@ -76,8 +76,8 @@ type ModuleBlockProps = {
 
 function ModuleBlock({ module, definition, onSelect, onMove, selected, canvasRect }: ModuleBlockProps) {
   const { active, lastValue, recent, binding, lastMessageAt } = useModuleSignal(module.id)
-  const warn = (!binding?.stateTopic && !binding?.commandTopic) || !lastMessageAt
-  const color = warn ? 'bg-amber-300' : active ? 'bg-emerald-500' : 'bg-slate-300'
+  const isUnconfigured = (!binding?.stateTopic && !binding?.commandTopic) || !lastMessageAt
+  const color = isUnconfigured ? 'bg-amber-300' : active ? 'bg-emerald-500' : 'bg-slate-300'
 
   const onMouseDown = (e: React.MouseEvent<HTMLButtonElement>) => {
     if (!canvasRect) return
@@ -111,7 +111,7 @@ function ModuleBlock({ module, definition, onSelect, onMove, selected, canvasRec
       className={clsx(
         'absolute flex h-16 w-24 cursor-grab flex-col justify-between rounded-xl px-3 py-2 text-left text-xs font-semibold text-white shadow-lg ring-2 ring-black/5 transition focus:outline-none focus:ring-4 focus:ring-red-300',
         color,
-        selected ? 'ring-4 ring-red-400' : warn ? 'shadow-amber-300/50' : active ? 'shadow-emerald-300/50' : 'shadow-slate-200'
+        selected ? 'ring-4 ring-red-400' : isUnconfigured ? 'shadow-amber-300/50' : active ? 'shadow-emerald-300/50' : 'shadow-slate-200'
       )}
       aria-label={module.label}
     >
@@ -211,7 +211,7 @@ type ModuleDetailProps = {
 
 function ModuleDetailPanel({ module, onRotate, onRemove, onLabelChange, onBindingChange }: ModuleDetailProps) {
   const { binding, lastValue, metaValue, lastMessageAt, commandTopic, stateTopic } = useModuleSignal(module?.id ?? '')
-  const { publishCommand, isSending } = useActuatorControl(binding?.stateTopic ?? stateTopic, binding?.commandTopic ?? commandTopic)
+  const { publishCommand, isSending } = useActuatorControl(stateTopic, commandTopic)
 
   if (!module) {
     return (
@@ -350,8 +350,12 @@ function ModuleDetailPanel({ module, onRotate, onRemove, onLabelChange, onBindin
 export function PlantBuilderView() {
   const { state, addModule, updateModule, updateBinding, removeModule, reset } = usePlantStore()
   const [selectedId, setSelectedId] = useState<string | null>(state.modules[0]?.id ?? null)
+  const effectiveSelectedId = useMemo(() => {
+    if (selectedId && state.modules.some((m) => m.id === selectedId)) return selectedId
+    return state.modules[0]?.id ?? null
+  }, [selectedId, state.modules])
 
-  const selectedModule = useMemo(() => state.modules.find((m) => m.id === selectedId), [selectedId, state.modules])
+  const selectedModule = useMemo(() => state.modules.find((m) => m.id === effectiveSelectedId), [effectiveSelectedId, state.modules])
 
   const handleCreate = (type: ModuleType, position: { x: number; y: number }) => {
     const definition = modulePalette.find((m) => m.type === type)
@@ -383,7 +387,7 @@ export function PlantBuilderView() {
         <ModulePalette onAdd={(type) => handleCreate(type, { x: 50, y: 50 })} />
         <PlantCanvas
           modules={state.modules}
-          selectedId={selectedId}
+          selectedId={effectiveSelectedId}
           onSelect={setSelectedId}
           onMove={(id, pos) => updateModule(id, pos)}
           onCreate={handleCreate}

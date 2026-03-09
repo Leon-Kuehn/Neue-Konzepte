@@ -64,7 +64,7 @@ export function PlantStoreProvider({ children }: { children: React.ReactNode }) 
   }, [state])
 
   const addModule: PlantStoreValue['addModule'] = (type, position, rotation = 0 as Rotation, label) => {
-    const id = `${type}-${Date.now()}-${Math.round(Math.random() * 1000)}`
+    const id = typeof crypto !== 'undefined' && 'randomUUID' in crypto ? crypto.randomUUID() : `${type}-${Date.now()}-${Math.round(Math.random() * 1000)}`
     const module: PlacedModule = {
       id,
       type,

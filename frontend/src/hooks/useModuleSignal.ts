@@ -3,6 +3,8 @@ import { usePlantStore } from '../store/plantStore'
 import { useTopicHistory } from './useTopicHistory'
 import { isActiveValue } from '../utils/deviceState'
 
+const RECENT_SIGNAL_TIMEOUT_MS = 12_000
+
 export const useModuleSignal = (moduleId: string) => {
   const { state } = usePlantStore()
   const binding = state.bindings[moduleId]
@@ -20,13 +22,10 @@ export const useModuleSignal = (moduleId: string) => {
 
   const [recent, setRecent] = useState(false)
   useEffect(() => {
-    if (!lastMessageAt) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- MQTT updates kommen außerhalb von React, State wird hier bewusst synchronisiert
-      setRecent(false)
-      return
-    }
+    if (!lastMessageAt) return
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- toggling visual pulse flag based on external MQTT timing
     setRecent(true)
-    const t = setTimeout(() => setRecent(false), 12_000)
+    const t = setTimeout(() => setRecent(false), RECENT_SIGNAL_TIMEOUT_MS)
     return () => clearTimeout(t)
   }, [lastMessageAt])
 

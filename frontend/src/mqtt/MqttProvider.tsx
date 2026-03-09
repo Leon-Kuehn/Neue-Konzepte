@@ -52,7 +52,10 @@ export function MqttProvider({ children }: { children: React.ReactNode }) {
     try {
       const stored = typeof window !== 'undefined' ? window.localStorage.getItem('mqtt-settings') : null
       if (stored) {
-        return { ...mqttConfig, ...JSON.parse(stored) }
+        const parsed = JSON.parse(stored)
+        if (parsed && typeof parsed.url === 'string') {
+          return { ...mqttConfig, ...parsed }
+        }
       }
     } catch (err) {
       console.warn('Konnte MQTT Settings nicht laden', err)
