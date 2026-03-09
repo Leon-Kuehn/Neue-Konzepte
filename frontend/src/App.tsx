@@ -1,9 +1,11 @@
 import './index.css'
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { ResponsiveContainer, LineChart, Line, Tooltip } from 'recharts'
 import { Sidebar } from './components/layout/Sidebar'
 import { Header } from './components/layout/Header'
 import { PlantView } from './components/plant/PlantView'
+import { PlantBuilderView } from './components/plant/PlantBuilderView'
+import { WarehouseView } from './components/warehouse/WarehouseView'
 import { KpiCard } from './components/devices/KpiCard'
 import { SensorCard } from './components/devices/SensorCard'
 import { ActuatorCard } from './components/devices/ActuatorCard'
@@ -13,6 +15,8 @@ import { useMqttContext } from './mqtt/MqttProvider'
 import { actuatorDevices, sensorDevices } from './config/devices'
 import { useDeviceStatus } from './hooks/useDeviceStatus'
 import { getDeviceById, isActiveValue } from './utils/deviceState'
+import { SettingsView } from './components/settings/SettingsView'
+import { useTheme } from './hooks/useTheme'
 
 const formatNumber = (value?: string | number, digits = 1) => {
   if (value === undefined) return '–'
@@ -20,6 +24,8 @@ const formatNumber = (value?: string | number, digits = 1) => {
   if (Number.isNaN(numeric)) return String(value)
   return numeric.toFixed(digits)
 }
+
+type TabKey = 'overview' | 'builder' | 'warehouse' | 'status' | 'settings'
 
 const MiniHistory = ({
   title,
@@ -63,6 +69,8 @@ const MiniHistory = ({
 
 function App() {
   const { status, lastMessageAt } = useMqttContext()
+  const { theme } = useTheme()
+  const [activeTab, setActiveTab] = useState<TabKey>('builder')
 
   const sensorFallback =
     sensorDevices[0] ??
@@ -105,60 +113,91 @@ function App() {
     rotaryStatus.state,
   ])
 
+  const tabs = [
+    { key: 'overview', label: 'Overview' },
+    { key: 'builder', label: 'Plant Builder' },
+    { key: 'warehouse', label: 'Warehouse' },
+    { key: 'status', label: 'MQTT & Status' },
+    { key: 'settings', label: 'Settings' },
+  ] as const satisfies { key: TabKey; label: string }[]
+
   return (
-    <div className="flex bg-slate-50">
-      <Sidebar />
+    <div className="flex bg-slate-50" data-theme={theme}>
+      <Sidebar active={activeTab} onSelect={(key) => setActiveTab(key as TabKey)} />
       <main className="min-h-screen flex-1 px-4 pb-16 lg:ml-64 lg:px-8">
         <Header status={status} lastMessageAt={lastMessageAt} />
 
-        <PlantView />
+        <div className="mb-6 flex flex-wrap gap-2">
+          {tabs.map((tab) => (
+            <button
+              key={tab.key}
+              onClick={() => setActiveTab(tab.key)}
+              className={`rounded-full px-4 py-2 text-sm font-semibold shadow-sm transition ${
+                activeTab === tab.key ? 'bg-red-600 text-white' : 'bg-white text-slate-700 hover:bg-red-50'
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
 
-        <section id="overview" className="mt-10 space-y-4">
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-            <KpiCard title="Temperatur" value={formatNumber(temperatureStatus.lastValue)} unit="°C" helper="dhbw/iot/sensors/temperature" />
-            <KpiCard title="Bodenfeuchte" value={formatNumber(soilStatus.lastValue)} unit="%" helper="dhbw/iot/sensors/soil" />
-            <KpiCard title="Energieverbrauch" value={formatNumber(energyStatus.lastValue)} unit="kWh" helper="dhbw/iot/sensors/energy" icon="energy" />
-            <KpiCard title="Aktive Aktoren" value={activeActuators} unit="" tone="neutral" helper="Status via .../state Topics" />
-          </div>
-          <div className="grid gap-4 md:grid-cols-2">
-            <MiniHistory title="Verlauf Temperatur" unit="°C" history={temperatureStatus.valueHistory.map((h) => ({ value: h.value, timestamp: h.timestamp }))} />
-            <MiniHistory title="Verlauf Luftfeuchte" unit="%" history={humidityStatus.valueHistory.map((h) => ({ value: h.value, timestamp: h.timestamp }))} />
-          </div>
-        </section>
+        {activeTab === 'overview' && (
+          <div className="space-y-10">
+            <PlantView />
 
-        <section id="sensors" className="mt-10 space-y-4">
-          <div className="flex items-baseline justify-between">
-            <div>
-              <p className="text-sm font-medium text-slate-500">Sensoren</p>
-              <h3 className="text-2xl font-semibold text-slate-900">Live-Werte &amp; Historie</h3>
-            </div>
-          </div>
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {sensorDevices.map((sensor) => (
-              <SensorCard key={sensor.id} sensor={sensor} />
-            ))}
-          </div>
-        </section>
+            <section className="space-y-4">
+              <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+                <KpiCard title="Temperatur" value={formatNumber(temperatureStatus.lastValue)} unit="°C" helper="dhbw/iot/sensors/temperature" />
+                <KpiCard title="Bodenfeuchte" value={formatNumber(soilStatus.lastValue)} unit="%" helper="dhbw/iot/sensors/soil" />
+                <KpiCard title="Energieverbrauch" value={formatNumber(energyStatus.lastValue)} unit="kWh" helper="dhbw/iot/sensors/energy" icon="energy" />
+                <KpiCard title="Aktive Aktoren" value={activeActuators} unit="" tone="neutral" helper="Status via .../state Topics" />
+              </div>
+              <div className="grid gap-4 md:grid-cols-2">
+                <MiniHistory title="Verlauf Temperatur" unit="°C" history={temperatureStatus.valueHistory.map((h) => ({ value: h.value, timestamp: h.timestamp }))} />
+                <MiniHistory title="Verlauf Luftfeuchte" unit="%" history={humidityStatus.valueHistory.map((h) => ({ value: h.value, timestamp: h.timestamp }))} />
+              </div>
+            </section>
 
-        <section id="actuators" className="mt-10 space-y-4">
-          <div className="flex items-baseline justify-between">
-            <div>
-              <p className="text-sm font-medium text-slate-500">Aktoren</p>
-              <h3 className="text-2xl font-semibold text-slate-900">Steuerung &amp; States</h3>
-            </div>
-            <p className="text-xs text-slate-500">Kommandos werden an .../set Topics gesendet, States via .../state gelesen.</p>
-          </div>
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {actuatorDevices.map((actuator) => (
-              <ActuatorCard key={actuator.id} actuator={actuator} />
-            ))}
-          </div>
-        </section>
+            <section className="space-y-4">
+              <div className="flex items-baseline justify-between">
+                <div>
+                  <p className="text-sm font-medium text-slate-500">Sensoren</p>
+                  <h3 className="text-2xl font-semibold text-slate-900">Live-Werte &amp; Historie</h3>
+                </div>
+              </div>
+              <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                {sensorDevices.map((sensor) => (
+                  <SensorCard key={sensor.id} sensor={sensor} />
+                ))}
+              </div>
+            </section>
 
-        <section id="system" className="mt-10 space-y-4">
-          <SystemStatusCard />
-          <MessageLog />
-        </section>
+            <section className="space-y-4">
+              <div className="flex items-baseline justify-between">
+                <div>
+                  <p className="text-sm font-medium text-slate-500">Aktoren</p>
+                  <h3 className="text-2xl font-semibold text-slate-900">Steuerung &amp; States</h3>
+                </div>
+                <p className="text-xs text-slate-500">Kommandos werden an .../set Topics gesendet, States via .../state gelesen.</p>
+              </div>
+              <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                {actuatorDevices.map((actuator) => (
+                  <ActuatorCard key={actuator.id} actuator={actuator} />
+                ))}
+              </div>
+            </section>
+          </div>
+        )}
+
+        {activeTab === 'builder' && <PlantBuilderView />}
+        {activeTab === 'warehouse' && <WarehouseView />}
+        {activeTab === 'status' && (
+          <section className="space-y-4">
+            <SystemStatusCard />
+            <MessageLog />
+          </section>
+        )}
+        {activeTab === 'settings' && <SettingsView />}
       </main>
     </div>
   )

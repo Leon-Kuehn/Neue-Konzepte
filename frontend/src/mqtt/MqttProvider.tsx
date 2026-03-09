@@ -20,6 +20,8 @@ type MqttContextValue = {
   messageLog: MqttMessage[]
   subscribe: (topic: string, handler: SubscribeHandler) => () => void
   publish: (topic: string, payload: string | number | Record<string, unknown>, options?: IClientPublishOptions) => Promise<void>
+  config: typeof mqttConfig
+  setConfig: (config: typeof mqttConfig) => void
 }
 
 const MqttContext = createContext<MqttContextValue | undefined>(undefined)
@@ -46,13 +48,27 @@ export function MqttProvider({ children }: { children: React.ReactNode }) {
   const [status, setStatus] = useState<ConnectionStatus>('connecting')
   const [messageLog, setMessageLog] = useState<MqttMessage[]>([])
   const [lastMessageAt, setLastMessageAt] = useState<Date>()
+  const [config, setConfigState] = useState(() => {
+    try {
+      const stored = typeof window !== 'undefined' ? window.localStorage.getItem('mqtt-settings') : null
+      if (stored) {
+        const parsed = JSON.parse(stored)
+        if (parsed && typeof parsed.url === 'string') {
+          return { ...mqttConfig, ...parsed }
+        }
+      }
+    } catch (err) {
+      console.warn('Konnte MQTT Settings nicht laden', err)
+    }
+    return mqttConfig
+  })
   const clientRef = useRef<MqttClient | null>(null)
 
   useEffect(() => {
-    const client = mqtt.connect(mqttConfig.url, {
+    const client = mqtt.connect(config.url, {
       reconnectPeriod: 3000,
-      username: mqttConfig.username,
-      password: mqttConfig.password,
+      username: config.username,
+      password: config.password,
       clean: true,
       keepalive: 60,
     })
@@ -79,7 +95,7 @@ export function MqttProvider({ children }: { children: React.ReactNode }) {
       client.end(true)
       clientRef.current = null
     }
-  }, [])
+  }, [config.password, config.url, config.username])
 
   const subscribe = useCallback(
     (topic: string, handler: SubscribeHandler) => {
@@ -129,8 +145,18 @@ export function MqttProvider({ children }: { children: React.ReactNode }) {
       messageLog,
       publish,
       subscribe,
+      config,
+      setConfig: (cfg: typeof mqttConfig) => {
+        setConfigState(cfg)
+        try {
+          window.localStorage.setItem('mqtt-settings', JSON.stringify(cfg))
+        } catch (err) {
+          console.warn('Konnte MQTT Settings nicht speichern', err)
+        }
+        setMessageLog([])
+      },
     }),
-    [lastMessageAt, messageLog, publish, status, subscribe]
+    [config, lastMessageAt, messageLog, publish, status, subscribe]
   )
 
   return <MqttContext.Provider value={value}>{children}</MqttContext.Provider>

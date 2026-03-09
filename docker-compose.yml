@@ -13,6 +13,7 @@ services:
     restart: unless-stopped
 
   frontend:
+    # React/Vite Digital Twin Builder (Quellcode liegt unter ./frontend)
     build: ./frontend
     working_dir: /app
     ports:
@@ -29,6 +30,7 @@ services:
     command: npm run dev -- --host --port 5173
 
   # backend:
+  #   # Platzhalter für spätere Digital-Twin-API (derzeit ohne Logik)
   #   build: ./backend
   #   working_dir: /app
   #   ports:
