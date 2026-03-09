@@ -1,0 +1,39 @@
+version: '3.9'
+
+services:
+  mosquitto:
+    image: eclipse-mosquitto:latest
+    ports:
+      - '1883:1883'
+      - '9001:9001'
+    volumes:
+      - ./mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf
+      - ./mosquitto/data:/mosquitto/data
+      - ./mosquitto/log:/mosquitto/log
+    restart: unless-stopped
+
+  frontend:
+    build: ./frontend
+    working_dir: /app
+    ports:
+      - '5173:5173'
+    environment:
+      - VITE_MQTT_URL=ws://mosquitto:9001
+      - VITE_MQTT_USERNAME=
+      - VITE_MQTT_PASSWORD=
+    volumes:
+      - ./frontend:/app # Dev bind-mount (overrides image content for hot reload)
+      - /app/node_modules
+    depends_on:
+      - mosquitto
+    command: npm run dev -- --host --port 5173
+
+  # backend:
+  #   build: ./backend
+  #   working_dir: /app
+  #   ports:
+  #     - '3001:3001'
+  #   environment:
+  #     - PORT=3001
+  #   command: npm run start
+  #   profiles: ['backend']
