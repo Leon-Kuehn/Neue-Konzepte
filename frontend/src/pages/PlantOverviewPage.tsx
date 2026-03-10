@@ -35,7 +35,7 @@ export function PlantOverviewPage() {
             try {
               return JSON.parse(payload) as IncomingPayload
             } catch (error) {
-              console.warn('Kann MQTT Payload nicht parsen', error)
+              console.warn('Cannot parse MQTT payload', error)
               return {}
             }
           })()
@@ -71,7 +71,7 @@ export function PlantOverviewPage() {
         await Promise.all(mockPlantComponents.map((component) => subscribe(`plant/${component.id}/status`)))
         setConnectionState('connected')
       } catch (error) {
-        console.warn('MQTT Verbindung fehlgeschlagen (Mock)', error)
+        console.warn('MQTT connection failed (mock)', error)
         setConnectionState('disconnected')
       }
     }

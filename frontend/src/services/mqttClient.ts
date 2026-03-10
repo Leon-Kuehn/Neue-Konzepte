@@ -25,14 +25,14 @@ let connected = false
 type MessageHandler = (topic: string, payload: unknown) => void
 
 let messageHandler: MessageHandler | null = null
-let simulator: number | null = null
+let mockMessageIntervalId: number | null = null
 const subscriptions = new Set<string>()
 
 const stopSimulator = () => {
-  if (simulator !== null && typeof window !== 'undefined') {
-    window.clearInterval(simulator)
+  if (mockMessageIntervalId !== null && typeof window !== 'undefined') {
+    window.clearInterval(mockMessageIntervalId)
   }
-  simulator = null
+  mockMessageIntervalId = null
 }
 
 const emitMockMessage = () => {
@@ -53,7 +53,7 @@ const emitMockMessage = () => {
 const startSimulator = () => {
   if (typeof window === 'undefined') return
   stopSimulator()
-  simulator = window.setInterval(emitMockMessage, 6500)
+  mockMessageIntervalId = window.setInterval(emitMockMessage, 6500)
 }
 
 export const loadMqttSettings = (): MqttSettings => {
@@ -64,7 +64,7 @@ export const loadMqttSettings = (): MqttSettings => {
       return { ...defaultMqttSettings, ...parsed }
     }
   } catch (error) {
-    console.warn('Konnte MQTT Einstellungen nicht laden', error)
+    console.warn('Could not load MQTT settings', error)
   }
   return defaultMqttSettings
 }
@@ -76,7 +76,7 @@ export const persistMqttSettings = (settings: MqttSettings) => {
       window.localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings))
     }
   } catch (error) {
-    console.warn('Konnte MQTT Einstellungen nicht speichern', error)
+    console.warn('Could not save MQTT settings', error)
   }
 }
 

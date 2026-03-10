@@ -79,3 +79,9 @@ svg [data-component-id]:hover {
   stroke-width: 3px;
   transform: translateZ(0);
 }
+
+.plant-svg-container svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}

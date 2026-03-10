@@ -1,4 +1,4 @@
-export type PlantComponentType = 'sensor' | 'actuator' | 'segment' | 'station' | string
+export type PlantComponentType = 'sensor' | 'actuator' | 'segment' | 'station'
 
 export type PlantComponentStatus = 'on' | 'off'
 

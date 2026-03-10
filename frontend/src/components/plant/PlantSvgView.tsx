@@ -1,7 +1,6 @@
-import { type ComponentType, type SVGProps, useEffect, useMemo, useRef } from 'react'
+import { useEffect, useRef } from 'react'
 import type { PlantComponent } from '../../types/plant'
-// @ts-expect-error – vite/react plugin enables ?react for SVGs
-import PlantSvg from '../../../../svg/TopDown.drawio.svg?react'
+import plantSvgMarkup from '../../../../svg/TopDown.drawio.svg?raw'
 
 type PlantSvgViewProps = {
   components: PlantComponent[]
@@ -22,10 +21,11 @@ const highlightSvgElement = (root: SVGSVGElement | null, selectedId?: string) =>
 
 export function PlantSvgView({ components, selectedId, onSelect }: PlantSvgViewProps) {
   const svgRef = useRef<SVGSVGElement | null>(null)
-  const SvgComponent = useMemo(() => PlantSvg as unknown as ComponentType<SVGProps<SVGSVGElement>>, [])
+  const containerRef = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {
-    const svgEl = svgRef.current
+    const svgEl = containerRef.current?.querySelector('svg') as SVGSVGElement | null
+    svgRef.current = svgEl
     if (!svgEl) return
     const handleClick = (event: Event) => {
       const target = event.target as HTMLElement
@@ -41,6 +41,7 @@ export function PlantSvgView({ components, selectedId, onSelect }: PlantSvgViewP
   }, [onSelect])
 
   useEffect(() => {
+    svgRef.current = containerRef.current?.querySelector('svg') as SVGSVGElement | null
     highlightSvgElement(svgRef.current, selectedId)
   }, [selectedId])
 
@@ -68,7 +69,13 @@ export function PlantSvgView({ components, selectedId, onSelect }: PlantSvgViewP
       <div className="relative overflow-hidden rounded-3xl border border-slate-100 bg-gradient-to-br from-white via-slate-50 to-slate-100 p-4 shadow-card">
         <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_top_left,rgba(198,0,31,0.05),transparent_45%),radial-gradient(circle_at_bottom_right,rgba(79,70,229,0.05),transparent_40%)]" />
         <div className="relative">
-          <SvgComponent ref={svgRef} className="h-full w-full" role="img" aria-label="Top-Down Anlagenübersicht" />
+          <div
+            ref={containerRef}
+            className="plant-svg-container"
+            role="img"
+            aria-label="Top-Down Anlagenübersicht"
+            dangerouslySetInnerHTML={{ __html: plantSvgMarkup }}
+          />
         </div>
       </div>
 
