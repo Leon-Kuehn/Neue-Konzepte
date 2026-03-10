@@ -1,41 +1,40 @@
-version: '3.9'
-
 services:
-  mosquitto:
-    image: eclipse-mosquitto:latest
-    ports:
-      - '1883:1883'
-      - '9001:9001'
-    volumes:
-      - ./mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf
-      - ./mosquitto/data:/mosquitto/data
-      - ./mosquitto/log:/mosquitto/log
+  db:
+    image: postgres:16-alpine
     restart: unless-stopped
-
-  frontend:
-    # React/Vite Digital Twin Builder (Quellcode liegt unter ./frontend)
-    build: ./frontend
-    working_dir: /app
-    ports:
-      - '5173:5173'
     environment:
-      - VITE_MQTT_URL=ws://mosquitto:9001
-      - VITE_MQTT_USERNAME=
-      - VITE_MQTT_PASSWORD=
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: iot_plant
+    ports:
+      - "5432:5432"
     volumes:
-      - ./frontend:/app # Dev bind-mount (overrides image content for hot reload)
-      - /app/node_modules
-    depends_on:
-      - mosquitto
-    command: npm run dev -- --host --port 5173
+      - pgdata:/var/lib/postgresql/data
 
-  # backend:
-  #   # Platzhalter für spätere Digital-Twin-API (derzeit ohne Logik)
-  #   build: ./backend
-  #   working_dir: /app
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      - db
+    ports:
+      - "3000:3000"
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@db:5432/iot_plant?schema=public
+
+  # Uncomment to run Prisma Studio for database inspection:
+  # prisma-studio:
+  #   build:
+  #     context: ./backend
+  #     dockerfile: Dockerfile
+  #   command: npx prisma studio --port 5555
+  #   depends_on:
+  #     - db
   #   ports:
-  #     - '3001:3001'
+  #     - "5555:5555"
   #   environment:
-  #     - PORT=3001
-  #   command: npm run start
-  #   profiles: ['backend']
+  #     DATABASE_URL: postgresql://postgres:postgres@db:5432/iot_plant?schema=public
+
+volumes:
+  pgdata:

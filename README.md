@@ -1,95 +1,69 @@
-# DHBW IoT Monitoring Dashboard – Digital Twin Builder
+# IoT Plant Admin
 
-MQTT-basiertes IoT-Dashboard (React/Vite/TypeScript) mit DHBW-Layout, Digital-Twin-Plant-Builder, Hochregallager-Ansicht sowie Docker-Setup inkl. Mosquitto (WebSocket).
+A web application for monitoring and managing an IoT logistics plant. Built with React + TypeScript (frontend) and NestJS + Prisma + PostgreSQL (backend).
 
-## Projektstruktur
+## Project Structure
 
 ```
-frontend/   # React/Vite App (Plant Builder, Warehouse, Dashboard, MQTT-Integration)
-backend/    # Platzhalter (später API/Gateway), einfacher Node-Server (derzeit auskommentiert)
-mosquitto/  # Mosquitto-Konfig, Daten, Logs (WebSocket aktiviert)
-docker-compose.yml
+├── frontend/          # React + TypeScript + Vite (MUI)
+│   ├── src/
+│   │   ├── components/    # Reusable UI components
+│   │   ├── pages/         # Page components (PlantOverview, MqttSettings)
+│   │   ├── services/      # MQTT client service
+│   │   ├── types/         # TypeScript interfaces & mock data
+│   │   └── svg/           # Plant top-down SVG
+│   └── package.json
+├── backend/           # NestJS + Prisma + PostgreSQL
+│   ├── src/               # NestJS application source
+│   ├── prisma/            # Prisma schema
+│   ├── Dockerfile         # Multi-stage Docker build
+│   └── package.json
+├── docker-compose.yml # Backend + PostgreSQL services
+└── svg/               # Original SVG source files
 ```
 
-## Schnellstart (Frontend)
+## Running the Frontend
 
 ```bash
 cd frontend
 npm install
-cp .env.example .env   # MQTT-URL anpassen (Standard: ws://mosquitto:9001)
-npm run dev            # http://localhost:5173
+npm run dev
 ```
 
-## Docker / Docker-Compose
+The app runs at [http://localhost:5173](http://localhost:5173).
+
+### Pages
+
+| Route    | Description                                         |
+| -------- | --------------------------------------------------- |
+| `/plant` | Plant overview with interactive SVG, tiles & details |
+| `/mqtt`  | MQTT broker connection settings                     |
+
+## Running the Backend + PostgreSQL (Docker)
 
 ```bash
-docker compose up --build
-# Frontend: http://localhost:5173 (Vite Dev-Server)
-# MQTT WebSocket Broker: ws://localhost:9001  (im Compose-Netz: ws://mosquitto:9001)
-# Backend-Platzhalter: optional (siehe docker-compose.yml, auskommentiert)
+# From the project root
+docker compose up -d
 ```
 
-Mosquitto-Konfiguration: `mosquitto/mosquitto.conf` (WebSocket Port 9001, anonyme Verbindung nur für lokale Entwicklung).
+This starts:
 
-## Wichtige Pfade (Frontend)
+- **PostgreSQL** on port `5432`
+- **NestJS backend** on port `3000` (health check at `GET /health`)
 
-- MQTT Provider & Hooks: `frontend/src/mqtt/`
-- Geräte-/Topic-Definitionen: `frontend/src/config/devices.ts`
-- Anlagen-Layout (statische Schaltplan-Ansicht): `frontend/src/config/layout.ts`
-- Plant Builder (Canvas, Palette, Module): `frontend/src/components/plant/PlantBuilderView.tsx`, `frontend/src/config/modules.ts`, `frontend/src/store/plantStore.tsx`
-- Hochregallager-Ansicht: `frontend/src/components/warehouse/WarehouseView.tsx`, `frontend/src/config/warehouse.ts`
-- Gerätetypen: `frontend/src/types/devices.ts`, Module-Typen: `frontend/src/types/modules.ts`
-- Klassische Karten & Logs: `frontend/src/components/devices/*`, `frontend/src/components/status/*`, Settings: `frontend/src/components/settings/SettingsView.tsx`
-
-## Navigation / Tabs
-
-- **Overview**: bestehende KPI-Karten, Sensor-/Aktor-Listen, klassische Schaltplan-Ansicht.
-- **Plant Builder**: Digital Twin Canvas mit Palette, Drag & Drop, Rotation, Topic-Bindings.
-- **Warehouse**: Hochregallager-Gitter mit Belegungsstatus, Donut-Chart, History.
-- **MQTT & Status**: Broker-Status, Heartbeat, Message-Log.
-- **Settings**: MQTT-URL/User/Passwort setzen, Layout/Bindings zurücksetzen, Theme-Toggle.
-
-## Plant Builder – digitale Zwillinge
-
-- Palette mit Förderband, Drehteller, Pumpe, Motor, Sensor, NFC-Reader.
-- Drag & Drop auf den Canvas (Raster-Snap), Rotation in 90°-Schritten, frei positionierbar.
-- Detailpanel pro Modul: Anzeigename, Typ (Sensor/Aktor), MQTT-Topics (`stateTopic`, `commandTopic`, `metaTopic`), Live-Status, letzter Wert.
-- Farbcodes: Grün = aktiv/1, Grau = inaktiv/0, Orange = keine Daten/keine Topics. Signal-Dot pulsiert bei neuer MQTT-Message.
-- Aktoren können über das Panel per Button `1/0` an `commandTopic` senden; State kommt von `stateTopic`.
-
-## Hochregallager-Ansicht
-
-- Raster aus Slots (z. B. A1–D4) – jeder Slot lauscht auf sein MQTT-Topic (0/1).
-- Live-Belegung (Farbe + Signal), Statistik (belegt/frei) + Donut-Chart, einfache History der letzten Bewegungen.
-
-## Persistenz der Layouts & Bindings
-
-- Plant-Layout, Positionen, Rotation und Topic-Bindings werden clientseitig in `localStorage` gespeichert (`plant-builder-state-v1`).
-- MQTT-URL/User/Passwort werden ebenfalls im Browser abgelegt, sodass eine spätere Backend- oder Auth-Integration leicht ergänzt werden kann.
-- Reset-Buttons in **Plant Builder** und **Settings** setzen alles auf Default (siehe `frontend/src/config/modules.ts`).
-
-## Geräte & Topics anpassen
-
-1. Klassische Geräte-Listen in `frontend/src/config/devices.ts`.
-2. Plant-Builder-Module + Default-Bindings in `frontend/src/config/modules.ts`.
-3. Warehouse-Slots in `frontend/src/config/warehouse.ts`.
-4. Persistenz erfolgt automatisch; bei Änderungen ggf. im Settings-Tab das Layout zurücksetzen.
-
-## MQTT-Konfiguration
-
-Umgebungsvariablen (`frontend/.env`):
-
-- `VITE_MQTT_URL` (z. B. `ws://mosquitto:9001`)
-- `VITE_MQTT_USERNAME`, `VITE_MQTT_PASSWORD` (optional, vorbereitet für spätere Auth/TLS)
-
-## Tests & Qualität
+### Running Database Migrations (when models are added)
 
 ```bash
-cd frontend
-npm run lint
-npm run build
+cd backend
+npx prisma migrate dev --name init
 ```
 
-## Backend-Platzhalter
+## MQTT
 
-`backend/` enthält einen minimalen Node-HTTP-Server (Port 3001). Docker-Service ist vorbereitet und kann bei Bedarf in `docker-compose.yml` aktiviert werden (Profil `backend`).
+The frontend connects as an MQTT **client** to an external broker (e.g. Mosquitto on a Raspberry Pi) via WebSockets. Configure the broker connection on the `/mqtt` settings page. No broker is bundled with this app.
+
+## Tech Stack
+
+- **Frontend:** React 19, TypeScript, Vite, MUI 7, react-router-dom, mqtt.js
+- **Backend:** NestJS, Prisma, PostgreSQL
+- **Infrastructure:** Docker, Docker Compose
