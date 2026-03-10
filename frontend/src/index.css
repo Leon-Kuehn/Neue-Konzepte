@@ -63,3 +63,19 @@ body {
 [data-theme='dark'] .bg-slate-50 {
   background-color: #111827 !important;
 }
+
+svg [data-component-id] {
+  cursor: pointer;
+  transition: filter 150ms ease, transform 150ms ease, stroke 150ms ease;
+}
+
+svg [data-component-id]:hover {
+  filter: drop-shadow(0 0 12px rgba(198, 0, 31, 0.25));
+}
+
+.component-active {
+  filter: drop-shadow(0 0 14px rgba(198, 0, 31, 0.4));
+  stroke: #c6001f;
+  stroke-width: 3px;
+  transform: translateZ(0);
+}

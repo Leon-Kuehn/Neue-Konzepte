@@ -6,11 +6,11 @@ type SidebarProps = {
 }
 
 const navItems = [
-  { key: 'overview', label: 'Overview' },
+  { key: 'plant-overview', label: 'Plant Overview' },
   { key: 'builder', label: 'Plant Builder' },
   { key: 'warehouse', label: 'Warehouse' },
-  { key: 'status', label: 'MQTT & Status' },
-  { key: 'settings', label: 'Settings' },
+  { key: 'status', label: 'Status & Logs' },
+  { key: 'mqtt-settings', label: 'MQTT Settings' },
 ]
 
 export function Sidebar({ active, onSelect }: SidebarProps) {
