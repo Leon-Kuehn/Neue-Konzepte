@@ -1,0 +1,40 @@
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: iot_plant
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      - db
+    ports:
+      - "3000:3000"
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@db:5432/iot_plant?schema=public
+
+  # Uncomment to run Prisma Studio for database inspection:
+  # prisma-studio:
+  #   build:
+  #     context: ./backend
+  #     dockerfile: Dockerfile
+  #   command: npx prisma studio --port 5555
+  #   depends_on:
+  #     - db
+  #   ports:
+  #     - "5555:5555"
+  #   environment:
+  #     DATABASE_URL: postgresql://postgres:postgres@db:5432/iot_plant?schema=public
+
+volumes:
+  pgdata:
