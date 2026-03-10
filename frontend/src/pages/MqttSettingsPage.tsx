@@ -52,10 +52,9 @@ export default function MqttSettingsPage() {
   const handleConnect = async () => {
     setError("");
     try {
-      // Adjust port for TLS
-      const finalSettings = {
+      const finalSettings: MqttSettings = {
         ...settings,
-        protocol: settings.useTls ? ("wss" as const) : ("ws" as const),
+        protocol: settings.useTls ? "wss" : "ws",
       };
       saveSettings(finalSettings);
       await connect(finalSettings);
@@ -82,7 +81,6 @@ export default function MqttSettingsPage() {
         MQTT Settings
       </Typography>
 
-      {/* Status indicator */}
       <Alert
         severity={
           status === "Connected" ? "success" : status === "Error" ? "error" : "info"
@@ -101,6 +99,7 @@ export default function MqttSettingsPage() {
 
           <Stack spacing={2.5} sx={{ mt: 2 }}>
             <TextField
+              id="mqtt-host"
               label="Broker Host"
               value={settings.host}
               onChange={(e) => handleChange("host", e.target.value)}
@@ -110,6 +109,7 @@ export default function MqttSettingsPage() {
             />
 
             <TextField
+              id="mqtt-port"
               label="Port"
               type="number"
               value={settings.port}
@@ -119,6 +119,7 @@ export default function MqttSettingsPage() {
             />
 
             <TextField
+              id="mqtt-protocol"
               label="Protocol"
               select
               value={settings.protocol}
@@ -131,6 +132,7 @@ export default function MqttSettingsPage() {
             </TextField>
 
             <TextField
+              id="mqtt-client-id"
               label="Client ID"
               value={settings.clientId}
               onChange={(e) => handleChange("clientId", e.target.value)}
@@ -139,6 +141,7 @@ export default function MqttSettingsPage() {
             />
 
             <TextField
+              id="mqtt-username"
               label="Username (optional)"
               value={settings.username}
               onChange={(e) => handleChange("username", e.target.value)}
@@ -147,6 +150,7 @@ export default function MqttSettingsPage() {
             />
 
             <TextField
+              id="mqtt-password"
               label="Password (optional)"
               type="password"
               value={settings.password}
@@ -161,8 +165,7 @@ export default function MqttSettingsPage() {
                   checked={settings.useTls}
                   onChange={(e) => {
                     const tls = e.target.checked;
-                    handleChange("useTls", tls);
-                    // Auto-update protocol and port
+                    // Protokoll + Port gemeinsam umschalten
                     setSettings((prev) => ({
                       ...prev,
                       useTls: tls,

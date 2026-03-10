@@ -8,10 +8,10 @@ interface Props {
 export default function ComponentDetails({ component }: Props) {
   if (!component) {
     return (
-      <Card sx={{ height: "100%" }}>
+      <Card sx={{ height: "100%", overflow: "auto" }}>
         <CardContent>
           <Typography color="text.secondary" sx={{ textAlign: "center", py: 4 }}>
-            Select a component from the SVG or tile grid to view details.
+            Select a component from the top view or component browser to view details.
           </Typography>
         </CardContent>
       </Card>
@@ -19,7 +19,7 @@ export default function ComponentDetails({ component }: Props) {
   }
 
   return (
-    <Card>
+    <Card sx={{ height: "100%", overflow: "auto" }}>
       <CardContent>
         <Typography variant="h6" fontWeight={700} gutterBottom>
           {component.name}
@@ -36,7 +36,10 @@ export default function ComponentDetails({ component }: Props) {
             <strong>ID:</strong> {component.id}
           </Typography>
           <Typography variant="body2">
-            <strong>Type:</strong> {component.type}
+            <strong>Role:</strong> {component.role}
+          </Typography>
+          <Typography variant="body2">
+            <strong>Category:</strong> {component.category}
           </Typography>
         </Box>
 
@@ -70,6 +73,14 @@ export default function ComponentDetails({ component }: Props) {
         {component.stats.uptimeHours !== undefined && (
           <Typography variant="body2">
             <strong>Uptime:</strong> {component.stats.uptimeHours}h
+          </Typography>
+        )}
+        <Typography variant="body2" sx={{ mt: 0.5 }}>
+          <strong>MQTT Status Topic:</strong> {component.mqttTopics.status}
+        </Typography>
+        {component.mqttTopics.command && (
+          <Typography variant="body2">
+            <strong>MQTT Command Topic:</strong> {component.mqttTopics.command}
           </Typography>
         )}
 

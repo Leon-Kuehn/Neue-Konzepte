@@ -22,6 +22,10 @@ function typeColor(type: string): "primary" | "secondary" | "success" | "warning
   }
 }
 
+function categoryLabel(category: string): string {
+  return category.replace(/-/g, " ");
+}
+
 export default function ComponentTileGrid({ components, selectedId, onSelect }: Props) {
   return (
     <Grid container spacing={2}>
@@ -47,7 +51,7 @@ export default function ComponentTileGrid({ components, selectedId, onSelect }: 
                 {comp.id}
               </Typography>
               <Box sx={{ display: "flex", gap: 0.5, flexWrap: "wrap", mt: 1 }}>
-                <Chip label={comp.type} size="small" color={typeColor(comp.type)} variant="outlined" />
+                <Chip label={categoryLabel(comp.category)} size="small" color={typeColor(comp.role)} variant="outlined" />
                 <Chip
                   label={comp.status.toUpperCase()}
                   size="small"
