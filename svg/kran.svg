@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="120" height="400" viewBox="0 0 120 400">
+  <!-- Nur Rahmen, innen durchsichtig -->
+  <rect x="10" y="5" rx="10" ry="10" width="100" height="390"
+        fill="none" stroke="#00a35c" stroke-width="3"/>
+
+  <!-- Vertikale Schienen -->
+  <rect x="18" y="25" width="6" height="350"
+        fill="none" stroke="#b0b0b0" stroke-width="1.2"/>
+  <rect x="96" y="25" width="6" height="350"
+        fill="none" stroke="#b0b0b0" stroke-width="1.2"/>
+
+  <!-- Querträger -->
+  <rect x="24" y="120" width="72" height="18"
+        fill="none" stroke="#00a35c" stroke-width="2"/>
+
+  <!-- Laufwagen -->
+  <rect x="48" y="116" width="24" height="26" rx="4"
+        fill="#c9f7df" stroke="#00a35c" stroke-width="2"/>
+
+  <!-- Hubseil -->
+  <line x1="72" y1="142" x2="95" y2="180"
+        stroke="#00a35c" stroke-width="3"/>
+
+  <!-- Magnet / Greifer -->
+  <circle cx="98" cy="184" r="10"
+          fill="#00a35c"/>
+  <circle cx="98" cy="184" r="5"
+          fill="#fdfdfd"/>
+</svg>

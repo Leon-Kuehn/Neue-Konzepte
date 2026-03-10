@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="360" height="150" viewBox="0 0 360 150">
+  <!-- Hintergrund -->
+  <rect x="5" y="5" rx="10" ry="10" width="350" height="140"
+        fill="#111111" stroke="#ffffff" stroke-width="2"/>
+
+  <!-- Titel -->
+  <text x="25" y="30" fill="#ffffff" font-family="Arial, sans-serif"
+        font-size="16" font-weight="bold">
+    Sensor-Legende
+  </text>
+
+  <!-- Induktiv -->
+  <rect x="25" y="45" rx="10" ry="10" width="70" height="24"
+        fill="none" stroke="#00A0E0" stroke-width="2"/>
+  <circle cx="43" cy="57" r="6"
+          fill="none" stroke="#00A0E0" stroke-width="2"/>
+  <line x1="51" y1="57" x2="85" y2="57"
+        stroke="#00A0E0" stroke-width="2" stroke-linecap="round"/>
+  <text x="110" y="60" fill="#ffffff" font-family="Arial, sans-serif" font-size="13">
+    Induktiver Sensor
+  </text>
+
+  <!-- RFID -->
+  <rect x="25" y="80" rx="10" ry="10" width="70" height="24"
+        fill="none" stroke="#6A5BFF" stroke-width="2"/>
+  <path d="M40 92 C42 90 42 94 44 92"
+        fill="none" stroke="#6A5BFF" stroke-width="2" stroke-linecap="round"/>
+  <path d="M48 92 C50 89 50 95 52 92"
+        fill="none" stroke="#6A5BFF" stroke-width="2" stroke-linecap="round"/>
+  <path d="M56 92 C58 88 58 96 60 92"
+        fill="none" stroke="#6A5BFF" stroke-width="2" stroke-linecap="round"/>
+  <text x="110" y="95" fill="#ffffff" font-family="Arial, sans-serif" font-size="13">
+    RFID-Sensor
+  </text>
+
+  <!-- Optisch -->
+  <rect x="25" y="115" rx="10" ry="10" width="70" height="24"
+        fill="none" stroke="#00B46A" stroke-width="2"/>
+  <circle cx="43" cy="127" r="5" fill="#00B46A"/>
+  <polygon points="51,123 69,119 69,123" fill="#00B46A"/>
+  <polygon points="51,131 69,135 69,131" fill="#00B46A"/>
+  <text x="110" y="130" fill="#ffffff" font-family="Arial, sans-serif" font-size="13">
+    Optischer Sensor
+  </text>
+</svg>

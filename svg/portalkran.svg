@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="120" viewBox="0 0 400 120">
+  <!-- Modulrahmen -->
+  <rect x="5" y="10" rx="10" ry="10" width="390" height="100"
+        fill="#fdfdfd" stroke="#00a35c" stroke-width="3"/>
+
+  <!-- Langer Portalträger -->
+  <rect x="15" y="30" width="370" height="16"
+        fill="#e6ffef" stroke="#00a35c" stroke-width="2"/>
+
+  <!-- Laufwagen (oben drauf, mittig) -->
+  <rect x="185" y="26" width="50" height="24" rx="4"
+        fill="#c9f7df" stroke="#00a35c" stroke-width="2"/>
+
+  <!-- Hubseil -->
+  <line x1="210" y1="50" x2="210" y2="85"
+        stroke="#00a35c" stroke-width="3"/>
+
+  <!-- Magnet / Greifer in Draufsicht -->
+  <circle cx="210" cy="92" r="10"
+          fill="#00a35c"/>
+  <circle cx="210" cy="92" r="5"
+          fill="#fdfdfd"/>
+
+  <!-- Schmale "Schienen" links/rechts (Andeutung Fahrweg) -->
+  <rect x="10" y="54" width="5" height="46"
+        fill="#e0e0e0" stroke="#b0b0b0" stroke-width="1"/>
+  <rect x="385" y="54" width="5" height="46"
+        fill="#e0e0e0" stroke="#b0b0b0" stroke-width="1"/>
+</svg>
