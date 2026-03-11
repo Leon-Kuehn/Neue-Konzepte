@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type ChangeEvent, type MouseEvent } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Alert,
   Button,
@@ -11,16 +12,16 @@ import {
   Slider,
   Stack,
   Chip,
+  Switch,
   Tabs,
   Tab,
   Tooltip,
   Typography,
-  useMediaQuery,
-  useTheme,
+  IconButton as MuiIconButton,
 } from "@mui/material";
 import SettingsSuggestIcon from "@mui/icons-material/SettingsSuggest";
+import CloseIcon from "@mui/icons-material/Close";
 import ComponentDetails from "../components/ComponentDetails";
-import ComponentGroupList from "../components/ComponentGroupList";
 import { mockComponents } from "../types/mockData";
 import type { PlantComponent } from "../types/PlantComponent";
 import {
@@ -29,6 +30,7 @@ import {
   sanitizeHotspotList,
   pixelsToPercent,
   percentToPixels,
+  buildHotspotVisualState,
 } from "../utils/hotspot";
 import {
   loadSettings,
@@ -105,7 +107,9 @@ const SEEDED_HOTSPOTS: Array<
   { id: "input-1", xPercent: 22.62, yPercent: 87.23 },
 ];
 
+// v3 stores numeric xPercent/yPercent, optional radiusPercent, description, and isActive; v2 stored top/left strings.
 const HOTSPOT_STORAGE_KEY = "plant-overview-hotspots-v3";
+const LEGACY_HOTSPOT_STORAGE_KEYS = ["plant-overview-hotspots-v2"];
 
 function buildInitialHotspots(): Hotspot[] {
   const seededById = new Map(SEEDED_HOTSPOTS.map((h) => [h.id, h]));
@@ -118,6 +122,7 @@ function buildInitialHotspots(): Hotspot[] {
       yPercent: seeded?.yPercent ?? 50,
       description: component.name,
       radiusPercent: seeded?.radiusPercent ?? DEFAULT_RADIUS_PERCENT,
+      isActive: component.status === "on",
     };
   });
 }
@@ -126,7 +131,7 @@ function loadInitialHotspots(): Hotspot[] {
   const initial = buildInitialHotspots();
 
   try {
-    const storedRaw = [HOTSPOT_STORAGE_KEY, "plant-overview-hotspots-v2"]
+    const storedRaw = [HOTSPOT_STORAGE_KEY, ...LEGACY_HOTSPOT_STORAGE_KEYS]
       .map((key) => localStorage.getItem(key))
       .filter((value): value is string => Boolean(value));
 
@@ -175,8 +180,7 @@ function categoryLabel(category: string): string {
 }
 
 export default function PlantOverviewPage() {
-  const theme = useTheme();
-  const isDesktop = useMediaQuery(theme.breakpoints.up("lg"));
+  const navigate = useNavigate();
 
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [components, setComponents] = useState<PlantComponent[]>(mockComponents);
@@ -184,6 +188,7 @@ export default function PlantOverviewPage() {
   const [hotspots, setHotspots] = useState<Hotspot[]>(loadInitialHotspots);
   const [editMode, setEditMode] = useState(false);
   const [hotspotRadiusPercent, setHotspotRadiusPercent] = useState<number>(DEFAULT_RADIUS_PERCENT);
+  const [showInactive, setShowInactive] = useState(true);
   const [cursorState, setCursorState] = useState<CursorState | null>(null);
   const importInputRef = useRef<HTMLInputElement | null>(null);
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
@@ -264,6 +269,21 @@ export default function PlantOverviewPage() {
   useEffect(() => {
     localStorage.setItem(HOTSPOT_STORAGE_KEY, JSON.stringify(hotspots));
   }, [hotspots]);
+
+  useEffect(() => {
+    setHotspots((prev) =>
+      prev.map((h) => {
+        const comp = components.find((c) => c.id === h.id);
+        return comp
+          ? {
+              ...h,
+              description: comp.name,
+              isActive: comp.status === "on",
+            }
+          : h;
+      })
+    );
+  }, [components]);
 
   useEffect(() => {
     const updatePopupPosition = () => {
@@ -360,6 +380,7 @@ export default function PlantOverviewPage() {
         xPercent: Number(hotspot.xPercent.toFixed(2)),
         yPercent: Number(hotspot.yPercent.toFixed(2)),
         radiusPercent: hotspot.radiusPercent ?? hotspotRadiusPercent,
+        isActive: Boolean(hotspot.isActive),
       })),
       null,
       2
@@ -467,6 +488,15 @@ export default function PlantOverviewPage() {
                   />
                 </Tooltip>
               )}
+              <Stack direction="row" spacing={0.5} alignItems="center">
+                <Typography variant="caption">Show inactive hotspots</Typography>
+                <Switch
+                  size="small"
+                  checked={showInactive}
+                  onChange={(_, val) => setShowInactive(val)}
+                  inputProps={{ "aria-label": "Toggle inactive hotspots" }}
+                />
+              </Stack>
               <Stack
                 direction="row"
                 spacing={0.75}
@@ -516,6 +546,11 @@ export default function PlantOverviewPage() {
                 borderRadius: 2,
                 overflow: "hidden",
                 boxShadow: "inset 0 0 0 1px rgba(0,0,0,0.05)",
+                "@keyframes pulseHalo": {
+                  "0%": { boxShadow: "0 0 0 4px rgba(227, 6, 19, 0.16)", opacity: 0.9 },
+                  "50%": { boxShadow: "0 0 0 10px rgba(227, 6, 19, 0.04)", opacity: 0.7 },
+                  "100%": { boxShadow: "0 0 0 4px rgba(227, 6, 19, 0.16)", opacity: 0.9 },
+                },
               }}
             >
               <img
@@ -527,59 +562,65 @@ export default function PlantOverviewPage() {
               {hotspots.map((h) => {
                 const comp = components.find((c) => c.id === h.id);
                 const isSelected = selectedId === h.id;
-                let color = "#9e9e9e";
-                if (comp?.online === false) color = "#d32f2f";
-                else if (comp?.status === "on") color = "#2e7d32";
-
+                const visual = buildHotspotVisualState(h, showInactive || editMode);
                 const sizePercent = (h.radiusPercent ?? hotspotRadiusPercent) * 2;
+                const tooltipTitle = (
+                  <Stack spacing={0.25}>
+                    <Typography variant="subtitle2">{comp?.name ?? h.id}</Typography>
+                    <Typography variant="caption">
+                      Status: {comp?.status ?? "unknown"} · {comp?.online ? "Online" : "Offline"}
+                    </Typography>
+                  </Stack>
+                );
 
                 return (
-                  <Box
-                    key={h.id}
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      setSelectedId((prev) => (prev === h.id ? null : h.id));
-                    }}
-                    title={h.description || comp?.name || h.id}
-                    sx={{
-                      position: "absolute",
-                      top: `${h.yPercent}%`,
-                      left: `${h.xPercent}%`,
-                      width: `${sizePercent}%`,
-                      height: `${sizePercent}%`,
-                      borderRadius: "50%",
-                      bgcolor: editMode ? color : "rgba(227, 6, 19, 0.12)",
-                      border: editMode ? "2px solid #fff" : `2px solid rgba(227, 6, 19, 0.6)`,
-                      boxShadow: editMode
-                        ? 2
-                        : isSelected
-                          ? "0 0 0 2px #fff, 0 0 0 6px rgba(227, 6, 19, 0.35)"
-                          : "0 0 0 1px rgba(0,0,0,0.08)",
-                      cursor: "pointer",
-                      transform: "translate(-50%, -50%)",
-                      transition: "all 0.15s ease",
-                      ...(isSelected && {
-                        ...(editMode
-                          ? { boxShadow: 6, transform: "translate(-50%, -50%) scale(1.08)" }
-                          : {
-                              bgcolor: "rgba(227, 6, 19, 0.18)",
-                            }),
-                      }),
-                      "&:hover": {
-                        boxShadow: "0 0 0 2px rgba(227, 6, 19, 0.7)",
-                        bgcolor: "rgba(227, 6, 19, 0.12)",
-                      },
-                    }}
-                    role="button"
-                    tabIndex={0}
-                    aria-label={comp ? `Open details for ${comp.name}` : `Open details for ${h.id}`}
-                    onKeyDown={(event) => {
-                      if (event.key === "Enter" || event.key === " ") {
-                        event.preventDefault();
+                  <Tooltip key={h.id} title={tooltipTitle} arrow disableInteractive>
+                    <Box
+                      onClick={(event) => {
+                        event.stopPropagation();
                         setSelectedId((prev) => (prev === h.id ? null : h.id));
-                      }
-                    }}
-                  />
+                      }}
+                      sx={{
+                        position: "absolute",
+                        top: `${h.yPercent}%`,
+                        left: `${h.xPercent}%`,
+                        width: `${sizePercent}%`,
+                        height: `${sizePercent}%`,
+                        borderRadius: "50%",
+                        transform: "translate(-50%, -50%)",
+                        cursor: "pointer",
+                        opacity: editMode ? 1 : visual.opacity,
+                        border: editMode ? "2px solid #fff" : "1px solid rgba(227,6,19,0.45)",
+                        bgcolor: editMode
+                          ? "rgba(227,6,19,0.65)"
+                          : visual.showHalo
+                            ? "rgba(227, 6, 19, 0.2)"
+                            : "transparent",
+                        boxShadow: visual.showHalo
+                          ? "0 0 0 8px rgba(227, 6, 19, 0.12)"
+                          : "0 0 0 1px rgba(0,0,0,0.05)",
+                        transition: "all 0.18s ease",
+                        animation: visual.animation,
+                        "&:hover": {
+                          opacity: 1,
+                          boxShadow: "0 0 0 8px rgba(227, 6, 19, 0.18)",
+                        },
+                        ...(isSelected && {
+                          boxShadow: "0 0 0 2px #fff, 0 0 0 8px rgba(227, 6, 19, 0.35)",
+                        }),
+                        pointerEvents: editMode || visual.opacity > 0 ? "auto" : "none",
+                      }}
+                      role="button"
+                      tabIndex={0}
+                      aria-label={comp ? `Open details for ${comp.name}` : `Open details for ${h.id}`}
+                      onKeyDown={(event) => {
+                        if (event.key === "Enter" || event.key === " ") {
+                          event.preventDefault();
+                          setSelectedId((prev) => (prev === h.id ? null : h.id));
+                        }
+                      }}
+                    />
+                  </Tooltip>
                 );
               })}
 
@@ -650,7 +691,13 @@ export default function PlantOverviewPage() {
             </Typography>
             <Tabs
               value={tab}
-              onChange={(_, next) => setTab(next as "hidden" | "components")}
+              onChange={(_, next) => {
+                const nextTab = next as "hidden" | "components";
+                setTab(nextTab);
+                if (nextTab === "components") {
+                  navigate("/components");
+                }
+              }}
               textColor="primary"
               indicatorColor="primary"
               variant="scrollable"
@@ -660,19 +707,10 @@ export default function PlantOverviewPage() {
             </Tabs>
           </Stack>
           <Divider sx={{ my: 1 }} />
-          {tab === "components" ? (
-            <ComponentGroupList
-              components={components}
-              selectedId={selectedId}
-              onSelect={setSelectedId}
-              maxHeight={isDesktop ? 360 : 420}
-            />
-          ) : (
-            <Typography variant="body2" color="text.secondary">
-              Component tiles are hidden to keep the top-down view uncluttered. Switch to the Component Browser tab to
-              browse and select parts without covering the map.
-            </Typography>
-          )}
+          <Typography variant="body2" color="text.secondary">
+            Component tiles are hidden to keep the top-down view uncluttered. Switch to the Component Browser tab in the
+            sidebar to browse and select parts without covering the map.
+          </Typography>
         </CardContent>
       </Card>
 
@@ -682,6 +720,11 @@ export default function PlantOverviewPage() {
         onClose={() => setSelectedId(null)}
         PaperProps={{ sx: { width: { xs: 320, sm: 380 }, p: 2 } }}
       >
+        <Box sx={{ display: "flex", justifyContent: "flex-end", mb: 1 }}>
+          <MuiIconButton size="small" onClick={() => setSelectedId(null)} aria-label="Close details">
+            <CloseIcon fontSize="small" />
+          </MuiIconButton>
+        </Box>
         <ComponentDetails component={selectedComponent} />
       </Drawer>
     </Box>

@@ -3,9 +3,10 @@ export type Hotspot = {
   xPercent: number; // 0-100 from left to right
   yPercent: number; // 0-100 from top to bottom
   description: string;
-  radiusPercent?: number; // optional circular radius in percent of image width
+  radiusPercent?: number; // optional circular radius in percent of image width (keeps aspect ratio via CSS percentages)
   widthPercent?: number; // optional rectangular width in percent
   heightPercent?: number; // optional rectangular height in percent
+  isActive?: boolean;
 };
 
 export const DEFAULT_RADIUS_PERCENT = 2;
@@ -79,6 +80,7 @@ export const sanitizeHotspot = (raw: unknown, defaults?: Partial<Hotspot>): Hots
     typeof candidate.description === "string"
       ? candidate.description
       : defaults?.description ?? candidate.id;
+  const isActive = typeof candidate.isActive === "boolean" ? candidate.isActive : defaults?.isActive;
 
   return {
     id: candidate.id,
@@ -88,6 +90,7 @@ export const sanitizeHotspot = (raw: unknown, defaults?: Partial<Hotspot>): Hots
     radiusPercent: radiusPercent ?? undefined,
     widthPercent: widthPercent ?? undefined,
     heightPercent: heightPercent ?? undefined,
+    isActive,
   };
 };
 
@@ -109,4 +112,30 @@ export const sanitizeHotspotList = (
   });
 
   return sanitized;
+};
+
+export type HotspotVisualState = {
+  opacity: number;
+  animation?: string;
+  showHalo: boolean;
+};
+
+export const buildHotspotVisualState = (
+  hotspot: Hotspot,
+  showInactive: boolean
+): HotspotVisualState => {
+  const isActive = Boolean(hotspot.isActive);
+  if (isActive) {
+    return {
+      opacity: 1,
+      animation: "pulseHalo 1.6s ease-in-out infinite",
+      showHalo: true,
+    };
+  }
+
+  return {
+    opacity: showInactive ? 0.32 : 0,
+    animation: undefined,
+    showHalo: false,
+  };
 };

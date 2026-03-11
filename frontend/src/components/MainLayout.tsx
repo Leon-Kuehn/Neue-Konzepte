@@ -22,6 +22,7 @@ const DRAWER_WIDTH = 240;
 
 const navItems = [
   { label: "Plant Overview", path: "/plant", icon: <FactoryIcon /> },
+  { label: "Component Browser", path: "/components", icon: <FactoryIcon /> },
   { label: "MQTT Settings", path: "/mqtt", icon: <SettingsInputAntennaIcon /> },
 ];
 

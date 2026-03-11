@@ -4,6 +4,7 @@ import {
   pixelsToPercent,
   percentToPixels,
   sanitizeHotspotList,
+  buildHotspotVisualState,
 } from "./hotspot";
 
 describe("coordinate conversion", () => {
@@ -18,6 +19,20 @@ describe("coordinate conversion", () => {
     const resized = percentToPixels(xPercent, yPercent, 1280, 720);
     expect(resized.xPx).toBeCloseTo(320);
     expect(resized.yPx).toBeCloseTo(180);
+  });
+
+  it("round-trips across multiple sizes without drift", () => {
+    const sizes = [
+      { w: 500, h: 300 },
+      { w: 1280, h: 720 },
+      { w: 1920, h: 1080 },
+    ];
+    sizes.forEach(({ w, h }) => {
+      const pct = pixelsToPercent(w * 0.42, h * 0.58, w, h);
+      const px = percentToPixels(pct.xPercent, pct.yPercent, w * 1.5, h * 1.5);
+      expect(px.xPx / (w * 1.5)).toBeCloseTo(0.42);
+      expect(px.yPx / (h * 1.5)).toBeCloseTo(0.58);
+    });
   });
 });
 
@@ -48,5 +63,30 @@ describe("hotspot structure", () => {
     const rect = sanitized.find((h) => h.id === "rect");
     expect(rect?.widthPercent).toBe(100);
     expect(rect?.heightPercent).toBe(0);
+  });
+
+  it("computes visual states for active and inactive hotspots", () => {
+    const active = buildHotspotVisualState(
+      { id: "a", xPercent: 10, yPercent: 10, description: "a", isActive: true },
+      false
+    );
+    expect(active.opacity).toBe(1);
+    expect(active.animation).toContain("pulseHalo");
+    expect(active.showHalo).toBe(true);
+
+    const hiddenInactive = buildHotspotVisualState(
+      { id: "b", xPercent: 10, yPercent: 10, description: "b", isActive: false },
+      false
+    );
+    expect(hiddenInactive.opacity).toBe(0);
+    expect(hiddenInactive.animation).toBeUndefined();
+    expect(hiddenInactive.showHalo).toBe(false);
+
+    const shownInactive = buildHotspotVisualState(
+      { id: "c", xPercent: 10, yPercent: 10, description: "c" },
+      true
+    );
+    expect(shownInactive.opacity).toBeGreaterThan(0);
+    expect(shownInactive.animation).toBeUndefined();
   });
 });
