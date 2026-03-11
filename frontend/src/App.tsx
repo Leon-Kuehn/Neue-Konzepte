@@ -4,6 +4,7 @@ import MainLayout from "./components/layout/MainLayout";
 import PlantOverviewPage from "./pages/PlantOverviewPage";
 import MqttSettingsPage from "./pages/MqttSettingsPage";
 import ComponentBrowserPage from "./pages/ComponentBrowserPage";
+import TopDownCanvasDemo from "./playground/konva-demo/TopDownCanvasDemo";
 
 const theme = createTheme({
   palette: {
@@ -25,6 +26,7 @@ export default function App() {
             <Route path="/plant" element={<PlantOverviewPage />} />
             <Route path="/components" element={<ComponentBrowserPage />} />
             <Route path="/mqtt" element={<MqttSettingsPage />} />
+            <Route path="/playground" element={<TopDownCanvasDemo />} />
             <Route path="*" element={<Navigate to="/plant" replace />} />
           </Route>
         </Routes>
