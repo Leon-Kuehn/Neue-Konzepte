@@ -102,8 +102,10 @@ const SEEDED_HOTSPOTS: Array<
   { id: "input-1", xPercent: 22.62, yPercent: 87.23 },
 ];
 
-// v3 stores numeric xPercent/yPercent, optional radiusPercent, description, and isActive; v2 stored top/left strings.
-const HOTSPOT_STORAGE_KEYS = ["plant-overview-hotspots-v3", "plant-overview-hotspots-v2"] as const;
+const HOTSPOT_STORAGE_KEYS = [
+  "plant-overview-hotspots-v3",
+  "plant-overview-hotspots-v2",
+] as const;
 const HOTSPOT_STORAGE_KEY = HOTSPOT_STORAGE_KEYS[0];
 
 function buildInitialHotspots(): Hotspot[] {
@@ -127,18 +129,21 @@ function loadInitialHotspots(): Hotspot[] {
 
   try {
     const storedRaw = HOTSPOT_STORAGE_KEYS
-      .map((key) => localStorage.getItem(key))
+      .map((key) => {
+        if (typeof window === "undefined") return null;
+        return localStorage.getItem(key);
+      })
       .filter((value): value is string => Boolean(value));
 
-    // sanitizeHotspotList understands legacy { top: '12%', left: '34%' } entries and converts them to xPercent/yPercent.
     const stored =
       storedRaw
         .map((raw) =>
           sanitizeHotspotList(JSON.parse(raw), {
             radiusPercent: DEFAULT_RADIUS_PERCENT,
-          })
+          }),
         )
         .find((list) => list.length > 0) ?? [];
+
     if (!stored.length) return initial;
 
     const storedById = new Map(stored.map((item) => [item.id, item]));
@@ -157,8 +162,6 @@ function loadInitialHotspots(): Hotspot[] {
   }
 }
 
-// mergeHotspotsWithInitial removed (unused after disabling import/export)
-
 function categoryLabel(category: string): string {
   return category.replace(/-/g, " ");
 }
@@ -172,15 +175,17 @@ export default function PlantOverviewPage() {
   const [hotspotRadiusPercent] = useState<number>(DEFAULT_RADIUS_PERCENT);
   const [showInactive, setShowInactive] = useState(true);
   const [cursorState, setCursorState] = useState<CursorState | null>(null);
-  // import input removed
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
   const popupRef = useRef<HTMLDivElement | null>(null);
-  const [popupPosition, setPopupPosition] = useState<{ top: number; left: number } | null>(null);
+  const [popupPosition, setPopupPosition] = useState<{ top: number; left: number } | null>(
+    null,
+  );
 
-  const selectedComponent = components.find((c) => c.id === selectedId);
-  const selectedHotspot = selectedId ? hotspots.find((h) => h.id === selectedId) : undefined;
+  const selectedComponent = components.find((c) => c.id === selectedId) ?? null;
+  const selectedHotspot = selectedId
+    ? hotspots.find((h) => h.id === selectedId)
+    : undefined;
 
-  // MQTT auto-connect with saved settings + Live-Update
   useEffect(() => {
     const settings = loadSettings();
     if (!settings) return;
@@ -193,12 +198,11 @@ export default function PlantOverviewPage() {
         if (cancelled) return;
         setMqttConnected(true);
 
-        // Subscribe all configured status topics from mock data.
         const statusTopics = [...new Set(components.map((c) => c.mqttTopics.status))];
         await Promise.all(statusTopics.map((topic) => subscribe(topic)));
 
         const topicToComponentId = new Map(
-          components.map((component) => [component.mqttTopics.status, component.id])
+          components.map((component) => [component.mqttTopics.status, component.id]),
         );
 
         onMessage((topic, payload) => {
@@ -207,13 +211,12 @@ export default function PlantOverviewPage() {
           const fallbackCompId = parts[1];
           const fallbackKind = parts[2];
 
-          const compId = mappedCompId ?? (fallbackKind === "status" ? fallbackCompId : undefined);
+          const compId =
+            mappedCompId ?? (fallbackKind === "status" ? fallbackCompId : undefined);
           if (!compId) return;
 
           try {
             const data = JSON.parse(payload as string);
-            // Erwartetes JSON:
-            // { "status":"on","online":true,"cycles":123,"uptimeHours":10.5 }
 
             setComponents((prev) =>
               prev.map((c) =>
@@ -229,8 +232,8 @@ export default function PlantOverviewPage() {
                         uptimeHours: data.uptimeHours ?? c.stats.uptimeHours,
                       },
                     }
-                  : c
-              )
+                  : c,
+              ),
             );
           } catch {
             // ignore non-JSON
@@ -248,6 +251,7 @@ export default function PlantOverviewPage() {
   }, [components]);
 
   useEffect(() => {
+    if (typeof window === "undefined") return;
     localStorage.setItem(HOTSPOT_STORAGE_KEY, JSON.stringify(hotspots));
   }, [hotspots]);
 
@@ -262,7 +266,7 @@ export default function PlantOverviewPage() {
               isActive: comp.status === "on",
             }
           : h;
-      })
+      }),
     );
   }, [components]);
 
@@ -283,7 +287,7 @@ export default function PlantOverviewPage() {
         selectedHotspot.xPercent,
         selectedHotspot.yPercent,
         containerWidth,
-        containerHeight
+        containerHeight,
       );
       const popupWidth = popup.offsetWidth;
       const popupHeight = popup.offsetHeight;
@@ -333,7 +337,7 @@ export default function PlantOverviewPage() {
       return;
     }
 
-    if (!editMode || !selectedId) return;
+    if (!selectedId) return;
 
     const pos = getPointerPosition(event);
     setHotspots((prev) =>
@@ -344,8 +348,8 @@ export default function PlantOverviewPage() {
               xPercent: Number(pos.xPercent.toFixed(2)),
               yPercent: Number(pos.yPercent.toFixed(2)),
             }
-          : h
-      )
+          : h,
+      ),
     );
   };
 
@@ -353,7 +357,6 @@ export default function PlantOverviewPage() {
     if (!editMode) return;
     setCursorState(getPointerPosition(event));
   };
-  // export/import and scaling UI removed per request
 
   return (
     <Box
@@ -364,8 +367,6 @@ export default function PlantOverviewPage() {
         height: { lg: "calc(100vh - 110px)" },
       }}
     >
-      {/* Page title removed - controls moved into card header */}
-
       {mqttConnected && (
         <Alert severity="success" sx={{ mb: 2 }}>
           Connected to MQTT broker — receiving live updates.
@@ -390,25 +391,35 @@ export default function PlantOverviewPage() {
               alignItems={{ xs: "flex-start", md: "center" }}
               sx={{ flexWrap: "wrap" }}
             >
-              {/* scaling control removed */}
               {editMode && selectedHotspot && (
                 <Tooltip
-                  title={`Selected: ${selectedHotspot.id} (${selectedHotspot.xPercent.toFixed(2)}%, ${selectedHotspot.yPercent.toFixed(2)}%)`}
+                  title={`Selected: ${selectedHotspot.id} (${selectedHotspot.xPercent.toFixed(
+                    2,
+                  )}%, ${selectedHotspot.yPercent.toFixed(2)}%)`}
                 >
                   <Chip
                     label={`Sel: ${selectedHotspot.id}`}
                     size="small"
                     color="primary"
-                    sx={{ maxWidth: 200, "& .MuiChip-label": { overflow: "hidden", textOverflow: "ellipsis" } }}
+                    sx={{
+                      maxWidth: 200,
+                      "& .MuiChip-label": { overflow: "hidden", textOverflow: "ellipsis" },
+                    }}
                   />
                 </Tooltip>
               )}
               {editMode && cursorState && (
-                <Tooltip title={`Cursor: ${cursorState.xPx.toFixed(0)}px / ${cursorState.yPx.toFixed(0)}px`}>
+                <Tooltip
+                  title={`Cursor: ${cursorState.xPx.toFixed(0)}px / ${cursorState.yPx.toFixed(
+                    0,
+                  )}px`}
+                >
                   <Chip
                     size="small"
                     variant="outlined"
-                    label={`Cur: ${cursorState.xPercent.toFixed(2)}% / ${cursorState.yPercent.toFixed(2)}%`}
+                    label={`Cur: ${cursorState.xPercent.toFixed(
+                      2,
+                    )}% / ${cursorState.yPercent.toFixed(2)}%`}
                   />
                 </Tooltip>
               )}
@@ -428,7 +439,6 @@ export default function PlantOverviewPage() {
                 justifyContent="flex-end"
                 sx={{ flexWrap: "wrap" }}
               >
-                {/* Export/Import removed */}
                 <Tooltip title={editMode ? "Disable calibration" : "Enable calibration"}>
                   <IconButton
                     size="small"
@@ -441,11 +451,18 @@ export default function PlantOverviewPage() {
               </Stack>
             </Stack>
           </Stack>
-          {/* import input removed */}
 
           <Divider sx={{ mb: 1 }} />
 
-          <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", flex: 1, minHeight: 0 }}>
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              flex: 1,
+              minHeight: 0,
+            }}
+          >
             <Box
               ref={mapContainerRef}
               onClick={handleTopViewClick}
@@ -453,9 +470,9 @@ export default function PlantOverviewPage() {
               sx={{
                 position: "relative",
                 width: "100%",
-                maxWidth: "min(100%, calc((100vh - 220px) * 1.6))",
-                aspectRatio: "16 / 10",
+                maxWidth: 1600,            // HIER: Breite der PNG in px
                 maxHeight: "calc(100vh - 220px)",
+                aspectRatio: "1600 / 900", // HIER: Breite / Höhe der PNG
                 cursor: editMode ? "crosshair" : "default",
                 borderRadius: 2,
                 overflow: "hidden",
@@ -465,7 +482,12 @@ export default function PlantOverviewPage() {
               <img
                 src={TopViewPng}
                 alt="Top-down plant view"
-                style={{ width: "100%", height: "100%", objectFit: "contain", display: "block" }}
+                style={{
+                  width: "100%",
+                  height: "100%",
+                  objectFit: "contain",
+                  display: "block",
+                }}
               />
 
               {hotspots.map((h) => {
@@ -477,7 +499,8 @@ export default function PlantOverviewPage() {
                   <Stack spacing={0.25}>
                     <Typography variant="subtitle2">{comp?.name ?? h.id}</Typography>
                     <Typography variant="caption">
-                      Status: {comp?.status ?? "unknown"} · {comp?.online ? "Online" : "Offline"}
+                      Status: {comp?.status ?? "unknown"} ·{" "}
+                      {comp?.online ? "Online" : "Offline"}
                     </Typography>
                   </Stack>
                 );
@@ -499,12 +522,14 @@ export default function PlantOverviewPage() {
                         transform: "translate(-50%, -50%)",
                         cursor: "pointer",
                         opacity: editMode ? 1 : visual.opacity,
-                        border: editMode ? "2px solid #fff" : "1px solid rgba(227,6,19,0.45)",
+                        border: editMode
+                          ? "2px solid #fff"
+                          : "1px solid rgba(227,6,19,0.45)",
                         bgcolor: editMode
                           ? "rgba(227,6,19,0.65)"
                           : visual.showHalo
-                            ? "rgba(227, 6, 19, 0.2)"
-                            : "transparent",
+                          ? "rgba(227, 6, 19, 0.2)"
+                          : "transparent",
                         boxShadow: visual.showHalo
                           ? "0 0 0 8px rgba(227, 6, 19, 0.12)"
                           : "0 0 0 1px rgba(0,0,0,0.05)",
@@ -515,17 +540,24 @@ export default function PlantOverviewPage() {
                           boxShadow: "0 0 0 8px rgba(227, 6, 19, 0.18)",
                         },
                         ...(isSelected && {
-                          boxShadow: "0 0 0 2px #fff, 0 0 0 8px rgba(227, 6, 19, 0.35)",
+                          boxShadow:
+                            "0 0 0 2px #fff, 0 0 0 8px rgba(227, 6, 19, 0.35)",
                         }),
                         pointerEvents: editMode || visual.opacity > 0 ? "auto" : "none",
                       }}
                       role="button"
                       tabIndex={0}
-                      aria-label={comp ? `Open details for ${comp.name}` : `Open details for ${h.id}`}
+                      aria-label={
+                        comp
+                          ? `Open details for ${comp.name}`
+                          : `Open details for ${h.id}`
+                      }
                       onKeyDown={(event) => {
                         if (event.key === "Enter" || event.key === " ") {
                           event.preventDefault();
-                          setSelectedId((prev) => (prev === h.id ? null : h.id));
+                          setSelectedId((prev) =>
+                            prev === h.id ? null : h.id,
+                          );
                         }
                       }}
                     />
@@ -551,27 +583,40 @@ export default function PlantOverviewPage() {
                     zIndex: 3,
                     backdropFilter: "blur(2px)",
                     opacity: popupPosition ? 1 : 0,
-                    transition: "top 0.12s ease, left 0.12s ease, opacity 0.12s ease",
+                    transition:
+                      "top 0.12s ease, left 0.12s ease, opacity 0.12s ease",
                   }}
                 >
                   <Typography variant="subtitle2" fontWeight={700}>
                     {selectedComponent.name}
                   </Typography>
                   <Typography variant="caption" sx={{ opacity: 0.95 }}>
-                    {selectedComponent.id} - {categoryLabel(selectedComponent.category)}
+                    {selectedComponent.id} -{" "}
+                    {categoryLabel(selectedComponent.category)}
                   </Typography>
-                  <Stack direction="row" spacing={0.5} flexWrap="wrap" useFlexGap sx={{ mt: 0.8 }}>
+                  <Stack
+                    direction="row"
+                    spacing={0.5}
+                    flexWrap="wrap"
+                    useFlexGap
+                    sx={{ mt: 0.8 }}
+                  >
                     <Chip
                       label={selectedComponent.status.toUpperCase()}
                       size="small"
-                      color={selectedComponent.status === "on" ? "success" : "default"}
+                      color={
+                        selectedComponent.status === "on" ? "success" : "default"
+                      }
                     />
                     <Chip
                       label={selectedComponent.online ? "Online" : "Offline"}
                       size="small"
                       color={selectedComponent.online ? "success" : "error"}
                       variant="outlined"
-                      sx={{ color: "#fff", borderColor: "rgba(255,255,255,0.45)" }}
+                      sx={{
+                        color: "#fff",
+                        borderColor: "rgba(255,255,255,0.45)",
+                      }}
                     />
                   </Stack>
                   <Typography variant="caption" sx={{ display: "block", mt: 0.8 }}>
@@ -594,11 +639,15 @@ export default function PlantOverviewPage() {
         PaperProps={{ sx: { width: { xs: 320, sm: 380 }, p: 2 } }}
       >
         <Box sx={{ display: "flex", justifyContent: "flex-end", mb: 1 }}>
-          <MuiIconButton size="small" onClick={() => setSelectedId(null)} aria-label="Close details">
+          <MuiIconButton
+            size="small"
+            onClick={() => setSelectedId(null)}
+            aria-label="Close details"
+          >
             <CloseIcon fontSize="small" />
           </MuiIconButton>
         </Box>
-        <ComponentDetails component={selectedComponent} />
+        {selectedComponent && <ComponentDetails component={selectedComponent} />}
       </Drawer>
     </Box>
   );
