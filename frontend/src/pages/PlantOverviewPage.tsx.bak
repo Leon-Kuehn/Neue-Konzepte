@@ -1,12 +1,14 @@
-import { useEffect, useRef, useState, type MouseEvent } from "react";
+import { useEffect, useRef, useState, type ChangeEvent, type MouseEvent } from "react";
 import {
   Alert,
+  Button,
   Box,
   Card,
   CardContent,
   Divider,
   Drawer,
   IconButton,
+  Slider,
   Stack,
   Chip,
   Switch,
@@ -157,7 +159,19 @@ function loadInitialHotspots(): Hotspot[] {
   }
 }
 
-// mergeHotspotsWithInitial removed (unused after disabling import/export)
+function mergeHotspotsWithInitial(base: Hotspot[], incoming: Hotspot[]): Hotspot[] {
+  const incomingById = new Map(incoming.map((item) => [item.id, item]));
+  return base.map((item) => {
+    const incoming = incomingById.get(item.id);
+    if (!incoming) return item;
+    return {
+      ...item,
+      ...incoming,
+      description: incoming.description || item.description,
+      radiusPercent: incoming.radiusPercent ?? item.radiusPercent,
+    };
+  });
+}
 
 function categoryLabel(category: string): string {
   return category.replace(/-/g, " ");
@@ -169,10 +183,10 @@ export default function PlantOverviewPage() {
   const [mqttConnected, setMqttConnected] = useState(false);
   const [hotspots, setHotspots] = useState<Hotspot[]>(loadInitialHotspots);
   const [editMode, setEditMode] = useState(false);
-  const [hotspotRadiusPercent] = useState<number>(DEFAULT_RADIUS_PERCENT);
+  const [hotspotRadiusPercent, setHotspotRadiusPercent] = useState<number>(DEFAULT_RADIUS_PERCENT);
   const [showInactive, setShowInactive] = useState(true);
   const [cursorState, setCursorState] = useState<CursorState | null>(null);
-  // import input removed
+  const importInputRef = useRef<HTMLInputElement | null>(null);
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
   const popupRef = useRef<HTMLDivElement | null>(null);
   const [popupPosition, setPopupPosition] = useState<{ top: number; left: number } | null>(null);
@@ -353,7 +367,47 @@ export default function PlantOverviewPage() {
     if (!editMode) return;
     setCursorState(getPointerPosition(event));
   };
-  // export/import and scaling UI removed per request
+
+  const exportHotspots = () => {
+    const exportPayload = JSON.stringify(
+      hotspots.map((hotspot) => ({
+        ...hotspot,
+        xPercent: Number(hotspot.xPercent.toFixed(2)),
+        yPercent: Number(hotspot.yPercent.toFixed(2)),
+        radiusPercent: hotspot.radiusPercent ?? hotspotRadiusPercent,
+        isActive: Boolean(hotspot.isActive),
+      })),
+      null,
+      2
+    );
+    const blob = new Blob([exportPayload], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "plant-hotspots.json";
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleImportFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+
+    try {
+      const text = await file.text();
+      const parsed = sanitizeHotspotList(JSON.parse(text), {
+        radiusPercent: hotspotRadiusPercent,
+      });
+      if (!parsed.length) return;
+
+      const initial = buildInitialHotspots();
+      const merged = mergeHotspotsWithInitial(initial, parsed);
+      setHotspots(merged);
+    } catch {
+      // Ignore invalid import files.
+    }
+  };
 
   return (
     <Box
@@ -364,7 +418,9 @@ export default function PlantOverviewPage() {
         height: { lg: "calc(100vh - 110px)" },
       }}
     >
-      {/* Page title removed - controls moved into card header */}
+      <Typography variant="h4" fontWeight={700} gutterBottom>
+        Plant Overview
+      </Typography>
 
       {mqttConnected && (
         <Alert severity="success" sx={{ mb: 2 }}>
@@ -390,7 +446,22 @@ export default function PlantOverviewPage() {
               alignItems={{ xs: "flex-start", md: "center" }}
               sx={{ flexWrap: "wrap" }}
             >
-              {/* scaling control removed */}
+              {editMode && (
+                <Box sx={{ minWidth: { xs: "100%", md: 220 } }}>
+                  <Typography variant="caption" color="text.secondary">
+                    Hotspot radius: {hotspotRadiusPercent.toFixed(2)}%
+                  </Typography>
+                  <Slider
+                    size="small"
+                    min={0.5}
+                    max={6}
+                    step={0.25}
+                    value={hotspotRadiusPercent}
+                    onChange={(_, value) => setHotspotRadiusPercent(value as number)}
+                    sx={{ width: { xs: "100%", md: 180 } }}
+                  />
+                </Box>
+              )}
               {editMode && selectedHotspot && (
                 <Tooltip
                   title={`Selected: ${selectedHotspot.id} (${selectedHotspot.xPercent.toFixed(2)}%, ${selectedHotspot.yPercent.toFixed(2)}%)`}
@@ -428,7 +499,12 @@ export default function PlantOverviewPage() {
                 justifyContent="flex-end"
                 sx={{ flexWrap: "wrap" }}
               >
-                {/* Export/Import removed */}
+                <Button size="small" variant="outlined" onClick={exportHotspots}>
+                  Export
+                </Button>
+                <Button size="small" variant="outlined" onClick={() => importInputRef.current?.click()}>
+                  Import
+                </Button>
                 <Tooltip title={editMode ? "Disable calibration" : "Enable calibration"}>
                   <IconButton
                     size="small"
@@ -441,7 +517,13 @@ export default function PlantOverviewPage() {
               </Stack>
             </Stack>
           </Stack>
-          {/* import input removed */}
+          <input
+            ref={importInputRef}
+            type="file"
+            accept="application/json,.json"
+            hidden
+            onChange={handleImportFileChange}
+          />
 
           <Divider sx={{ mb: 1 }} />
 
