@@ -126,12 +126,18 @@ function loadInitialHotspots(): Hotspot[] {
   const initial = buildInitialHotspots();
 
   try {
-    const raw = localStorage.getItem(HOTSPOT_STORAGE_KEY);
-    if (!raw) return initial;
+    const storedRaw = [HOTSPOT_STORAGE_KEY, "plant-overview-hotspots-v2"]
+      .map((key) => localStorage.getItem(key))
+      .filter((value): value is string => Boolean(value));
 
-    const stored = sanitizeHotspotList(JSON.parse(raw), {
-      radiusPercent: DEFAULT_RADIUS_PERCENT,
-    });
+    const stored =
+      storedRaw
+        .map((raw) =>
+          sanitizeHotspotList(JSON.parse(raw), {
+            radiusPercent: DEFAULT_RADIUS_PERCENT,
+          })
+        )
+        .find((list) => list.length > 0) ?? [];
     if (!stored.length) return initial;
 
     const storedById = new Map(stored.map((item) => [item.id, item]));

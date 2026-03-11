@@ -85,7 +85,7 @@ export const sanitizeHotspot = (raw: unknown, defaults?: Partial<Hotspot>): Hots
     xPercent,
     yPercent,
     description,
-    radiusPercent,
+    radiusPercent: radiusPercent ?? undefined,
     widthPercent: widthPercent ?? undefined,
     heightPercent: heightPercent ?? undefined,
   };
