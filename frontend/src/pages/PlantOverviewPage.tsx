@@ -525,7 +525,7 @@ export default function PlantOverviewPage() {
                 if (comp?.online === false) color = "#d32f2f";
                 else if (comp?.status === "on") color = "#2e7d32";
 
-                const diameterPercent = (h.radiusPercent ?? hotspotRadiusPercent) * 2;
+                const sizePercent = (h.radiusPercent ?? hotspotRadiusPercent) * 2;
 
                 return (
                   <Box
@@ -539,8 +539,8 @@ export default function PlantOverviewPage() {
                       position: "absolute",
                       top: `${h.yPercent}%`,
                       left: `${h.xPercent}%`,
-                      width: `${diameterPercent}%`,
-                      height: `${diameterPercent}%`,
+                      width: `${sizePercent}%`,
+                      height: `${sizePercent}%`,
                       borderRadius: "50%",
                       bgcolor: editMode ? color : "rgba(227, 6, 19, 0.12)",
                       border: editMode ? "2px solid #fff" : `2px solid rgba(227, 6, 19, 0.6)`,
