@@ -108,8 +108,10 @@ const SEEDED_HOTSPOTS: Array<
 ];
 
 // v3 stores numeric xPercent/yPercent, optional radiusPercent, description, and isActive; v2 stored top/left strings.
-const HOTSPOT_STORAGE_KEY = "plant-overview-hotspots-v3";
-const LEGACY_HOTSPOT_STORAGE_KEYS = ["plant-overview-hotspots-v2"];
+const HOTSPOT_STORAGE_KEYS = ["plant-overview-hotspots-v3", "plant-overview-hotspots-v2"] as const;
+const HOTSPOT_STORAGE_KEY = HOTSPOT_STORAGE_KEYS[0];
+const TAB_VALUES = ["hidden", "components"] as const;
+type TabValue = (typeof TAB_VALUES)[number];
 
 function buildInitialHotspots(): Hotspot[] {
   const seededById = new Map(SEEDED_HOTSPOTS.map((h) => [h.id, h]));
@@ -131,7 +133,7 @@ function loadInitialHotspots(): Hotspot[] {
   const initial = buildInitialHotspots();
 
   try {
-    const storedRaw = [HOTSPOT_STORAGE_KEY, ...LEGACY_HOTSPOT_STORAGE_KEYS]
+    const storedRaw = HOTSPOT_STORAGE_KEYS
       .map((key) => localStorage.getItem(key))
       .filter((value): value is string => Boolean(value));
 
@@ -194,7 +196,7 @@ export default function PlantOverviewPage() {
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
   const popupRef = useRef<HTMLDivElement | null>(null);
   const [popupPosition, setPopupPosition] = useState<{ top: number; left: number } | null>(null);
-  const [tab, setTab] = useState<"hidden" | "components">("hidden");
+  const [tab, setTab] = useState<TabValue>("hidden");
 
   const selectedComponent = components.find((c) => c.id === selectedId);
   const selectedHotspot = selectedId ? hotspots.find((h) => h.id === selectedId) : undefined;
@@ -546,11 +548,6 @@ export default function PlantOverviewPage() {
                 borderRadius: 2,
                 overflow: "hidden",
                 boxShadow: "inset 0 0 0 1px rgba(0,0,0,0.05)",
-                "@keyframes pulseHalo": {
-                  "0%": { boxShadow: "0 0 0 4px rgba(227, 6, 19, 0.16)", opacity: 0.9 },
-                  "50%": { boxShadow: "0 0 0 10px rgba(227, 6, 19, 0.04)", opacity: 0.7 },
-                  "100%": { boxShadow: "0 0 0 4px rgba(227, 6, 19, 0.16)", opacity: 0.9 },
-                },
               }}
             >
               <img
@@ -692,10 +689,12 @@ export default function PlantOverviewPage() {
             <Tabs
               value={tab}
               onChange={(_, next) => {
-                const nextTab = next as "hidden" | "components";
-                setTab(nextTab);
-                if (nextTab === "components") {
-                  navigate("/components");
+                if (TAB_VALUES.includes(next as TabValue)) {
+                  const nextTab = next as TabValue;
+                  setTab(nextTab);
+                  if (nextTab === "components") {
+                    navigate("/components");
+                  }
                 }
               }}
               textColor="primary"
