@@ -16,7 +16,7 @@ import {
 } from "@mui/material";
 import SettingsSuggestIcon from "@mui/icons-material/SettingsSuggest";
 import CloseIcon from "@mui/icons-material/Close";
-import ComponentDetails from "../components/ComponentDetails";
+import ComponentDetails from "../components/domain/ComponentDetails";
 import { mockComponents } from "../types/mockData";
 import type { PlantComponent } from "../types/PlantComponent";
 import {
@@ -27,6 +27,7 @@ import {
   percentToPixels,
   buildHotspotVisualState,
 } from "../utils/hotspot";
+import { categoryLabel } from "../utils/categoryLabel";
 import {
   loadSettings,
   connect,
@@ -160,10 +161,6 @@ function loadInitialHotspots(): Hotspot[] {
   } catch {
     return initial;
   }
-}
-
-function categoryLabel(category: string): string {
-  return category.replace(/-/g, " ");
 }
 
 export default function PlantOverviewPage() {

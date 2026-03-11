@@ -1,6 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ThemeProvider, createTheme, CssBaseline } from "@mui/material";
-import MainLayout from "./components/MainLayout";
+import MainLayout from "./components/layout/MainLayout";
 import PlantOverviewPage from "./pages/PlantOverviewPage";
 import MqttSettingsPage from "./pages/MqttSettingsPage";
 import ComponentBrowserPage from "./pages/ComponentBrowserPage";

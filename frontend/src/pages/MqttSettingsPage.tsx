@@ -12,6 +12,7 @@ import {
   Alert,
   Stack,
 } from "@mui/material";
+import PageHeader from "../components/common/PageHeader";
 import type { MqttSettings, ConnectionStatus } from "../types/MqttSettings";
 import {
   connect,
@@ -77,9 +78,7 @@ export default function MqttSettingsPage() {
 
   return (
     <Box>
-      <Typography variant="h4" fontWeight={700} gutterBottom>
-        MQTT Settings
-      </Typography>
+      <PageHeader>MQTT Settings</PageHeader>
 
       <Alert
         severity={
