@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { Box, Card, CardContent, Divider, Typography, Drawer, IconButton } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
-import ComponentGroupList from "../components/ComponentGroupList";
-import ComponentDetails from "../components/ComponentDetails";
+import ComponentGroupList from "../components/domain/ComponentGroupList";
+import ComponentDetails from "../components/domain/ComponentDetails";
+import PageHeader from "../components/common/PageHeader";
 import { mockComponents } from "../types/mockData";
 import type { PlantComponent } from "../types/PlantComponent";
 
@@ -13,9 +14,7 @@ export default function ComponentBrowserPage() {
 
   return (
     <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-      <Typography variant="h4" fontWeight={700}>
-        Component Browser
-      </Typography>
+      <PageHeader gutterBottom={false}>Component Browser</PageHeader>
 
       <Card>
         <CardContent sx={{ pb: 1 }}>

@@ -1,5 +1,6 @@
 import { Card, CardContent, Typography, Divider, Chip, Box } from "@mui/material";
-import type { PlantComponent } from "../types/PlantComponent";
+import type { PlantComponent } from "../../types/PlantComponent";
+import { OnlineChip } from "../common/StatusChips";
 
 interface Props {
   component: PlantComponent | undefined;
@@ -55,11 +56,7 @@ export default function ComponentDetails({ component }: Props) {
             color={component.status === "on" ? "success" : "default"}
             size="small"
           />
-          <Chip
-            label={component.online ? "Online" : "Offline"}
-            color={component.online ? "success" : "error"}
-            size="small"
-          />
+          <OnlineChip online={component.online} />
         </Box>
         <Typography variant="body2" sx={{ mb: 0.5 }}>
           <strong>Last Changed:</strong>{" "}

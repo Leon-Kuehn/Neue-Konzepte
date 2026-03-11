@@ -12,7 +12,8 @@ import {
   Typography,
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import type { Category, PlantComponent } from "../types/PlantComponent";
+import type { Category, PlantComponent } from "../../types/PlantComponent";
+import { StatusChip, OnlineChip } from "../common/StatusChips";
 
 type GroupDefinition = {
   category: Category;
@@ -137,17 +138,8 @@ export default function ComponentGroupList({
                         secondary={
                           <Stack direction="row" spacing={0.5} useFlexGap flexWrap="wrap" sx={{ mt: 0.5 }}>
                             <Chip label={component.id} size="small" variant="outlined" />
-                            <Chip
-                              label={component.status.toUpperCase()}
-                              size="small"
-                              color={component.status === "on" ? "success" : "default"}
-                            />
-                            <Chip
-                              label={component.online ? "Online" : "Offline"}
-                              size="small"
-                              color={component.online ? "success" : "error"}
-                              variant="outlined"
-                            />
+                            <StatusChip status={component.status} />
+                            <OnlineChip online={component.online} />
                           </Stack>
                         }
                       />

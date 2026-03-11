@@ -1,5 +1,7 @@
 import { Card, CardContent, Typography, Chip, Box, Grid } from "@mui/material";
-import type { PlantComponent } from "../types/PlantComponent";
+import type { PlantComponent } from "../../types/PlantComponent";
+import { StatusChip, OnlineChip } from "../common/StatusChips";
+import { categoryLabel } from "../../utils/categoryLabel";
 
 interface Props {
   components: PlantComponent[];
@@ -20,10 +22,6 @@ function typeColor(type: string): "primary" | "secondary" | "success" | "warning
     default:
       return "secondary";
   }
-}
-
-function categoryLabel(category: string): string {
-  return category.replace(/-/g, " ");
 }
 
 export default function ComponentTileGrid({ components, selectedId, onSelect }: Props) {
@@ -52,17 +50,8 @@ export default function ComponentTileGrid({ components, selectedId, onSelect }: 
               </Typography>
               <Box sx={{ display: "flex", gap: 0.5, flexWrap: "wrap", mt: 1 }}>
                 <Chip label={categoryLabel(comp.category)} size="small" color={typeColor(comp.role)} variant="outlined" />
-                <Chip
-                  label={comp.status.toUpperCase()}
-                  size="small"
-                  color={comp.status === "on" ? "success" : "default"}
-                />
-                <Chip
-                  label={comp.online ? "Online" : "Offline"}
-                  size="small"
-                  color={comp.online ? "success" : "error"}
-                  variant="outlined"
-                />
+                <StatusChip status={comp.status} />
+                <OnlineChip online={comp.online} />
               </Box>
             </CardContent>
           </Card>

@@ -17,6 +17,7 @@ import {
 import MenuIcon from "@mui/icons-material/Menu";
 import FactoryIcon from "@mui/icons-material/Factory";
 import SettingsInputAntennaIcon from "@mui/icons-material/SettingsInputAntenna";
+import ScienceIcon from "@mui/icons-material/Science";
 
 const DRAWER_WIDTH = 240;
 
@@ -24,6 +25,7 @@ const navItems = [
   { label: "Plant Overview", path: "/plant", icon: <FactoryIcon /> },
   { label: "Component Browser", path: "/components", icon: <FactoryIcon /> },
   { label: "MQTT Settings", path: "/mqtt", icon: <SettingsInputAntennaIcon /> },
+  { label: "Konva Playground", path: "/playground", icon: <ScienceIcon /> },
 ];
 
 export default function MainLayout() {

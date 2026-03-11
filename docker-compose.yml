@@ -23,6 +23,16 @@ services:
     environment:
       DATABASE_URL: postgresql://postgres:postgres@db:5432/iot_plant?schema=public
 
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "8080:80"
+
   # Uncomment to run Prisma Studio for database inspection:
   # prisma-studio:
   #   build:
