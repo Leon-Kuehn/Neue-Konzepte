@@ -3,7 +3,7 @@ export type Hotspot = {
   xPercent: number; // 0-100 from left to right
   yPercent: number; // 0-100 from top to bottom
   description: string;
-  radiusPercent?: number; // optional circular radius in percent of image width (keeps aspect ratio via CSS percentages)
+  radiusPercent?: number; // optional circular radius in percent of the container (keeps aspect ratio via CSS percentages)
   widthPercent?: number; // optional rectangular width in percent
   heightPercent?: number; // optional rectangular height in percent
   isActive?: boolean;

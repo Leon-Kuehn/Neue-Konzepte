@@ -46,8 +46,8 @@ import TopViewPng from "../png/TopView.png";
 type CursorState = {
   xPx: number;
   yPx: number;
-  xPct: number;
-  yPct: number;
+  xPercent: number;
+  yPercent: number;
 };
 
 const SEEDED_HOTSPOTS: Array<
@@ -137,6 +137,7 @@ function loadInitialHotspots(): Hotspot[] {
       .map((key) => localStorage.getItem(key))
       .filter((value): value is string => Boolean(value));
 
+    // sanitizeHotspotList understands legacy { top: '12%', left: '34%' } entries and converts them to xPercent/yPercent.
     const stored =
       storedRaw
         .map((raw) =>
@@ -345,7 +346,7 @@ export default function PlantOverviewPage() {
     const xPx = Math.max(0, Math.min(event.clientX - rect.left, rect.width));
     const yPx = Math.max(0, Math.min(event.clientY - rect.top, rect.height));
     const { xPercent, yPercent } = pixelsToPercent(xPx, yPx, rect.width, rect.height);
-    return { xPx, yPx, xPct: xPercent, yPct: yPercent };
+    return { xPx, yPx, xPercent, yPercent };
   };
 
   const handleTopViewClick = (event: MouseEvent<HTMLDivElement>) => {
@@ -362,8 +363,8 @@ export default function PlantOverviewPage() {
         h.id === selectedId
           ? {
               ...h,
-              xPercent: Number(pos.xPct.toFixed(2)),
-              yPercent: Number(pos.yPct.toFixed(2)),
+              xPercent: Number(pos.xPercent.toFixed(2)),
+              yPercent: Number(pos.yPercent.toFixed(2)),
             }
           : h
       )
@@ -486,7 +487,7 @@ export default function PlantOverviewPage() {
                   <Chip
                     size="small"
                     variant="outlined"
-                    label={`Cur: ${cursorState.xPct.toFixed(2)}% / ${cursorState.yPct.toFixed(2)}%`}
+                    label={`Cur: ${cursorState.xPercent.toFixed(2)}% / ${cursorState.yPercent.toFixed(2)}%`}
                   />
                 </Tooltip>
               )}
@@ -707,8 +708,8 @@ export default function PlantOverviewPage() {
           </Stack>
           <Divider sx={{ my: 1 }} />
           <Typography variant="body2" color="text.secondary">
-            Component tiles are hidden to keep the top-down view uncluttered. Switch to the Component Browser tab in the
-            sidebar to browse and select parts without covering the map.
+            Component tiles are hidden to keep the top-down view uncluttered. Use the Component Browser entry in the
+            left sidebar navigation to browse and select parts without covering the map.
           </Typography>
         </CardContent>
       </Card>
