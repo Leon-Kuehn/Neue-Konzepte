@@ -1,0 +1,309 @@
+{
+  "hotspots": [
+    {
+      "id": "input-station-1",
+      "name": "Input Station 1",
+      "iconId": "input-station",
+      "layer": 1,
+      "iconSize": 200,
+      "rotation": 0,
+      "stateSource": {
+        "type": "local"
+      },
+      "x": 100,
+      "y": 1800,
+      "initialState": "on",
+      "action": { "type": "toggleState" },
+      "ariaLabel": "Input Station 1"
+    },
+    {
+      "id": "conveyor-1",
+      "name": "Foerderband 1",
+      "iconId": "conveyor-belt",
+      "layer": 0,
+      "iconSize": 500,
+      "rotation": 180,
+      "stateSource": {
+        "type": "local"
+      },
+      "x": 400,
+      "y": 1800,
+      "initialState": "on",
+      "action": { "type": "toggleState" },
+      "ariaLabel": "Foerderband 1"
+    },
+    {
+      "id": "conveyor-2",
+      "name": "Foerderband 2",
+      "iconId": "conveyor-belt",
+      "layer": 0,
+      "iconSize": 500,
+      "rotation": 180,
+      "stateSource": {
+        "type": "local"
+      },
+      "x": 850,
+      "y": 1800,
+      "initialState": "on",
+      "action": { "type": "toggleState" },
+      "ariaLabel": "Foerderband 2"
+    },
+    {
+      "id": "conveyor-3",
+      "name": "Foerderband 3",
+      "iconId": "conveyor-belt",
+      "layer": 0,
+      "iconSize": 500,
+      "rotation": 180,
+      "stateSource": {
+        "type": "local"
+      },
+      "x": 1300,
+      "y": 1800,
+      "initialState": "on",
+      "action": { "type": "toggleState" },
+      "ariaLabel": "Foerderband 3"
+    },
+    {
+      "id": "conveyor-4",
+      "name": "Foerderband 3",
+      "iconId": "conveyor-belt",
+      "layer": 0,
+      "iconSize": 500,
+      "rotation": 180,
+      "stateSource": {
+        "type": "local"
+      },
+      "x": 2200,
+      "y": 1800,
+      "initialState": "on",
+      "action": { "type": "toggleState" },
+      "ariaLabel": "Foerderband 3"
+    },
+    {
+      "id": "conveyor-5",
+      "name": "Foerderband 3",
+      "iconId": "conveyor-belt",
+      "layer": 0,
+      "iconSize": 500,
+      "rotation": 180,
+      "stateSource": {
+        "type": "local"
+      },
+      "x": 2650,
+      "y": 1800,
+      "initialState": "on",
+      "action": { "type": "toggleState" },
+      "ariaLabel": "Foerderband 3"
+    },
+    {
+      "id": "rotating-conveyor-1",
+      "name": "Drehfoerderband 1",
+      "iconId": "rotating-conveyor",
+      "layer": 0,
+      "direction": "right",
+      "iconSize": 500,
+      "rotation": 0,
+      "stateSource": {
+        "type": "local"
+      },
+      "x": 1750,
+      "y": 1795,
+      "initialState": "on",
+      "action": { "type": "toggleState" },
+      "ariaLabel": "Drehfoerderband 1"
+    },
+    {
+      "id": "ball-loader-1",
+      "name": "Kugellade-Station 1",
+      "iconId": "ball-loader",
+      "layer": 1,
+      "iconSize": 260,
+      "rotation": 180,
+      "stateSource": {
+        "type": "local"
+      },
+      "x": 1200,
+      "y": 1900,
+      "initialState": "on",
+      "action": { "type": "toggleState" },
+      "ariaLabel": "Kugellade-Station 1"
+    },
+    {
+      "id": "ball-loader-2",
+      "name": "Kugellade-Station 2",
+      "iconId": "ball-loader",
+      "layer": 1,
+      "iconSize": 260,
+      "rotation": 180,
+      "stateSource": {
+        "type": "local"
+      },
+      "x": 1300,
+      "y": 1900,
+      "initialState": "on",
+      "action": { "type": "toggleState" },
+      "ariaLabel": "Kugellade-Station 2"
+    },
+    {
+      "id": "ball-loader-3",
+      "name": "Kugellade-Station 3",
+      "iconId": "ball-loader",
+      "layer": 1,
+      "iconSize": 260,
+      "rotation": 180,
+      "stateSource": {
+        "type": "local"
+      },
+      "x": 1400,
+      "y": 1900,
+      "initialState": "on",
+      "action": { "type": "toggleState" },
+      "ariaLabel": "Kugellade-Station 3"
+    },
+    {
+      "id": "inductive-1",
+      "name": "Induktiver Sensor 1",
+      "iconId": "inductive-sensor",
+      "layer": 1,
+      "iconSize": 200,
+      "rotation": 90,
+      "stateSource": {
+        "type": "local"
+      },
+      "x": 400,
+      "y": 1750,
+      "initialState": "on",
+      "action": { "type": "toggleState" },
+      "ariaLabel": "Induktiver Sensor 1"
+    },
+    {
+      "id": "inductive-2",
+      "name": "Induktiver Sensor 2",
+      "iconId": "inductive-sensor",
+      "layer": 1,
+      "iconSize": 200,
+      "rotation": 90,
+      "stateSource": {
+        "type": "local"
+      },
+      "x": 850,
+      "y": 1750,
+      "initialState": "on",
+      "action": { "type": "toggleState" },
+      "ariaLabel": "Induktiver Sensor 2"
+    },
+    {
+      "id": "inductive-3",
+      "name": "Induktiver Sensor 3",
+      "iconId": "inductive-sensor",
+      "layer": 1,
+      "iconSize": 200,
+      "rotation": 90,
+      "stateSource": {
+        "type": "local"
+      },
+      "x": 1200,
+      "y": 1750,
+      "initialState": "on",
+      "action": { "type": "toggleState" },
+      "ariaLabel": "Induktiver Sensor 3"
+    },
+    {
+      "id": "inductive-4",
+      "name": "Induktiver Sensor 4",
+      "iconId": "inductive-sensor",
+      "layer": 1,
+      "iconSize": 200,
+      "rotation": 90,
+      "stateSource": {
+        "type": "local"
+      },
+      "x": 1300,
+      "y": 1750,
+      "initialState": "on",
+      "action": { "type": "toggleState" },
+      "ariaLabel": "Induktiver Sensor 4"
+    },
+    {
+      "id": "inductive-5",
+      "name": "Induktiver Sensor 5",
+      "iconId": "inductive-sensor",
+      "layer": 1,
+      "iconSize": 200,
+      "rotation": 90,
+      "stateSource": {
+        "type": "local"
+      },
+      "x": 1400,
+      "y": 1750,
+      "initialState": "on",
+      "action": { "type": "toggleState" },
+      "ariaLabel": "Induktiver Sensor 5"
+    },
+    {
+      "id": "rfid-1",
+      "name": "RFID Sensor 1",
+      "iconId": "rfid-sensor",
+      "layer": 1,
+      "iconSize": 200,
+      "rotation": 180,
+      "stateSource": {
+        "type": "local"
+      },
+      "x": 350,
+      "y": 1800,
+      "initialState": "on",
+      "action": { "type": "toggleState" },
+      "ariaLabel": "RFID Sensor 1"
+    },
+    {
+      "id": "rfid-2",
+      "name": "RFID Sensor 2",
+      "iconId": "rfid-sensor",
+      "layer": 1,
+      "iconSize": 200,
+      "rotation": 180,
+      "stateSource": {
+        "type": "local"
+      },
+      "x": 1150,
+      "y": 1800,
+      "initialState": "on",
+      "action": { "type": "toggleState" },
+      "ariaLabel": "RFID Sensor 2"
+    },
+    {
+      "id": "rfid-3",
+      "name": "RFID Sensor 2",
+      "iconId": "rfid-sensor",
+      "layer": 1,
+      "iconSize": 200,
+      "rotation": 180,
+      "stateSource": {
+        "type": "local"
+      },
+      "x": 2150,
+      "y": 1800,
+      "initialState": "on",
+      "action": { "type": "toggleState" },
+      "ariaLabel": "RFID Sensor 2"
+    },
+    {
+      "id": "lightbarrier-1",
+      "name": "Lichtschranke 1",
+      "iconId": "lightbarrier-sensor",
+      "layer": 1,
+      "iconSize": 200,
+      "rotation": 90,
+      "stateSource": {
+        "type": "local"
+      },
+      "x": 2650,
+      "y": 1800,
+      "initialState": "on",
+      "action": { "type": "toggleState" },
+      "ariaLabel": "Lichtschranke 1"
+    }
+  ]
+}
