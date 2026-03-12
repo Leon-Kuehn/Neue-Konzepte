@@ -10,6 +10,7 @@ import {
   IconButton as MuiIconButton,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
+import { useNavigate } from "react-router-dom";
 import ComponentDetails from "../components/ComponentDetails";
 import { mockComponents } from "../types/mockData";
 import type { PlantComponent } from "../types/PlantComponent";
@@ -23,8 +24,8 @@ import {
 } from "../services/mqttClient";
 import EntryRoutePanel from "../entryRoute/EntryRoutePanel";
 
-
 export default function PlantOverviewPage() {
+  const navigate = useNavigate();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [components, setComponents] = useState<PlantComponent[]>(mockComponents);
   const [mqttConnected, setMqttConnected] = useState(false);
@@ -120,17 +121,68 @@ export default function PlantOverviewPage() {
 
           <Box
             sx={{
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
-              flex: 1,
+              display: "grid",
+              gridTemplateColumns: { xs: "1fr", lg: "1fr 260px" },
+              gap: 2,
+              alignItems: "start",
               minHeight: 0,
             }}
           >
-            <EntryRoutePanel
-              components={components}
-              onSelectComponent={setSelectedId}
-            />
+            <Box sx={{ minWidth: 0 }}>
+              <EntryRoutePanel
+                components={components}
+                onSelectComponent={setSelectedId}
+              />
+            </Box>
+
+            <Box sx={{ minWidth: 0 }}>
+              <Card
+                variant="outlined"
+                sx={{
+                  borderColor: "rgba(227, 6, 19, 0.35)",
+                  bgcolor: "#fff",
+                  cursor: "pointer",
+                  "&:hover": {
+                    borderColor: "#E30613",
+                    boxShadow: "0 0 0 1px rgba(227, 6, 19, 0.25)",
+                  },
+                }}
+                onClick={() => navigate("/hochregallager")}
+              >
+                <CardContent sx={{ p: 1.25, "&:last-child": { pb: 1.25 } }}>
+                  <Typography variant="subtitle2" fontWeight={700} sx={{ mb: 1 }}>
+                    Hochregallager
+                  </Typography>
+
+                  <Box sx={{ border: "1px solid #ddd", borderRadius: 1, overflow: "hidden" }}>
+                    <svg viewBox="0 0 320 190" width="100%" role="img" aria-label="Hochregallager Top Down Kacheln">
+                      <rect x={0} y={0} width={320} height={190} fill="#f2f2f2" />
+                      <rect x={14} y={14} width={292} height={162} fill="#ffffff" stroke="#b9b9b9" strokeWidth={2} rx={6} />
+
+                      {Array.from({ length: 12 }, (_, idx) => {
+                        const col = idx % 4;
+                        const row = Math.floor(idx / 4);
+                        const x = 30 + col * 68;
+                        const y = 28 + row * 48;
+                        return (
+                          <rect
+                            key={`slot-${idx}`}
+                            x={x}
+                            y={y}
+                            width={52}
+                            height={30}
+                            rx={4}
+                            fill="#d8a164"
+                            stroke="#8f5d34"
+                            strokeWidth={1.5}
+                          />
+                        );
+                      })}
+                    </svg>
+                  </Box>
+                </CardContent>
+              </Card>
+            </Box>
           </Box>
         </CardContent>
       </Card>
