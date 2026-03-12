@@ -17,11 +17,13 @@ import {
 import MenuIcon from "@mui/icons-material/Menu";
 import FactoryIcon from "@mui/icons-material/Factory";
 import SettingsInputAntennaIcon from "@mui/icons-material/SettingsInputAntenna";
+import ViewModuleIcon from "@mui/icons-material/ViewModule";
 
 const DRAWER_WIDTH = 240;
 
 const navItems = [
-  { label: "Plant Overview", path: "/plant", icon: <FactoryIcon /> },
+  { label: "Top Down View", path: "/plant", icon: <FactoryIcon /> },
+  { label: "Hochregallager", path: "/hochregallager", icon: <ViewModuleIcon /> },
   { label: "Component Browser", path: "/components", icon: <FactoryIcon /> },
   { label: "MQTT Settings", path: "/mqtt", icon: <SettingsInputAntennaIcon /> },
 ];
