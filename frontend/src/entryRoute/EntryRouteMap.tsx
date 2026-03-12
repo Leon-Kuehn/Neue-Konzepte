@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import type { ComponentType, KeyboardEvent, SVGProps } from "react";
 
 import "./EntryRouteMap.css";
@@ -28,9 +28,8 @@ export type EntryRouteMapProps = {
   className?: string;
 };
 
-const BASE_AREA_WIDTH = 3840;
-const BASE_AREA_HEIGHT = 2160;
 const DEFAULT_ICON_SIZE = 80;
+const VIEWPORT_PADDING = 140;
 
 type IconComponentProps = SVGProps<SVGSVGElement> & {
   direction?: HotspotDirection;
@@ -59,7 +58,40 @@ export default function EntryRouteMap({
   const sortedHotspots = [...MAP_HOTSPOTS].sort(
     (left, right) => (left.layer ?? 2) - (right.layer ?? 2)
   );
-  const aspect = BASE_AREA_HEIGHT / BASE_AREA_WIDTH;
+
+  const viewBounds = useMemo(() => {
+    let minX = Number.POSITIVE_INFINITY;
+    let minY = Number.POSITIVE_INFINITY;
+    let maxX = Number.NEGATIVE_INFINITY;
+    let maxY = Number.NEGATIVE_INFINITY;
+
+    for (const hotspot of sortedHotspots) {
+      const iconSize = hotspot.iconSize ?? DEFAULT_ICON_SIZE;
+      const halfSize = iconSize / 2;
+      minX = Math.min(minX, hotspot.x - halfSize);
+      minY = Math.min(minY, hotspot.y - halfSize);
+      maxX = Math.max(maxX, hotspot.x + halfSize);
+      maxY = Math.max(maxY, hotspot.y + halfSize);
+    }
+
+    if (
+      !Number.isFinite(minX) ||
+      !Number.isFinite(minY) ||
+      !Number.isFinite(maxX) ||
+      !Number.isFinite(maxY)
+    ) {
+      return { x: 0, y: 0, width: 1, height: 1 };
+    }
+
+    const x = Math.max(0, minX - VIEWPORT_PADDING);
+    const y = Math.max(0, minY - VIEWPORT_PADDING);
+    const width = Math.max(1, maxX - minX + VIEWPORT_PADDING * 2);
+    const height = Math.max(1, maxY - minY + VIEWPORT_PADDING * 2);
+
+    return { x, y, width, height };
+  }, [sortedHotspots]);
+
+  const aspect = viewBounds.height / viewBounds.width;
 
   const containerClassName = ["responsive-map-container", className]
     .filter(Boolean)
@@ -107,7 +139,7 @@ export default function EntryRouteMap({
     <div
       className={containerClassName}
       style={{
-        width: "min(100%, calc(100dvh * 1.7777778))",
+        width: "min(100%, 1300px)",
         margin: "0 auto",
         position: "relative",
       }}
@@ -120,7 +152,7 @@ export default function EntryRouteMap({
         }}
       >
         <svg
-          viewBox={`0 0 ${BASE_AREA_WIDTH} ${BASE_AREA_HEIGHT}`}
+          viewBox={`${viewBounds.x} ${viewBounds.y} ${viewBounds.width} ${viewBounds.height}`}
           aria-label="Responsive map"
           style={{
             position: "absolute",
@@ -129,18 +161,14 @@ export default function EntryRouteMap({
             height: "100%",
           }}
         >
-          <image
-            href="/static/map.svg"
-            x={0}
-            y={0}
-            width={BASE_AREA_WIDTH}
-            height={BASE_AREA_HEIGHT}
-            preserveAspectRatio="none"
-          />
-
           <defs>
             <clipPath id="map-work-area-clip">
-              <rect x={0} y={0} width={BASE_AREA_WIDTH} height={BASE_AREA_HEIGHT} />
+              <rect
+                x={viewBounds.x}
+                y={viewBounds.y}
+                width={viewBounds.width}
+                height={viewBounds.height}
+              />
             </clipPath>
           </defs>
 

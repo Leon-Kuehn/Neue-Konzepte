@@ -1,13 +1,17 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Box, Card, CardContent, Divider, Typography, Drawer, IconButton } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import ComponentGroupList from "../components/ComponentGroupList";
 import ComponentDetails from "../components/ComponentDetails";
 import { mockComponents } from "../types/mockData";
 import type { PlantComponent } from "../types/PlantComponent";
+import { getTopDownComponentIds } from "../entryRoute/componentBindings";
 
 export default function ComponentBrowserPage() {
-  const [components] = useState<PlantComponent[]>(mockComponents);
+  const topDownComponentIds = useMemo(() => getTopDownComponentIds(), []);
+  const [components] = useState<PlantComponent[]>(() =>
+    mockComponents.filter((component) => topDownComponentIds.has(component.id))
+  );
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const selectedComponent = components.find((c) => c.id === selectedId);
 

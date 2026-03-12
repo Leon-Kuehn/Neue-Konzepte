@@ -2,27 +2,8 @@ import { useMemo } from "react";
 import EntryRouteMap from "./EntryRouteMap";
 import { MAP_HOTSPOTS } from "./mapHotspots";
 import type { HotspotAction, HotspotState } from "./mapHotspots";
+import { resolveComponentId } from "./componentBindings";
 import type { PlantComponent } from "../types/PlantComponent";
-
-/**
- * Maps SVG hotspot IDs to PlantComponent IDs where they differ.
- * Hotspots whose IDs already match a component ID (e.g. "conveyor-1") need
- * no explicit entry here.
- */
-const HOTSPOT_TO_COMPONENT: Record<string, string> = {
-  "input-station-1": "input-1",
-  "rotating-conveyor-1": "rotating-1",
-  "inductive-1": "ind-sensor-1",
-  "inductive-2": "ind-sensor-2",
-  "inductive-3": "ind-sensor-3",
-  "inductive-4": "ind-sensor-4",
-  "inductive-5": "ind-sensor-5",
-  "lightbarrier-1": "optical-1",
-};
-
-function resolveComponentId(hotspotId: string): string {
-  return HOTSPOT_TO_COMPONENT[hotspotId] ?? hotspotId;
-}
 
 interface EntryRoutePanelProps {
   components: PlantComponent[];

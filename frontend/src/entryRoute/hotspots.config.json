@@ -110,7 +110,7 @@
       "x": 1200,
       "y": 1900,
       "initialState": "on",
-      "action": { "type": "toggleState" },
+      "action": { "type": "openDetails", "target": "pneumatic-1" },
       "ariaLabel": "Kugellade-Station 1"
     },
     {
@@ -124,7 +124,7 @@
       "x": 1300,
       "y": 1900,
       "initialState": "on",
-      "action": { "type": "toggleState" },
+      "action": { "type": "openDetails", "target": "pneumatic-2" },
       "ariaLabel": "Kugellade-Station 2"
     },
     {
@@ -138,7 +138,7 @@
       "x": 1400,
       "y": 1900,
       "initialState": "on",
-      "action": { "type": "toggleState" },
+      "action": { "type": "openDetails", "target": "pneumatic-3" },
       "ariaLabel": "Kugellade-Station 3"
     },
     {
