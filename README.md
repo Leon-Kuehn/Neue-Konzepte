@@ -22,7 +22,7 @@ A web application for monitoring and managing an IoT logistics plant. Built with
 └── svg/               # Original SVG source files
 ```
 
-## Running the Frontend
+## Running the Frontend Locally
 
 ```bash
 cd frontend
@@ -39,17 +39,22 @@ The app runs at [http://localhost:5173](http://localhost:5173).
 | `/plant` | Plant overview with interactive SVG, tiles & details |
 | `/mqtt`  | MQTT broker connection settings                     |
 
-## Running the Backend + PostgreSQL (Docker)
+## Running the Full Stack with Docker
 
 ```bash
 # From the project root
-docker compose up -d
+docker compose up -d --build
 ```
 
 This starts:
 
 - **PostgreSQL** on port `5432`
 - **NestJS backend** on port `3000` (health check at `GET /health`)
+- **Frontend via Nginx** on [https://localhost](https://localhost) and [http://localhost](http://localhost)
+
+The HTTP endpoint redirects to HTTPS automatically. A self-signed development certificate is included under `frontend/nginx/certs/` and can be replaced later with your own certificate and key.
+
+If your browser warns about the certificate, that is expected for the current development setup.
 
 ### Running Database Migrations (when models are added)
 
@@ -66,4 +71,4 @@ The frontend connects as an MQTT **client** to an external broker (e.g. Mosquitt
 
 - **Frontend:** React 19, TypeScript, Vite, MUI 7, react-router-dom, mqtt.js
 - **Backend:** NestJS, Prisma, PostgreSQL
-- **Infrastructure:** Docker, Docker Compose
+- **Infrastructure:** Docker, Docker Compose, Nginx
