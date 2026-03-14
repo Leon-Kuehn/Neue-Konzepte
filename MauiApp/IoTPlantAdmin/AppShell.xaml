@@ -1,0 +1,26 @@
+<?xml version = "1.0" encoding = "UTF-8" ?>
+<Shell xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+       xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+       xmlns:views="clr-namespace:IoTPlantAdmin.Views"
+       x:Class="IoTPlantAdmin.AppShell"
+       Shell.FlyoutBehavior="Disabled"
+       Shell.TabBarBackgroundColor="{StaticResource Primary}"
+       Shell.TabBarForegroundColor="White"
+       Shell.TabBarTitleColor="White"
+       Shell.TabBarUnselectedColor="{StaticResource Gray300}">
+
+    <TabBar>
+        <ShellContent
+            Title="Plant"
+            ContentTemplate="{DataTemplate views:PlantPage}"
+            Icon="{OnPlatform Default='plant_icon.png'}"
+            Route="PlantPage" />
+
+        <ShellContent
+            Title="MQTT Settings"
+            ContentTemplate="{DataTemplate views:MqttSettingsPage}"
+            Icon="{OnPlatform Default='mqtt_icon.png'}"
+            Route="MqttSettingsPage" />
+    </TabBar>
+
+</Shell>

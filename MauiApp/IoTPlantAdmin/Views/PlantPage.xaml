@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:IoTPlantAdmin.ViewModels"
+             x:Class="IoTPlantAdmin.Views.PlantPage"
+             x:DataType="vm:PlantViewModel"
+             Title="Plant Overview"
+             BackgroundColor="{StaticResource Background}">
+
+    <Grid RowDefinitions="Auto,*,Auto">
+
+        <!-- ── Connection status banner ─────────────────── -->
+        <Frame Grid.Row="0"
+               Padding="12"
+               Margin="16,8"
+               CornerRadius="8"
+               BorderColor="{StaticResource Gray400}"
+               BackgroundColor="White">
+            <HorizontalStackLayout Spacing="8">
+                <Label Text="MQTT:"
+                       FontAttributes="Bold"
+                       VerticalOptions="Center" />
+                <Label Text="{Binding MqttConnectionState}"
+                       VerticalOptions="Center"
+                       TextColor="{StaticResource Gray600}" />
+            </HorizontalStackLayout>
+        </Frame>
+
+        <!-- ── Plant component tiles ────────────────────── -->
+        <RefreshView Grid.Row="1"
+                     Command="{Binding LoadDataCommand}"
+                     IsRefreshing="{Binding IsBusy}">
+            <CollectionView ItemsSource="{Binding Components}"
+                            SelectionMode="Single"
+                            SelectedItem="{Binding SelectedComponent, Mode=TwoWay}"
+                            ItemsLayout="VerticalGrid, 2">
+                <CollectionView.EmptyView>
+                    <StackLayout VerticalOptions="Center"
+                                 HorizontalOptions="Center"
+                                 Padding="32">
+                        <!-- TODO: Replace with interactive SVG plant map
+                             similar to frontend/src/entryRoute/EntryRouteMap.tsx -->
+                        <Label Text="&#x1F331;"
+                               FontSize="64"
+                               HorizontalOptions="Center" />
+                        <Label Text="No plant components loaded."
+                               FontSize="16"
+                               HorizontalTextAlignment="Center"
+                               TextColor="{StaticResource Gray600}" />
+                        <Label Text="Pull to refresh or check your connection."
+                               FontSize="13"
+                               HorizontalTextAlignment="Center"
+                               TextColor="{StaticResource Gray400}" />
+                    </StackLayout>
+                </CollectionView.EmptyView>
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="x:String">
+                        <!-- Using a simple Frame-based tile card -->
+                        <Frame Margin="8"
+                               Padding="12"
+                               CornerRadius="12"
+                               BackgroundColor="White"
+                               BorderColor="{StaticResource Gray200}"
+                               HasShadow="True">
+                            <StackLayout Spacing="4">
+                                <Label Text="{Binding Name}"
+                                       FontSize="15"
+                                       FontAttributes="Bold"
+                                       LineBreakMode="TailTruncation" />
+                                <Label FontSize="12"
+                                       TextColor="{StaticResource Gray600}">
+                                    <Label.FormattedText>
+                                        <FormattedString>
+                                            <Span Text="{Binding Category}" />
+                                            <Span Text=" · " />
+                                            <Span Text="{Binding Role}" />
+                                        </FormattedString>
+                                    </Label.FormattedText>
+                                </Label>
+                                <HorizontalStackLayout Spacing="6"
+                                                       Margin="0,4,0,0">
+                                    <BoxView WidthRequest="10"
+                                             HeightRequest="10"
+                                             CornerRadius="5"
+                                             Color="{Binding Online, Converter={StaticResource BoolToColorConverter}}" />
+                                    <Label Text="{Binding Status}"
+                                           FontSize="13"
+                                           TextColor="{StaticResource Gray500}" />
+                                </HorizontalStackLayout>
+                            </StackLayout>
+                        </Frame>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+        </RefreshView>
+
+        <!-- ── Error banner ─────────────────────────────── -->
+        <Frame Grid.Row="2"
+               Padding="12"
+               Margin="16,4"
+               CornerRadius="8"
+               BackgroundColor="#FFEBEE"
+               BorderColor="#E53935"
+               IsVisible="{Binding ErrorMessage, Converter={StaticResource IsNotNullConverter}}">
+            <Label Text="{Binding ErrorMessage}"
+                   TextColor="#C62828"
+                   FontSize="13" />
+        </Frame>
+
+    </Grid>
+
+</ContentPage>
