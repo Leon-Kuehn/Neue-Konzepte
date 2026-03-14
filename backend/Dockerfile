@@ -24,6 +24,7 @@ COPY --from=builder /app/dist ./dist
 # Kein generated-Ordner mehr kopieren, der existiert nicht:
 # COPY --from=builder /app/generated ./generated
 COPY --from=builder /app/prisma ./prisma
+COPY --from=builder /app/prisma.config.ts ./prisma.config.ts
 
 EXPOSE 3000
 

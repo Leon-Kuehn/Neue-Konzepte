@@ -11,10 +11,21 @@ export class AppController {
   }
 
   @Get('health')
-  getHealth(): { status: string; timestamp: string } {
+  getHealth(): { status: string } {
     return {
       status: 'ok',
-      timestamp: new Date().toISOString(),
     };
+  }
+
+  @Get('api/health')
+  getApiHealth(): { status: string } {
+    return {
+      status: 'ok',
+    };
+  }
+
+  @Get('api/sensor-data')
+  getSensorData(): [] {
+    return [];
   }
 }
