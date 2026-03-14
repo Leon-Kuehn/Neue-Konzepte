@@ -28,5 +28,9 @@ backend/generated
 *.suo
 *.ntvs*
 *.njsproj
-*.sln
 *.sw?
+
+# .NET / MAUI build artifacts
+MauiApp/**/bin/
+MauiApp/**/obj/
+*.user
