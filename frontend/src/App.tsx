@@ -3,6 +3,8 @@ import { ThemeProvider, createTheme, CssBaseline } from "@mui/material";
 import MainLayout from "./components/MainLayout";
 import PlantOverviewPage from "./pages/PlantOverviewPage";
 import MqttSettingsPage from "./pages/MqttSettingsPage";
+import ComponentBrowserPage from "./pages/ComponentBrowserPage";
+import HighBayStoragePage from "./pages/HighBayStoragePage";
 
 const theme = createTheme({
   palette: {
@@ -22,6 +24,8 @@ export default function App() {
         <Routes>
           <Route element={<MainLayout />}>
             <Route path="/plant" element={<PlantOverviewPage />} />
+            <Route path="/hochregallager" element={<HighBayStoragePage />} />
+            <Route path="/components" element={<ComponentBrowserPage />} />
             <Route path="/mqtt" element={<MqttSettingsPage />} />
             <Route path="*" element={<Navigate to="/plant" replace />} />
           </Route>
