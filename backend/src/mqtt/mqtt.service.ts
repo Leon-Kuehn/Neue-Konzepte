@@ -7,6 +7,9 @@ import {
 import * as mqtt from 'mqtt';
 import { PrismaService } from '../prisma/prisma.service.js';
 
+/** Topics the backend subscribes to. */
+const SUBSCRIBED_TOPICS = ['entry-route/#', 'hochregallager/#', 'plant/#'];
+
 @Injectable()
 export class MqttService implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(MqttService.name);
@@ -17,7 +20,6 @@ export class MqttService implements OnModuleInit, OnModuleDestroy {
   onModuleInit() {
     const brokerUrl =
       process.env.MQTT_BROKER_URL ?? 'mqtt://mosquitto:1883';
-    const topic = process.env.MQTT_TOPIC ?? 'plant/#';
 
     this.client = mqtt.connect(brokerUrl, {
       clientId: `backend-${Math.random().toString(36).substring(2, 10)}`,
@@ -26,14 +28,18 @@ export class MqttService implements OnModuleInit, OnModuleDestroy {
     });
 
     this.client.on('connect', () => {
-      this.logger.log(`Connected to MQTT broker at ${brokerUrl}`);
-      this.client!.subscribe(topic, (err) => {
-        if (err) {
-          this.logger.error(`Failed to subscribe to ${topic}: ${err.message}`);
-        } else {
-          this.logger.log(`Subscribed to topic pattern: ${topic}`);
-        }
-      });
+      this.logger.log('MQTT connected');
+      for (const topic of SUBSCRIBED_TOPICS) {
+        this.client!.subscribe(topic, (err) => {
+          if (err) {
+            this.logger.error(
+              `Failed to subscribe to ${topic}: ${err.message}`,
+            );
+          } else {
+            this.logger.log(`Subscribed to topic pattern: ${topic}`);
+          }
+        });
+      }
     });
 
     this.client.on('message', (receivedTopic, message) => {
@@ -57,9 +63,11 @@ export class MqttService implements OnModuleInit, OnModuleDestroy {
   }
 
   private async handleMessage(topic: string, payload: string): Promise<void> {
-    // Derive componentId from topic: plant/<componentId>/<kind>
-    const parts = topic.split('/');
-    const componentId = parts.length >= 2 ? parts[1] : topic;
+    this.logger.log(`MQTT message received: ${topic}`);
+
+    // Derive componentId from the first segment of the topic.
+    // e.g. "entry-route/status" → "entry-route"
+    const componentId = topic.split('/')[0];
 
     let parsedPayload: unknown;
     try {
@@ -77,6 +85,7 @@ export class MqttService implements OnModuleInit, OnModuleDestroy {
           payload: parsedPayload as any,
         },
       });
+      this.logger.log(`SensorData stored: ${topic}`);
     } catch (err) {
       this.logger.error(
         `Failed to persist MQTT message [${topic}]: ${(err as Error).message}`,

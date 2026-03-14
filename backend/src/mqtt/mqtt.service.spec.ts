@@ -1,0 +1,159 @@
+import { Test, TestingModule } from '@nestjs/testing';
+import { MqttService } from './mqtt.service';
+import { PrismaService } from '../prisma/prisma.service';
+
+// Prevent Jest from loading the actual PrismaService (which pulls in the
+// Prisma-generated ESM client that uses import.meta and can't run in Jest).
+// Using a factory avoids Jest ever touching the real prisma.service.ts file.
+jest.mock('../prisma/prisma.service', () => ({
+  PrismaService: jest.fn(),
+}));
+
+/** Minimal mock for the mqtt client returned by mqtt.connect(). */
+class MockMqttClient {
+  private handlers: Record<string, ((...args: unknown[]) => void)[]> = {};
+
+  on(event: string, handler: (...args: unknown[]) => void) {
+    if (!this.handlers[event]) this.handlers[event] = [];
+    this.handlers[event].push(handler);
+    return this;
+  }
+
+  subscribe(_topic: string, cb: (err: Error | null) => void) {
+    cb(null);
+    return this;
+  }
+
+  end() {
+    return this;
+  }
+
+  /** Helper: trigger a registered event from tests. */
+  emit(event: string, ...args: unknown[]) {
+    for (const handler of this.handlers[event] ?? []) {
+      handler(...args);
+    }
+  }
+}
+
+jest.mock('mqtt', () => ({
+  connect: jest.fn(() => new MockMqttClient()),
+}));
+
+import * as mqttLib from 'mqtt';
+
+describe('MqttService', () => {
+  let service: MqttService;
+  let mockClient: MockMqttClient;
+
+  const mockSensorDataCreate = jest.fn().mockResolvedValue({ id: 1 });
+  const mockPrismaService = {
+    sensorData: {
+      create: mockSensorDataCreate,
+    },
+  } as unknown as PrismaService;
+
+  beforeEach(async () => {
+    jest.clearAllMocks();
+
+    const module: TestingModule = await Test.createTestingModule({
+      providers: [
+        MqttService,
+        { provide: PrismaService, useValue: mockPrismaService },
+      ],
+    }).compile();
+
+    service = module.get<MqttService>(MqttService);
+
+    // Initialise (calls onModuleInit) and capture the mock client
+    service.onModuleInit();
+    mockClient = (mqttLib.connect as jest.Mock).mock.results[0].value as MockMqttClient;
+  });
+
+  afterEach(() => {
+    service.onModuleDestroy();
+  });
+
+  it('should be defined', () => {
+    expect(service).toBeDefined();
+  });
+
+  it('connects to the broker using MQTT_BROKER_URL', () => {
+    process.env.MQTT_BROKER_URL = 'mqtt://test-broker:1883';
+    service.onModuleInit();
+    expect(mqttLib.connect).toHaveBeenCalledWith(
+      'mqtt://test-broker:1883',
+      expect.objectContaining({ reconnectPeriod: 5000 }),
+    );
+    delete process.env.MQTT_BROKER_URL;
+  });
+
+  it('subscribes to entry-route/#, hochregallager/#, and plant/# on connect', () => {
+    const subscribeSpy = jest.spyOn(mockClient, 'subscribe');
+    mockClient.emit('connect');
+
+    const topics = subscribeSpy.mock.calls.map(([t]) => t);
+    expect(topics).toContain('entry-route/#');
+    expect(topics).toContain('hochregallager/#');
+    expect(topics).toContain('plant/#');
+  });
+
+  it('derives componentId from the first topic segment', async () => {
+    mockClient.emit('connect');
+
+    // Simulate a message on entry-route/status
+    mockClient.emit(
+      'message',
+      'entry-route/status',
+      Buffer.from('{"sensor":"entry","value":1}'),
+    );
+
+    // Allow the async handleMessage to complete
+    await new Promise((r) => setTimeout(r, 10));
+
+    expect(mockSensorDataCreate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          componentId: 'entry-route',
+          topic: 'entry-route/status',
+        }),
+      }),
+    );
+  });
+
+  it('stores parsed JSON payload', async () => {
+    mockClient.emit('connect');
+    mockClient.emit(
+      'message',
+      'plant/conveyor-1/telemetry',
+      Buffer.from('{"speed":3.2}'),
+    );
+
+    await new Promise((r) => setTimeout(r, 10));
+
+    expect(mockSensorDataCreate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          componentId: 'plant',
+          payload: { speed: 3.2 },
+        }),
+      }),
+    );
+  });
+
+  it('wraps non-JSON payload in { raw: ... }', async () => {
+    mockClient.emit('connect');
+    mockClient.emit('message', 'hochregallager/door', Buffer.from('OPEN'));
+
+    await new Promise((r) => setTimeout(r, 10));
+
+    expect(mockSensorDataCreate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          componentId: 'hochregallager',
+          payload: { raw: 'OPEN' },
+        }),
+      }),
+    );
+  });
+});
