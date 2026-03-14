@@ -8,8 +8,7 @@ RUN npm ci
 
 COPY . .
 
-# Prisma vorübergehend deaktivieren:
-# RUN npx prisma generate
+RUN npx prisma generate
 RUN npm run build
 
 # Stage 2: Production
@@ -20,9 +19,9 @@ WORKDIR /app
 COPY --from=builder /app/package.json /app/package-lock.json ./
 RUN npm ci --omit=dev
 
+RUN npx prisma generate
+
 COPY --from=builder /app/dist ./dist
-# Kein generated-Ordner mehr kopieren, der existiert nicht:
-# COPY --from=builder /app/generated ./generated
 COPY --from=builder /app/prisma ./prisma
 
 EXPOSE 3000
