@@ -1,5 +1,6 @@
 using IoTPlantAdmin.Models;
 using MQTTnet;
+using MQTTnet.Client;
 using MQTTnet.Protocol;
 
 namespace IoTPlantAdmin.Services;
@@ -27,7 +28,7 @@ public class MqttService : IMqttService, IDisposable
 
             SetState(ConnectionState.Connecting);
 
-            var factory = new MqttClientFactory();
+            var factory = new MqttFactory();
             _client = factory.CreateMqttClient();
 
             // Build the broker URI: ws[s]://host:port/mqtt
