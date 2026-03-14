@@ -23,4 +23,9 @@ export class AppController {
       status: 'ok',
     };
   }
+
+  @Get('api/sensor-data')
+  getSensorData(): [] {
+    return [];
+  }
 }
