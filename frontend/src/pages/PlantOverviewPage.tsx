@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import {
   Alert,
   Box,
@@ -9,6 +9,9 @@ import {
   Typography,
   IconButton as MuiIconButton,
 } from "@mui/material";
+import AddIcon from "@mui/icons-material/Add";
+import RemoveIcon from "@mui/icons-material/Remove";
+import RestartAltIcon from "@mui/icons-material/RestartAlt";
 import CloseIcon from "@mui/icons-material/Close";
 import ComponentDetails from "../components/ComponentDetails";
 import { mockComponents } from "../types/mockData";
@@ -22,6 +25,7 @@ import {
   getClient,
 } from "../services/mqttClient";
 import EntryRoutePanel from "../entryRoute/EntryRoutePanel";
+import type { EntryRouteMapHandle } from "../entryRoute/EntryRouteMap";
 import { useAppPreferences } from "../context/AppPreferencesContext";
 
 export default function PlantOverviewPage() {
@@ -29,6 +33,7 @@ export default function PlantOverviewPage() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [components, setComponents] = useState<PlantComponent[]>(mockComponents);
   const [mqttConnected, setMqttConnected] = useState(false);
+  const mapRef = useRef<EntryRouteMapHandle>(null);
 
   const selectedComponent = components.find((c) => c.id === selectedId) ?? null;
 
@@ -102,7 +107,6 @@ export default function PlantOverviewPage() {
         display: "flex",
         flexDirection: "column",
         gap: 2,
-        height: { lg: "calc(100vh - 110px)" },
       }}
     >
       {mqttConnected && (
@@ -113,9 +117,68 @@ export default function PlantOverviewPage() {
 
       <Card sx={{ width: "100%", display: "flex", flexDirection: "column" }}>
         <CardContent sx={{ pb: 1 }}>
-          <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 1 }}>
-            {t("plant.topDownEntryRoute")}
-          </Typography>
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              mb: 1,
+            }}
+          >
+            <Typography variant="subtitle1" fontWeight={700}>
+              {t("plant.topDownEntryRoute")}
+            </Typography>
+            <Box sx={{ display: "flex", gap: 0.5 }}>
+              <MuiIconButton
+                size="small"
+                onClick={() => mapRef.current?.zoomIn()}
+                aria-label="Zoom in"
+                title="Zoom in"
+                sx={{
+                  border: "1px solid",
+                  borderColor: "divider",
+                  borderRadius: 1,
+                  "&:hover": {
+                    backgroundColor: "action.hover",
+                  },
+                }}
+              >
+                <AddIcon fontSize="small" />
+              </MuiIconButton>
+              <MuiIconButton
+                size="small"
+                onClick={() => mapRef.current?.zoomOut()}
+                aria-label="Zoom out"
+                title="Zoom out"
+                sx={{
+                  border: "1px solid",
+                  borderColor: "divider",
+                  borderRadius: 1,
+                  "&:hover": {
+                    backgroundColor: "action.hover",
+                  },
+                }}
+              >
+                <RemoveIcon fontSize="small" />
+              </MuiIconButton>
+              <MuiIconButton
+                size="small"
+                onClick={() => mapRef.current?.resetView()}
+                aria-label="Reset view"
+                title="Reset view"
+                sx={{
+                  border: "1px solid",
+                  borderColor: "divider",
+                  borderRadius: 1,
+                  "&:hover": {
+                    backgroundColor: "action.hover",
+                  },
+                }}
+              >
+                <RestartAltIcon fontSize="small" />
+              </MuiIconButton>
+            </Box>
+          </Box>
 
           <Divider sx={{ mb: 1 }} />
 
@@ -127,6 +190,7 @@ export default function PlantOverviewPage() {
           >
             <Box sx={{ minWidth: 0 }}>
               <EntryRoutePanel
+                ref={mapRef}
                 components={components}
                 onSelectComponent={setSelectedId}
               />

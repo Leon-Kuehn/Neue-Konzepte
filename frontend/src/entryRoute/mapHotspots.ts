@@ -35,6 +35,8 @@ export interface HotspotConfig {
   layer?: number;
   direction?: HotspotDirection;
   iconSize?: number;
+  iconWidth?: number;
+  iconHeight?: number;
   rotation?: number;
   stateSource?: HotspotStateSource;
   x: number;
@@ -62,6 +64,12 @@ function assertHotspotConfig(config: HotspotsConfigFile): void {
     const hasValidSize =
       hotspot.iconSize === undefined ||
       (Number.isFinite(hotspot.iconSize) && hotspot.iconSize > 0);
+    const hasValidWidth =
+      hotspot.iconWidth === undefined ||
+      (Number.isFinite(hotspot.iconWidth) && hotspot.iconWidth > 0);
+    const hasValidHeight =
+      hotspot.iconHeight === undefined ||
+      (Number.isFinite(hotspot.iconHeight) && hotspot.iconHeight > 0);
     const hasValidRotation =
       hotspot.rotation === undefined || Number.isFinite(hotspot.rotation);
     const hasValidLayer =
@@ -73,11 +81,13 @@ function assertHotspotConfig(config: HotspotsConfigFile): void {
       !isFiniteX ||
       !isFiniteY ||
       !hasValidSize ||
+      !hasValidWidth ||
+      !hasValidHeight ||
       !hasValidRotation ||
       !hasValidLayer
     ) {
       throw new Error(
-        `Hotspot ${hotspot.id || "<missing-id>"} is invalid. id must be set, coordinates must be finite numbers, iconSize must be > 0, rotation must be finite, and layer must be an integer >= 0.`
+        `Hotspot ${hotspot.id || "<missing-id>"} is invalid. id must be set, coordinates must be finite numbers, iconSize/iconWidth/iconHeight must be > 0, rotation must be finite, and layer must be an integer >= 0.`
       );
     }
 
@@ -96,6 +106,8 @@ export const MAP_HOTSPOTS: HotspotConfig[] = rawConfig.hotspots.map((hotspot) =>
   direction: hotspot.direction ?? "left",
   layer: hotspot.layer ?? DEFAULT_LAYER,
   iconSize: hotspot.iconSize ?? DEFAULT_ICON_SIZE,
+  iconWidth: hotspot.iconWidth ?? hotspot.iconSize ?? DEFAULT_ICON_SIZE,
+  iconHeight: hotspot.iconHeight ?? hotspot.iconSize ?? DEFAULT_ICON_SIZE,
   rotation: hotspot.rotation ?? 0,
   stateSource: hotspot.stateSource ?? { type: "local" },
 }));

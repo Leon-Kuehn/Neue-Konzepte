@@ -7,11 +7,16 @@
       "layer": 1,
       "iconSize": 200,
       "rotation": 0,
-      "stateSource": { "type": "values" },
+      "stateSource": {
+        "type": "values"
+      },
       "x": 100,
-      "y": 1800,
+      "y": 1930,
       "initialState": "on",
-      "action": { "type": "openDetails", "target": "input-1" },
+      "action": {
+        "type": "openDetails",
+        "target": "input-station-1-details"
+      },
       "ariaLabel": "Input Station 1"
     },
     {
@@ -21,11 +26,16 @@
       "layer": 0,
       "iconSize": 500,
       "rotation": 180,
-      "stateSource": { "type": "values" },
+      "stateSource": {
+        "type": "values"
+      },
       "x": 400,
-      "y": 1800,
+      "y": 1930,
       "initialState": "on",
-      "action": { "type": "openDetails", "target": "conveyor-1" },
+      "action": {
+        "type": "openDetails",
+        "target": "conveyor-1-details"
+      },
       "ariaLabel": "Foerderband 1"
     },
     {
@@ -35,11 +45,16 @@
       "layer": 0,
       "iconSize": 500,
       "rotation": 180,
-      "stateSource": { "type": "values" },
+      "stateSource": {
+        "type": "values"
+      },
       "x": 850,
-      "y": 1800,
+      "y": 1930,
       "initialState": "on",
-      "action": { "type": "openDetails", "target": "conveyor-2" },
+      "action": {
+        "type": "openDetails",
+        "target": "conveyor-2-details"
+      },
       "ariaLabel": "Foerderband 2"
     },
     {
@@ -49,11 +64,16 @@
       "layer": 0,
       "iconSize": 500,
       "rotation": 180,
-      "stateSource": { "type": "values" },
+      "stateSource": {
+        "type": "values"
+      },
       "x": 1300,
-      "y": 1800,
+      "y": 1930,
       "initialState": "on",
-      "action": { "type": "openDetails", "target": "conveyor-3" },
+      "action": {
+        "type": "openDetails",
+        "target": "conveyor-3-details"
+      },
       "ariaLabel": "Foerderband 3"
     },
     {
@@ -63,11 +83,16 @@
       "layer": 0,
       "iconSize": 500,
       "rotation": 180,
-      "stateSource": { "type": "values" },
+      "stateSource": {
+        "type": "values"
+      },
       "x": 2200,
-      "y": 1800,
+      "y": 1930,
       "initialState": "on",
-      "action": { "type": "openDetails", "target": "conveyor-4" },
+      "action": {
+        "type": "openDetails",
+        "target": "conveyor-4-details"
+      },
       "ariaLabel": "Foerderband 4"
     },
     {
@@ -77,12 +102,188 @@
       "layer": 0,
       "iconSize": 500,
       "rotation": 180,
-      "stateSource": { "type": "values" },
+      "stateSource": {
+        "type": "values"
+      },
       "x": 2650,
-      "y": 1800,
+      "y": 1930,
       "initialState": "on",
-      "action": { "type": "openDetails", "target": "conveyor-5" },
+      "action": {
+        "type": "openDetails",
+        "target": "conveyor-5-details"
+      },
       "ariaLabel": "Foerderband 5"
+    },
+    {
+      "id": "conveyor-6",
+      "name": "Foerderband 6",
+      "iconId": "conveyor-belt",
+      "layer": 0,
+      "iconSize": 500,
+      "rotation": 90,
+      "stateSource": {
+        "type": "values"
+      },
+      "x": 1750,
+      "y": 1480,
+      "initialState": "on",
+      "action": {
+        "type": "openDetails",
+        "target": "conveyor-6-details"
+      },
+      "ariaLabel": "Foerderband 6"
+    },
+    {
+      "id": "conveyor-7",
+      "name": "Foerderband 7",
+      "iconId": "conveyor-belt",
+      "layer": 0,
+      "iconSize": 500,
+      "rotation": 90,
+      "stateSource": {
+        "type": "values"
+      },
+      "x": 1750,
+      "y": 580,
+      "initialState": "on",
+      "action": {
+        "type": "openDetails",
+        "target": "conveyor-7-details"
+      },
+      "ariaLabel": "Foerderband 7"
+    },
+    {
+      "id": "conveyor-8",
+      "name": "Foerderband 8",
+      "iconId": "conveyor-belt",
+      "layer": 0,
+      "iconSize": 500,
+      "rotation": 0,
+      "stateSource": {
+        "type": "values"
+      },
+      "x": 1300,
+      "y": 130,
+      "initialState": "on",
+      "action": {
+        "type": "openDetails",
+        "target": "conveyor-8-details"
+      },
+      "ariaLabel": "Foerderband 8"
+    },
+    {
+      "id": "conveyor-9",
+      "name": "Foerderband 9",
+      "iconId": "conveyor-belt",
+      "layer": 0,
+      "iconSize": 500,
+      "rotation": 0,
+      "stateSource": {
+        "type": "values"
+      },
+      "x": 850,
+      "y": 130,
+      "initialState": "on",
+      "action": {
+        "type": "openDetails",
+        "target": "conveyor-9-details"
+      },
+      "ariaLabel": "Foerderband 9"
+    },
+    {
+      "id": "conveyor-10",
+      "name": "Foerderband 10",
+      "iconId": "conveyor-belt",
+      "layer": 0,
+      "iconSize": 500,
+      "rotation": 0,
+      "stateSource": {
+        "type": "values"
+      },
+      "x": 400,
+      "y": 130,
+      "initialState": "on",
+      "action": {
+        "type": "openDetails",
+        "target": "conveyor-10-details"
+      },
+      "ariaLabel": "Foerderband 10"
+    },
+    {
+      "id": "conveyor-11",
+      "name": "Foerderband 11",
+      "iconId": "conveyor-belt",
+      "layer": 0,
+      "iconSize": 500,
+      "rotation": 180,
+      "stateSource": {
+        "type": "values"
+      },
+      "x": 2200,
+      "y": 130,
+      "initialState": "on",
+      "action": {
+        "type": "openDetails",
+        "target": "conveyor-11-details"
+      },
+      "ariaLabel": "Foerderband 11"
+    },
+    {
+      "id": "conveyor-12",
+      "name": "Foerderband 12",
+      "iconId": "conveyor-belt",
+      "layer": 0,
+      "iconSize": 500,
+      "rotation": 180,
+      "stateSource": {
+        "type": "values"
+      },
+      "x": 2650,
+      "y": 130,
+      "initialState": "on",
+      "action": {
+        "type": "openDetails",
+        "target": "conveyor-12-details"
+      },
+      "ariaLabel": "Foerderband 12"
+    },
+    {
+      "id": "conveyor-13",
+      "name": "Foerderband 13",
+      "iconId": "conveyor-belt",
+      "layer": 0,
+      "iconSize": 500,
+      "rotation": 180,
+      "stateSource": {
+        "type": "values"
+      },
+      "x": 850,
+      "y": 1030,
+      "initialState": "on",
+      "action": {
+        "type": "openDetails",
+        "target": "conveyor-13-details"
+      },
+      "ariaLabel": "Foerderband 13"
+    },
+    {
+      "id": "conveyor-14",
+      "name": "Foerderband 14",
+      "iconId": "conveyor-belt",
+      "layer": 0,
+      "iconSize": 500,
+      "rotation": 180,
+      "stateSource": {
+        "type": "values"
+      },
+      "x": 1300,
+      "y": 1030,
+      "initialState": "on",
+      "action": {
+        "type": "openDetails",
+        "target": "conveyor-14-details"
+      },
+      "ariaLabel": "Foerderband 14"
     },
     {
       "id": "rotating-conveyor-1",
@@ -91,13 +292,58 @@
       "layer": 0,
       "direction": "right",
       "iconSize": 500,
-      "rotation": 0,
-      "stateSource": { "type": "values" },
+      "rotation": 45,
+      "stateSource": {
+        "type": "values"
+      },
       "x": 1750,
-      "y": 1795,
+      "y": 1925,
       "initialState": "on",
-      "action": { "type": "openDetails", "target": "rotating-1" },
+      "action": {
+        "type": "openDetails",
+        "target": "rotating-conveyor-1-details"
+      },
       "ariaLabel": "Drehfoerderband 1"
+    },
+    {
+      "id": "rotating-conveyor-2",
+      "name": "Drehfoerderband 2",
+      "iconId": "rotating-conveyor",
+      "layer": 0,
+      "direction": "right",
+      "iconSize": 500,
+      "rotation": 90,
+      "stateSource": {
+        "type": "values"
+      },
+      "x": 1750,
+      "y": 1030,
+      "initialState": "on",
+      "action": {
+        "type": "openDetails",
+        "target": "rotating-conveyor-2-details"
+      },
+      "ariaLabel": "Drehfoerderband 2"
+    },
+    {
+      "id": "rotating-conveyor-3",
+      "name": "Drehfoerderband 3",
+      "iconId": "rotating-conveyor",
+      "layer": 0,
+      "direction": "right",
+      "iconSize": 500,
+      "rotation": 0,
+      "stateSource": {
+        "type": "values"
+      },
+      "x": 1750,
+      "y": 130,
+      "initialState": "on",
+      "action": {
+        "type": "openDetails",
+        "target": "rotating-conveyor-3-details"
+      },
+      "ariaLabel": "Drehfoerderband 3"
     },
     {
       "id": "ball-loader-1",
@@ -106,11 +352,16 @@
       "layer": 1,
       "iconSize": 260,
       "rotation": 180,
-      "stateSource": { "type": "values" },
+      "stateSource": {
+        "type": "values"
+      },
       "x": 1200,
-      "y": 1900,
+      "y": 2030,
       "initialState": "on",
-      "action": { "type": "openDetails", "target": "pneumatic-1" },
+      "action": {
+        "type": "openDetails",
+        "target": "ball-loader-1-details"
+      },
       "ariaLabel": "Kugellade-Station 1"
     },
     {
@@ -120,11 +371,16 @@
       "layer": 1,
       "iconSize": 260,
       "rotation": 180,
-      "stateSource": { "type": "values" },
+      "stateSource": {
+        "type": "values"
+      },
       "x": 1300,
-      "y": 1900,
+      "y": 2030,
       "initialState": "on",
-      "action": { "type": "openDetails", "target": "pneumatic-2" },
+      "action": {
+        "type": "openDetails",
+        "target": "ball-loader-2-details"
+      },
       "ariaLabel": "Kugellade-Station 2"
     },
     {
@@ -134,12 +390,93 @@
       "layer": 1,
       "iconSize": 260,
       "rotation": 180,
-      "stateSource": { "type": "values" },
+      "stateSource": {
+        "type": "values"
+      },
       "x": 1400,
-      "y": 1900,
+      "y": 2030,
       "initialState": "on",
-      "action": { "type": "openDetails", "target": "pneumatic-3" },
+      "action": {
+        "type": "openDetails",
+        "target": "ball-loader-3-details"
+      },
       "ariaLabel": "Kugellade-Station 3"
+    },
+    {
+      "id": "ball-loader-4",
+      "name": "Kugellade-Station 4",
+      "iconId": "ball-loader",
+      "layer": 1,
+      "iconSize": 260,
+      "rotation": 180,
+      "stateSource": {
+        "type": "values"
+      },
+      "x": 1200,
+      "y": 230,
+      "initialState": "on",
+      "action": {
+        "type": "openDetails",
+        "target": "ball-loader-4-details"
+      },
+      "ariaLabel": "Kugellade-Station 4"
+    },
+    {
+      "id": "ball-loader-5",
+      "name": "Kugellade-Station 5",
+      "iconId": "ball-loader",
+      "layer": 1,
+      "iconSize": 260,
+      "rotation": 180,
+      "stateSource": {
+        "type": "values"
+      },
+      "x": 300,
+      "y": 230,
+      "initialState": "on",
+      "action": {
+        "type": "openDetails",
+        "target": "ball-loader-5-details"
+      },
+      "ariaLabel": "Kugellade-Station 5"
+    },
+    {
+      "id": "ball-loader-6",
+      "name": "Kugellade-Station 6",
+      "iconId": "ball-loader",
+      "layer": 1,
+      "iconSize": 260,
+      "rotation": 180,
+      "stateSource": {
+        "type": "values"
+      },
+      "x": 500,
+      "y": 230,
+      "initialState": "on",
+      "action": {
+        "type": "openDetails",
+        "target": "ball-loader-6-details"
+      },
+      "ariaLabel": "Kugellade-Station 6"
+    },
+    {
+      "id": "inductive-0",
+      "name": "Induktiver Sensor 0",
+      "iconId": "inductive-sensor",
+      "layer": 1,
+      "iconSize": 200,
+      "rotation": 90,
+      "stateSource": {
+        "type": "values"
+      },
+      "x": 100,
+      "y": 1880,
+      "initialState": "on",
+      "action": {
+        "type": "openDetails",
+        "target": "inductive-0-details"
+      },
+      "ariaLabel": "Induktiver Sensor 0"
     },
     {
       "id": "inductive-1",
@@ -148,11 +485,16 @@
       "layer": 1,
       "iconSize": 200,
       "rotation": 90,
-      "stateSource": { "type": "values" },
+      "stateSource": {
+        "type": "values"
+      },
       "x": 400,
-      "y": 1750,
+      "y": 1880,
       "initialState": "on",
-      "action": { "type": "openDetails", "target": "ind-sensor-1" },
+      "action": {
+        "type": "openDetails",
+        "target": "inductive-1-details"
+      },
       "ariaLabel": "Induktiver Sensor 1"
     },
     {
@@ -162,11 +504,16 @@
       "layer": 1,
       "iconSize": 200,
       "rotation": 90,
-      "stateSource": { "type": "values" },
+      "stateSource": {
+        "type": "values"
+      },
       "x": 850,
-      "y": 1750,
+      "y": 1880,
       "initialState": "on",
-      "action": { "type": "openDetails", "target": "ind-sensor-2" },
+      "action": {
+        "type": "openDetails",
+        "target": "inductive-2-details"
+      },
       "ariaLabel": "Induktiver Sensor 2"
     },
     {
@@ -176,11 +523,16 @@
       "layer": 1,
       "iconSize": 200,
       "rotation": 90,
-      "stateSource": { "type": "values" },
+      "stateSource": {
+        "type": "values"
+      },
       "x": 1200,
-      "y": 1750,
+      "y": 1880,
       "initialState": "on",
-      "action": { "type": "openDetails", "target": "ind-sensor-3" },
+      "action": {
+        "type": "openDetails",
+        "target": "inductive-3-details"
+      },
       "ariaLabel": "Induktiver Sensor 3"
     },
     {
@@ -190,11 +542,16 @@
       "layer": 1,
       "iconSize": 200,
       "rotation": 90,
-      "stateSource": { "type": "values" },
+      "stateSource": {
+        "type": "values"
+      },
       "x": 1300,
-      "y": 1750,
+      "y": 1880,
       "initialState": "on",
-      "action": { "type": "openDetails", "target": "ind-sensor-4" },
+      "action": {
+        "type": "openDetails",
+        "target": "inductive-4-details"
+      },
       "ariaLabel": "Induktiver Sensor 4"
     },
     {
@@ -204,12 +561,245 @@
       "layer": 1,
       "iconSize": 200,
       "rotation": 90,
-      "stateSource": { "type": "values" },
+      "stateSource": {
+        "type": "values"
+      },
       "x": 1400,
-      "y": 1750,
+      "y": 1880,
       "initialState": "on",
-      "action": { "type": "openDetails", "target": "ind-sensor-5" },
+      "action": {
+        "type": "openDetails",
+        "target": "inductive-5-details"
+      },
       "ariaLabel": "Induktiver Sensor 5"
+    },
+    {
+      "id": "inductive-6",
+      "name": "Induktiver Sensor 6",
+      "iconId": "inductive-sensor",
+      "layer": 1,
+      "iconSize": 200,
+      "rotation": 90,
+      "stateSource": {
+        "type": "values"
+      },
+      "x": 1200,
+      "y": 980,
+      "initialState": "on",
+      "action": {
+        "type": "openDetails",
+        "target": "inductive-6-details"
+      },
+      "ariaLabel": "Induktiver Sensor 6"
+    },
+    {
+      "id": "inductive-7",
+      "name": "Induktiver Sensor 7",
+      "iconId": "inductive-sensor",
+      "layer": 1,
+      "iconSize": 200,
+      "rotation": 90,
+      "stateSource": {
+        "type": "values"
+      },
+      "x": 850,
+      "y": 980,
+      "initialState": "on",
+      "action": {
+        "type": "openDetails",
+        "target": "inductive-7-details"
+      },
+      "ariaLabel": "Induktiver Sensor 7"
+    },
+    {
+      "id": "inductive-8",
+      "name": "Induktiver Sensor 8",
+      "iconId": "inductive-sensor",
+      "layer": 1,
+      "iconSize": 200,
+      "rotation": 90,
+      "stateSource": {
+        "type": "values"
+      },
+      "x": 1300,
+      "y": 980,
+      "initialState": "on",
+      "action": {
+        "type": "openDetails",
+        "target": "inductive-8-details"
+      },
+      "ariaLabel": "Induktiver Sensor 8"
+    },
+    {
+      "id": "inductive-9",
+      "name": "Induktiver Sensor 9",
+      "iconId": "inductive-sensor",
+      "layer": 1,
+      "iconSize": 200,
+      "rotation": 90,
+      "stateSource": {
+        "type": "values"
+      },
+      "x": 300,
+      "y": 80,
+      "initialState": "on",
+      "action": {
+        "type": "openDetails",
+        "target": "inductive-9-details"
+      },
+      "ariaLabel": "Induktiver Sensor 9"
+    },
+    {
+      "id": "inductive-10",
+      "name": "Induktiver Sensor 10",
+      "iconId": "inductive-sensor",
+      "layer": 1,
+      "iconSize": 200,
+      "rotation": 90,
+      "stateSource": {
+        "type": "values"
+      },
+      "x": 500,
+      "y": 80,
+      "initialState": "on",
+      "action": {
+        "type": "openDetails",
+        "target": "inductive-10-details"
+      },
+      "ariaLabel": "Induktiver Sensor 10"
+    },
+    {
+      "id": "inductive-11",
+      "name": "Induktiver Sensor 11",
+      "iconId": "inductive-sensor",
+      "layer": 1,
+      "iconSize": 200,
+      "rotation": 90,
+      "stateSource": {
+        "type": "values"
+      },
+      "x": 850,
+      "y": 80,
+      "initialState": "on",
+      "action": {
+        "type": "openDetails",
+        "target": "inductive-11-details"
+      },
+      "ariaLabel": "Induktiver Sensor 11"
+    },
+    {
+      "id": "inductive-12",
+      "name": "Induktiver Sensor 12",
+      "iconId": "inductive-sensor",
+      "layer": 1,
+      "iconSize": 200,
+      "rotation": 90,
+      "stateSource": {
+        "type": "values"
+      },
+      "x": 1200,
+      "y": 80,
+      "initialState": "on",
+      "action": {
+        "type": "openDetails",
+        "target": "inductive-12-details"
+      },
+      "ariaLabel": "Induktiver Sensor 12"
+    },
+    {
+      "id": "inductive-13",
+      "name": "Induktiver Sensor 13",
+      "iconId": "inductive-sensor",
+      "layer": 1,
+      "iconSize": 200,
+      "rotation": 90,
+      "stateSource": {
+        "type": "values"
+      },
+      "x": 1400,
+      "y": 80,
+      "initialState": "on",
+      "action": {
+        "type": "openDetails",
+        "target": "inductive-13-details"
+      },
+      "ariaLabel": "Induktiver Sensor 13"
+    },
+    {
+      "id": "inductive-14",
+      "name": "Induktiver Sensor 14",
+      "iconId": "inductive-sensor",
+      "layer": 1,
+      "iconSize": 200,
+      "rotation": 90,
+      "stateSource": {
+        "type": "values"
+      },
+      "x": 2200,
+      "y": 80,
+      "initialState": "on",
+      "action": {
+        "type": "openDetails",
+        "target": "inductive-14-details"
+      },
+      "ariaLabel": "Induktiver Sensor 14"
+    },
+    {
+      "id": "inductive-15",
+      "name": "Induktiver Sensor 15",
+      "iconId": "inductive-sensor",
+      "layer": 1,
+      "iconSize": 200,
+      "rotation": 180,
+      "stateSource": {
+        "type": "values"
+      },
+      "x": 1800,
+      "y": 580,
+      "initialState": "on",
+      "action": {
+        "type": "openDetails",
+        "target": "inductive-15-details"
+      },
+      "ariaLabel": "Induktiver Sensor 15"
+    },
+    {
+      "id": "inductive-16",
+      "name": "Induktiver Sensor 16",
+      "iconId": "inductive-sensor",
+      "layer": 1,
+      "iconSize": 200,
+      "rotation": 180,
+      "stateSource": {
+        "type": "values"
+      },
+      "x": 1800,
+      "y": 1380,
+      "initialState": "on",
+      "action": {
+        "type": "openDetails",
+        "target": "inductive-16-details"
+      },
+      "ariaLabel": "Induktiver Sensor 16"
+    },
+    {
+      "id": "inductive-17",
+      "name": "Induktiver Sensor 17",
+      "iconId": "inductive-sensor",
+      "layer": 1,
+      "iconSize": 200,
+      "rotation": 180,
+      "stateSource": {
+        "type": "values"
+      },
+      "x": 1800,
+      "y": 1580,
+      "initialState": "on",
+      "action": {
+        "type": "openDetails",
+        "target": "inductive-17-details"
+      },
+      "ariaLabel": "Induktiver Sensor 17"
     },
     {
       "id": "rfid-1",
@@ -218,11 +808,16 @@
       "layer": 1,
       "iconSize": 200,
       "rotation": 180,
-      "stateSource": { "type": "values" },
+      "stateSource": {
+        "type": "values"
+      },
       "x": 350,
-      "y": 1800,
+      "y": 1930,
       "initialState": "on",
-      "action": { "type": "openDetails", "target": "rfid-1" },
+      "action": {
+        "type": "openDetails",
+        "target": "rfid-1-details"
+      },
       "ariaLabel": "RFID Sensor 1"
     },
     {
@@ -232,11 +827,16 @@
       "layer": 1,
       "iconSize": 200,
       "rotation": 180,
-      "stateSource": { "type": "values" },
+      "stateSource": {
+        "type": "values"
+      },
       "x": 1150,
-      "y": 1800,
+      "y": 1930,
       "initialState": "on",
-      "action": { "type": "openDetails", "target": "rfid-2" },
+      "action": {
+        "type": "openDetails",
+        "target": "rfid-2-details"
+      },
       "ariaLabel": "RFID Sensor 2"
     },
     {
@@ -246,12 +846,55 @@
       "layer": 1,
       "iconSize": 200,
       "rotation": 180,
-      "stateSource": { "type": "values" },
+      "stateSource": {
+        "type": "values"
+      },
       "x": 2150,
-      "y": 1800,
+      "y": 1930,
       "initialState": "on",
-      "action": { "type": "openDetails", "target": "rfid-3" },
+      "action": {
+        "type": "openDetails",
+        "target": "rfid-3-details"
+      },
       "ariaLabel": "RFID Sensor 3"
+    },
+    {
+      "id": "rfid-4",
+      "name": "RFID Sensor 4",
+      "iconId": "rfid-sensor",
+      "layer": 1,
+      "iconSize": 200,
+      "rotation": 180,
+      "stateSource": {
+        "type": "values"
+      },
+      "x": 1150,
+      "y": 1030,
+      "initialState": "on",
+      "action": {
+        "type": "openDetails",
+        "target": "rfid-4-details"
+      },
+      "ariaLabel": "RFID Sensor 4"
+    },
+    {
+      "id": "rfid-5",
+      "name": "RFID Sensor 5",
+      "iconId": "rfid-sensor",
+      "layer": 1,
+      "iconSize": 200,
+      "rotation": 180,
+      "stateSource": {
+        "type": "values"
+      },
+      "x": 1150,
+      "y": 130,
+      "initialState": "on",
+      "action": {
+        "type": "openDetails",
+        "target": "rfid-5-details"
+      },
+      "ariaLabel": "RFID Sensor 5"
     },
     {
       "id": "lightbarrier-1",
@@ -260,11 +903,16 @@
       "layer": 1,
       "iconSize": 200,
       "rotation": 90,
-      "stateSource": { "type": "values" },
+      "stateSource": {
+        "type": "values"
+      },
       "x": 2650,
-      "y": 1800,
+      "y": 1930,
       "initialState": "on",
-      "action": { "type": "openDetails", "target": "optical-1" },
+      "action": {
+        "type": "openDetails",
+        "target": "lightbarrier-1-details"
+      },
       "ariaLabel": "Lichtschranke 1"
     },
     {
@@ -272,13 +920,18 @@
       "name": "Hochregallager",
       "iconId": "highbay-storage",
       "layer": 1,
-      "iconSize": 320,
+      "iconSize": 2200,
       "rotation": 180,
-      "stateSource": { "type": "local" },
-      "x": 3180,
-      "y": 1800,
+      "stateSource": {
+        "type": "local"
+      },
+      "x": 2980,
+      "y": 1050,
       "initialState": "on",
-      "action": { "type": "navigate", "path": "/hochregallager" },
+      "action": {
+        "type": "navigate",
+        "path": "/hochregallager"
+      },
       "ariaLabel": "Hochregallager oeffnen"
     }
   ]
