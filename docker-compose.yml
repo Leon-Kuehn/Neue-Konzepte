@@ -29,6 +29,10 @@ services:
       - "3000:3000"
     environment:
       DATABASE_URL: postgresql://postgres:postgres@db:5432/iot_plant?schema=public
+      # Set MQTT_BROKER_URL to the address of your MQTT broker on the Raspberry Pi,
+      # e.g. mqtt://192.168.178.40:1883
+      MQTT_BROKER_URL: ${MQTT_BROKER_URL:-mqtt://localhost:1883}
+      CORS_ORIGIN: "http://localhost"
     healthcheck:
       test:
         [
