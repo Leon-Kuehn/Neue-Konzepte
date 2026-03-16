@@ -266,6 +266,20 @@
       "initialState": "on",
       "action": { "type": "openDetails", "target": "optical-1" },
       "ariaLabel": "Lichtschranke 1"
+    },
+    {
+      "id": "highbay-storage-1",
+      "name": "Hochregallager",
+      "iconId": "highbay-storage",
+      "layer": 1,
+      "iconSize": 320,
+      "rotation": 180,
+      "stateSource": { "type": "local" },
+      "x": 3180,
+      "y": 1800,
+      "initialState": "on",
+      "action": { "type": "navigate", "path": "/hochregallager" },
+      "ariaLabel": "Hochregallager oeffnen"
     }
   ]
 }

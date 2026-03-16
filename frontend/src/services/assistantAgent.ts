@@ -39,7 +39,7 @@ function buildSystemPrompt(language: AppLanguage): string {
     "Do not invent unavailable measurements or backend data.",
     "If a request is unclear, ask one short clarifying question.",
     "Prefer actionable steps and mention the exact UI area/tab names.",
-    "Support slash commands: /help /sensor /component /mqtt /lager /analyse.",
+    "Support slash commands: /help /sensor /component /mqtt /lager /analyse /module.",
     "Project facts:",
     componentFacts,
     "Known product areas: Top-Down View, High-Bay Warehouse, Component Browser, Settings, Documentation, AI Assistant.",
@@ -56,6 +56,7 @@ function commandHelp(language: AppLanguage): string {
       "/mqtt - Schritt-fuer-Schritt MQTT-Einrichtung",
       "/lager - Bedienung Hochregallager und Slot-Details",
       "/analyse - Wirtschaftliche Kennzahlen erklaeren",
+      "/module - Moduluebersicht mit Datenblatt-IDs und Komponentenbezug",
     ].join("\n");
   }
 
@@ -68,6 +69,7 @@ function commandHelp(language: AppLanguage): string {
       "/mqtt - Configuration MQTT pas a pas",
       "/lager - Utilisation de l'entrepot",
       "/analyse - Explication des indicateurs economiques",
+      "/module - Vue modules avec IDs fiche et correspondance composants",
     ].join("\n");
   }
 
@@ -79,6 +81,61 @@ function commandHelp(language: AppLanguage): string {
     "/mqtt - MQTT setup walkthrough",
     "/lager - High-bay usage and slot details",
     "/analyse - Explain economic KPIs",
+    "/module - Module overview with datasheet IDs and mapped components",
+  ].join("\n");
+}
+
+function commandModule(language: AppLanguage): string {
+  const mappedLines = [
+    "221001 -> conveyor belt",
+    "221018 -> rotating conveyor",
+    "224001 -> input station",
+    "224005 -> pneumatic order picker",
+    "224007 -> high-bay storage",
+  ];
+
+  const additionalLines = [
+    "Weitere Datenblaetter sind in der Dokumentation unten gesammelt (inkl. 221/224/226).",
+  ];
+
+  if (language === "de") {
+    return [
+      "Modul-Kurzuebersicht (Quelle: Module-20260114.zip):",
+      ...mappedLines,
+      "",
+      "Weitere Datenblaetter:",
+      ...additionalLines,
+      "",
+      "Hinweis: Pro Komponente werden nur die explizit zugewiesenen Datenblaetter angezeigt.",
+      "Datenblaetter liegen unter: /static/modules/<modul>_data.pdf",
+      "In der Doku-Seite findest du zusaetzlich SVG-Vorschau je Komponententyp.",
+    ].join("\n");
+  }
+
+  if (language === "fr") {
+    return [
+      "Resume modules (source: Module-20260114.zip):",
+      ...mappedLines,
+      "",
+      "Fiches supplementaires:",
+      ...additionalLines,
+      "",
+      "Note: Component-level datasheets are shown only for explicit assignments.",
+      "Fiches disponibles sous: /static/modules/<module>_data.pdf",
+      "La page Documentation inclut aussi un apercu SVG par type de composant.",
+    ].join("\n");
+  }
+
+  return [
+    "Module quick reference (source: Module-20260114.zip):",
+    ...mappedLines,
+    "",
+    "Additional datasheets:",
+    ...additionalLines,
+    "",
+    "Note: Component-level datasheets are shown only for explicit assignments.",
+    "Datasheets are available at: /static/modules/<module>_data.pdf",
+    "The Documentation page also includes SVG previews per component type.",
   ].join("\n");
 }
 
@@ -268,6 +325,8 @@ function handleCommand(input: string, language: AppLanguage): string | null {
       return commandLager(language);
     case "/analyse":
       return commandAnalyse(language);
+    case "/module":
+      return commandModule(language);
     case "/sensor":
       return commandSensor(language, arg);
     case "/component":
@@ -288,6 +347,8 @@ function localFallback(input: string, language: AppLanguage): string {
   if (q.includes("lager") || q.includes("warehouse")) return commandLager(language);
   if (q.includes("analyse") || q.includes("profit") || q.includes("dead stock"))
     return commandAnalyse(language);
+  if (q.includes("module") || q.includes("datenblatt") || q.includes("datasheet"))
+    return commandModule(language);
   if (q.includes("sensor") || q.includes("rfid") || q.includes("indukt"))
     return commandSensor(language, q);
   if (q.includes("component") || q.includes("komponent") || q.includes("conveyor"))
@@ -301,6 +362,7 @@ function localFallback(input: string, language: AppLanguage): string {
       "- /sensor rfid",
       "- /component conveyor-1",
       "- Was bedeutet Lagerhueter-Quote?",
+      "- /module",
     ].join("\n");
   }
 
@@ -369,12 +431,12 @@ export async function askAssistant(
 
 export function getAssistantHint(language: AppLanguage): string {
   if (language === "de") {
-    return "Tipp: /help, /sensor rfid, /component conveyor-1, /mqtt, /lager, /analyse";
+    return "Tipp: /help, /sensor rfid, /component conveyor-1, /mqtt, /lager, /analyse, /module";
   }
 
   if (language === "fr") {
-    return "Astuce: /help, /sensor rfid, /component conveyor-1, /mqtt, /lager, /analyse";
+    return "Astuce: /help, /sensor rfid, /component conveyor-1, /mqtt, /lager, /analyse, /module";
   }
 
-  return "Tip: /help, /sensor rfid, /component conveyor-1, /mqtt, /lager, /analyse";
+  return "Tip: /help, /sensor rfid, /component conveyor-1, /mqtt, /lager, /analyse, /module";
 }

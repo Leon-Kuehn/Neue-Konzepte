@@ -45,6 +45,12 @@
   transition: stroke-opacity 0.2s ease;
 }
 
+.highbay__carriage,
+.highbay__fork {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
 .hotspot--on .belt--left .belt__segments {
   animation: belt-move-left 1.2s linear infinite;
 }
@@ -98,6 +104,14 @@
 .hotspot--on .inputstation__outer,
 .hotspot--on .inputstation__inner {
   animation: inputstation-pulse 1.2s ease-in-out infinite;
+}
+
+.hotspot--on .highbay__carriage {
+  animation: highbay-carriage-move 2.4s ease-in-out infinite;
+}
+
+.hotspot--on .highbay__fork {
+  animation: highbay-fork-extend 1.2s ease-in-out infinite;
 }
 
 .hotspot--off .hotspot__icon {
@@ -207,6 +221,30 @@
   }
   100% {
     stroke-opacity: 0.45;
+  }
+}
+
+@keyframes highbay-carriage-move {
+  0% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(58px);
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
+
+@keyframes highbay-fork-extend {
+  0%,
+  100% {
+    transform: scaleX(0.72);
+    opacity: 0.75;
+  }
+  50% {
+    transform: scaleX(1);
+    opacity: 1;
   }
 }
 

@@ -12,13 +12,15 @@ export type HotspotIconId =
   | "inductive-sensor"
   | "lightbarrier-sensor"
   | "input-station"
-  | "ball-loader";
+  | "ball-loader"
+  | "highbay-storage";
 
 export type HotspotDirection = "left" | "right";
 
 export type HotspotAction =
   | { type: "toggleState" }
-  | { type: "openDetails"; target: string };
+  | { type: "openDetails"; target: string }
+  | { type: "navigate"; path: string };
 
 export type HotspotStateSource = {
   type: "values" | "local";

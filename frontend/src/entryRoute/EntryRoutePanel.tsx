@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import EntryRouteMap from "./EntryRouteMap";
 import { MAP_HOTSPOTS } from "./mapHotspots";
 import type { HotspotAction, HotspotState } from "./mapHotspots";
@@ -16,6 +17,7 @@ export default function EntryRoutePanel({
   onSelectComponent,
   className,
 }: EntryRoutePanelProps) {
+  const navigate = useNavigate();
   const componentById = useMemo(() => {
     const map = new Map<string, PlantComponent>();
     for (const comp of components) {
@@ -41,6 +43,11 @@ export default function EntryRoutePanel({
   const handleToggle = (_id: string, action: HotspotAction) => {
     if (action.type === "openDetails") {
       onSelectComponent(action.target);
+      return;
+    }
+
+    if (action.type === "navigate") {
+      navigate(action.path);
     }
   };
 

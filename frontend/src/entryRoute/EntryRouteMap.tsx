@@ -9,6 +9,7 @@ import { BallLoaderIcon } from "./icons/BallLoaderIcon";
 import { InputStationIcon } from "./icons/InputStationIcon";
 import { LightSensorIcon } from "./icons/LightSensorIcon";
 import { LightBarrierIcon } from "./icons/LightBarrierIcon";
+import { HighBayStorageIcon } from "./icons/HighBayStorageIcon";
 import { RfidSensorIcon } from "./icons/RfidSensorIcon";
 import { RotatingConveyorIcon } from "./icons/RotatingConveyorIcon";
 import { SensorGenericIcon } from "./icons/SensorGenericIcon";
@@ -48,6 +49,7 @@ const iconRegistry: Record<HotspotIconId, ComponentType<IconComponentProps>> = {
   "lightbarrier-sensor": LightBarrierIcon,
   "input-station": InputStationIcon,
   "ball-loader": BallLoaderIcon,
+  "highbay-storage": HighBayStorageIcon,
 };
 
 export default function EntryRouteMap({
@@ -230,7 +232,8 @@ export default function EntryRouteMap({
                       hotspot.iconId === "inductive-sensor" ||
                       hotspot.iconId === "lightbarrier-sensor" ||
                       hotspot.iconId === "input-station" ||
-                      hotspot.iconId === "ball-loader"
+                      hotspot.iconId === "ball-loader" ||
+                      hotspot.iconId === "highbay-storage"
                         ? active
                         : undefined
                     }

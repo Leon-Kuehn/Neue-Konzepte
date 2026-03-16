@@ -1,6 +1,7 @@
 import {
   Alert,
   Box,
+  Button,
   Card,
   CardContent,
   Chip,
@@ -17,7 +18,19 @@ import {
   TableRow,
   Typography,
 } from "@mui/material";
+import "../entryRoute/EntryRouteMap.css";
+import { BallLoaderIcon } from "../entryRoute/icons/BallLoaderIcon";
+import { ConveyorBeltIcon } from "../entryRoute/icons/ConveyorBeltIcon";
+import { DeviceSquareIcon } from "../entryRoute/icons/DeviceSquareIcon";
+import { HighBayStorageIcon } from "../entryRoute/icons/HighBayStorageIcon";
+import { InductiveSensorIcon } from "../entryRoute/icons/InductiveSensorIcon";
+import { InputStationIcon } from "../entryRoute/icons/InputStationIcon";
+import { LightBarrierIcon } from "../entryRoute/icons/LightBarrierIcon";
+import { RfidSensorIcon } from "../entryRoute/icons/RfidSensorIcon";
+import { RotatingConveyorIcon } from "../entryRoute/icons/RotatingConveyorIcon";
 import { useAppPreferences } from "../context/AppPreferencesContext";
+
+type AppLang = "de" | "en" | "fr";
 
 type SensorDoc = {
   type: string;
@@ -25,6 +38,367 @@ type SensorDoc = {
   signals: string;
   troubleshooting: string;
 };
+
+type ComponentBrief = {
+  key: string;
+  category: string;
+  role: "sensor" | "actuator";
+  count: number;
+  iconId:
+    | "input-station"
+    | "conveyor-belt"
+    | "rotating-conveyor"
+    | "ball-loader"
+    | "inductive-sensor"
+    | "rfid-sensor"
+    | "lightbarrier-sensor"
+    | "device-square"
+    | "highbay-storage";
+  direction?: "left" | "right";
+  animated?: boolean;
+  moduleSheets?: string[];
+  labels: Record<AppLang, string>;
+  summaries: Record<AppLang, string>;
+  signals: Record<AppLang, string>;
+};
+
+const componentSectionText: Record<
+  AppLang,
+  {
+    title: string;
+    intro: string;
+    roleSensor: string;
+    roleActuator: string;
+    countLabel: string;
+    categoryLabel: string;
+    signalsLabel: string;
+    datasheetButton: string;
+  }
+> = {
+  de: {
+    title: "Einzelkomponenten: Kurzfassung",
+    intro:
+      "Alle in der App verwendeten Komponententypen mit Kurzbeschreibung und animierter Vorschau.",
+    roleSensor: "Sensor",
+    roleActuator: "Aktor",
+    countLabel: "Anzahl",
+    categoryLabel: "Kategorie",
+    signalsLabel: "Typische Signale",
+    datasheetButton: "Datenblatt",
+  },
+  en: {
+    title: "Individual Components: Quick Reference",
+    intro:
+      "All component types used in the app, with short descriptions and animated previews.",
+    roleSensor: "Sensor",
+    roleActuator: "Actuator",
+    countLabel: "Count",
+    categoryLabel: "Category",
+    signalsLabel: "Typical Signals",
+    datasheetButton: "Datasheet",
+  },
+  fr: {
+    title: "Composants Individuels : Resume",
+    intro:
+      "Tous les types de composants utilises dans l'application avec resume et apercu anime.",
+    roleSensor: "Capteur",
+    roleActuator: "Actionneur",
+    countLabel: "Quantite",
+    categoryLabel: "Categorie",
+    signalsLabel: "Signaux typiques",
+    datasheetButton: "Fiche",
+  },
+};
+
+const allDatasheets = {
+  standard: [
+    "221001_data.pdf", "221002_data.pdf", "221011_data.pdf", "221012_data.pdf",
+    "221018_data.pdf", "221022_data.pdf", "221024_data.pdf", "221026_data.pdf",
+    "221029_data.pdf", "221032_data.pdf",
+  ],
+  kombi: [
+    "224001_data.pdf", "224002_data.pdf", "224003_data.pdf", "224004_data.pdf",
+    "224005_data.pdf", "224006_data.pdf", "224007_data.pdf",
+  ],
+  kompakt: [
+    "226001_data.pdf", "226003_data.pdf", "226005_data.pdf", "226006_data.pdf",
+  ],
+};
+
+const datasheetSectionText: Record<AppLang, { title: string; standard: string; kombi: string; kompakt: string }> = {
+  de: { title: "Datenblätter", standard: "Standardmodule (221xxx)", kombi: "Kombinationsmodule (224xxx)", kompakt: "Kompaktmodule (226xxx)" },
+  en: { title: "Datasheets", standard: "Standard Modules (221xxx)", kombi: "Combination Modules (224xxx)", kompakt: "Compact Modules (226xxx)" },
+  fr: { title: "Fiches techniques", standard: "Modules standard (221xxx)", kombi: "Modules combinés (224xxx)", kompakt: "Modules compacts (226xxx)" },
+};
+
+const componentBriefs: ComponentBrief[] = [
+  {
+    key: "input",
+    category: "input",
+    role: "sensor",
+    count: 1,
+    iconId: "input-station",
+    animated: true,
+    moduleSheets: ["224001_data.pdf"],
+    labels: {
+      de: "Input-Station",
+      en: "Input Station",
+      fr: "Station d'entree",
+    },
+    summaries: {
+      de: "Startpunkt des Materialflusses mit Erfassung der ankommenden Werkstuecke.",
+      en: "Start point of the material flow with incoming workpiece detection.",
+      fr: "Point de depart du flux materiel avec detection des pieces entrantes.",
+    },
+    signals: {
+      de: "Startfreigabe, Werkstueck erkannt, Stationsstatus",
+      en: "Start enable, workpiece detected, station status",
+      fr: "Autorisation de depart, piece detectee, statut station",
+    },
+  },
+  {
+    key: "conveyor",
+    category: "conveyor",
+    role: "actuator",
+    count: 14,
+    iconId: "conveyor-belt",
+    direction: "left",
+    animated: true,
+    moduleSheets: ["221001_data.pdf"],
+    labels: {
+      de: "Foerderband",
+      en: "Conveyor Belt",
+      fr: "Convoyeur",
+    },
+    summaries: {
+      de: "Linearer Transport zwischen Stationen mit taktgenauer Materialweitergabe.",
+      en: "Linear transport between stations with cycle-accurate material handover.",
+      fr: "Transport lineaire entre stations avec transfert cadence du materiel.",
+    },
+    signals: {
+      de: "Motor ON/OFF, Taktzaehler, Laufzeit",
+      en: "Motor ON/OFF, cycle counter, runtime",
+      fr: "Moteur ON/OFF, compteur de cycles, temps de marche",
+    },
+  },
+  {
+    key: "rotating-conveyor",
+    category: "rotating-conveyor",
+    role: "actuator",
+    count: 3,
+    iconId: "rotating-conveyor",
+    direction: "right",
+    animated: true,
+    moduleSheets: ["221018_data.pdf"],
+    labels: {
+      de: "Drehfoerderband",
+      en: "Rotating Conveyor",
+      fr: "Convoyeur rotatif",
+    },
+    summaries: {
+      de: "Richtet den Materialfluss um und verteilt Werkstuecke auf verschiedene Strecken.",
+      en: "Redirects material flow and distributes workpieces to different paths.",
+      fr: "Redirige le flux materiel et distribue les pieces sur plusieurs voies.",
+    },
+    signals: {
+      de: "Drehrichtung, Endlage, Betriebsstatus",
+      en: "Rotation direction, end position, operation state",
+      fr: "Sens de rotation, position finale, etat de service",
+    },
+  },
+  {
+    key: "pneumatic-unit",
+    category: "pneumatic-unit",
+    role: "actuator",
+    count: 5,
+    iconId: "ball-loader",
+    animated: true,
+    moduleSheets: ["224005_data.pdf"],
+    labels: {
+      de: "Pneumatik-Einheit",
+      en: "Pneumatic Unit",
+      fr: "Unite pneumatique",
+    },
+    summaries: {
+      de: "Fuehrt mechanische Hub-, Trenn- oder Positionierbewegungen aus.",
+      en: "Performs mechanical lifting, separating, or positioning movements.",
+      fr: "Execute des mouvements mecaniques de levage, separation ou positionnement.",
+    },
+    signals: {
+      de: "Ventilstatus, Endlage, Druckzustand",
+      en: "Valve state, end position, pressure state",
+      fr: "Etat vanne, position finale, etat de pression",
+    },
+  },
+  {
+    key: "press",
+    category: "press",
+    role: "actuator",
+    count: 3,
+    iconId: "device-square",
+    labels: {
+      de: "Pressmodul",
+      en: "Press Module",
+      fr: "Module de presse",
+    },
+    summaries: {
+      de: "Bearbeitet oder trennt Werkstuecke durch geregelte Hubbewegung.",
+      en: "Processes or separates workpieces through controlled stroke movement.",
+      fr: "Traite ou separe les pieces par mouvement de course controle.",
+    },
+    signals: {
+      de: "Hub aus/ein, Endschalter, Zykluszaehler",
+      en: "Stroke extend/retract, end switch, cycle counter",
+      fr: "Course sortie/rentree, fin de course, compteur",
+    },
+  },
+  {
+    key: "inductive-sensor",
+    category: "inductive-sensor",
+    role: "sensor",
+    count: 19,
+    iconId: "inductive-sensor",
+    animated: true,
+    labels: {
+      de: "Induktivsensor",
+      en: "Inductive Sensor",
+      fr: "Capteur inductif",
+    },
+    summaries: {
+      de: "Erkennt metallische Objekte beruehrungslos entlang der Transportstrecke.",
+      en: "Detects metallic objects contactlessly along the transport line.",
+      fr: "Detecte sans contact des objets metalliques le long de la ligne.",
+    },
+    signals: {
+      de: "Digital ON/OFF, Schaltabstand erreicht",
+      en: "Digital ON/OFF, switching distance reached",
+      fr: "Numerique ON/OFF, distance de commutation atteinte",
+    },
+  },
+  {
+    key: "rfid-sensor",
+    category: "rfid-sensor",
+    role: "sensor",
+    count: 5,
+    iconId: "rfid-sensor",
+    animated: true,
+    labels: {
+      de: "RFID-Sensor",
+      en: "RFID Sensor",
+      fr: "Capteur RFID",
+    },
+    summaries: {
+      de: "Liest Werkstueck- oder Traeger-IDs fuer Verfolgung und Routing.",
+      en: "Reads workpiece or carrier IDs for tracking and routing.",
+      fr: "Lit les IDs des pieces/porteurs pour suivi et routage.",
+    },
+    signals: {
+      de: "Tag-ID, Lesestatus, Kommunikationszustand",
+      en: "Tag ID, read status, communication state",
+      fr: "ID tag, statut de lecture, etat communication",
+    },
+  },
+  {
+    key: "optical-sensor",
+    category: "optical-sensor",
+    role: "sensor",
+    count: 1,
+    iconId: "lightbarrier-sensor",
+    animated: true,
+    labels: {
+      de: "Lichtschranke",
+      en: "Optical Barrier",
+      fr: "Barriere optique",
+    },
+    summaries: {
+      de: "Erkennt Objekte ueber Unterbrechung oder Reflexion eines Lichtsignals.",
+      en: "Detects objects by light beam interruption or reflection.",
+      fr: "Detecte les objets via interruption ou reflexion du faisceau lumineux.",
+    },
+    signals: {
+      de: "Lichtsignal frei/belegt, Schaltsignal",
+      en: "Beam clear/blocked, switching signal",
+      fr: "Faisceau libre/coupe, signal de commutation",
+    },
+  },
+  {
+    key: "crane",
+    category: "crane",
+    role: "actuator",
+    count: 1,
+    iconId: "device-square",
+    labels: {
+      de: "Kran / Lift",
+      en: "Crane / Lift",
+      fr: "Grue / Lift",
+    },
+    summaries: {
+      de: "Vertikales Handling fuer Ein- und Auslagerbewegungen im Lagerbereich.",
+      en: "Vertical handling for storage and retrieval movements in the warehouse.",
+      fr: "Manutention verticale pour mouvements de stockage et destockage.",
+    },
+    signals: {
+      de: "Position X/Z, Fahrstatus, Endlage",
+      en: "Position X/Z, motion status, end position",
+      fr: "Position X/Z, etat mouvement, position finale",
+    },
+  },
+  {
+    key: "storage",
+    category: "storage",
+    role: "actuator",
+    count: 1,
+    iconId: "highbay-storage",
+    moduleSheets: ["224007_data.pdf"],
+    labels: {
+      de: "Hochregallager",
+      en: "High-Bay Storage",
+      fr: "Entrepot grande hauteur",
+    },
+    summaries: {
+      de: "Slot-basierte Lagerung mit Bestands-, Kosten- und Nachfragebezug.",
+      en: "Slot-based storage with stock, cost, and demand context.",
+      fr: "Stockage par emplacements avec contexte stock, cout et demande.",
+    },
+    signals: {
+      de: "Slot belegt/frei, Einlagerung, Auslagerung",
+      en: "Slot occupied/free, store command, retrieve command",
+      fr: "Emplacement occupe/libre, commande stockage, commande sortie",
+    },
+  },
+];
+
+function renderBriefIcon(component: ComponentBrief) {
+  const sharedProps = {
+    className: "hotspot__icon",
+    width: "100%",
+    height: "100%",
+    preserveAspectRatio: "xMidYMid meet" as const,
+  };
+
+  switch (component.iconId) {
+    case "input-station":
+      return <InputStationIcon {...sharedProps} active={true} />;
+    case "conveyor-belt":
+      return <ConveyorBeltIcon {...sharedProps} direction={component.direction ?? "left"} />;
+    case "rotating-conveyor":
+      return <RotatingConveyorIcon {...sharedProps} direction={component.direction ?? "left"} />;
+    case "ball-loader":
+      return <BallLoaderIcon {...sharedProps} active={true} />;
+    case "inductive-sensor":
+      return <InductiveSensorIcon {...sharedProps} active={true} />;
+    case "rfid-sensor":
+      return <RfidSensorIcon {...sharedProps} active={true} />;
+    case "lightbarrier-sensor":
+      return <LightBarrierIcon {...sharedProps} active={true} />;
+    case "device-square":
+      return <DeviceSquareIcon {...sharedProps} />;
+    case "highbay-storage":
+      return <HighBayStorageIcon {...sharedProps} active={true} />;
+    default:
+      return <DeviceSquareIcon {...sharedProps} />;
+  }
+}
 
 type DocsContent = {
   title: string;
@@ -325,6 +699,7 @@ const docsByLanguage: Record<"de" | "en" | "fr", DocsContent> = {
 export default function DocumentationPage() {
   const { language } = useAppPreferences();
   const docs = docsByLanguage[language];
+  const sectionText = componentSectionText[language];
 
   return (
     <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
@@ -415,6 +790,96 @@ export default function DocumentationPage() {
       <Card>
         <CardContent>
           <Typography variant="h6" fontWeight={700} sx={{ mb: 1 }}>
+            {sectionText.title}
+          </Typography>
+
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+            {sectionText.intro}
+          </Typography>
+
+          <Box
+            sx={{
+              display: "grid",
+              gridTemplateColumns: {
+                xs: "1fr",
+                md: "1fr 1fr",
+                xl: "1fr 1fr 1fr",
+              },
+              gap: 2,
+            }}
+          >
+            {componentBriefs.map((component) => (
+              <Card key={component.key} variant="outlined">
+                <CardContent>
+                  <Box
+                    className={`hotspot ${component.animated ? "hotspot--on" : "hotspot--off"}`}
+                    aria-label={component.labels[language]}
+                    sx={{
+                      width: "100%",
+                      height: 120,
+                      mb: 1.5,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    {renderBriefIcon(component)}
+                  </Box>
+
+                  <Stack direction="row" spacing={1} sx={{ mb: 1, flexWrap: "wrap" }}>
+                    <Chip
+                      size="small"
+                      label={component.role === "sensor" ? sectionText.roleSensor : sectionText.roleActuator}
+                      color={component.role === "sensor" ? "primary" : "secondary"}
+                    />
+                    <Chip
+                      size="small"
+                      variant="outlined"
+                      label={`${sectionText.countLabel}: ${component.count}`}
+                    />
+                  </Stack>
+
+                  <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 0.5 }}>
+                    {component.labels[language]}
+                  </Typography>
+
+                  <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                    {component.summaries[language]}
+                  </Typography>
+
+                  <Typography variant="body2" sx={{ mb: 0.5 }}>
+                    <strong>{sectionText.categoryLabel}:</strong> {component.category}
+                  </Typography>
+                  <Typography variant="body2" sx={{ mb: 1 }}>
+                    <strong>{sectionText.signalsLabel}:</strong> {component.signals[language]}
+                  </Typography>
+                  {component.moduleSheets && component.moduleSheets.length > 0 && (
+                    <Stack direction="row" sx={{ flexWrap: "wrap", gap: 1 }}>
+                      {component.moduleSheets.map((sheet) => (
+                        <Button
+                          key={`${component.key}-${sheet}`}
+                          size="small"
+                          variant="outlined"
+                          href={`/static/modules/${sheet}`}
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          {sectionText.datasheetButton}: {sheet.replace("_data.pdf", "")}
+                        </Button>
+                      ))}
+                    </Stack>
+                  )}
+                </CardContent>
+              </Card>
+            ))}
+          </Box>
+
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardContent>
+          <Typography variant="h6" fontWeight={700} sx={{ mb: 1 }}>
             {docs.highBayTitle}
           </Typography>
           <List dense disablePadding>
@@ -465,6 +930,68 @@ export default function DocumentationPage() {
           </CardContent>
         </Card>
       </Box>
+
+      <Card>
+        <CardContent>
+          <Typography variant="h6" fontWeight={700} sx={{ mb: 2 }}>
+            {datasheetSectionText[language].title}
+          </Typography>
+
+          <Typography variant="body2" fontWeight={600} sx={{ mb: 1 }}>
+            {datasheetSectionText[language].standard}
+          </Typography>
+          <Stack direction="row" sx={{ mb: 2.5, flexWrap: "wrap", gap: 1 }}>
+            {allDatasheets.standard.map((sheet) => (
+              <Button
+                key={sheet}
+                size="small"
+                variant="outlined"
+                href={`/static/modules/${sheet}`}
+                target="_blank"
+                rel="noreferrer"
+              >
+                {sheet.replace("_data.pdf", "")}
+              </Button>
+            ))}
+          </Stack>
+
+          <Typography variant="body2" fontWeight={600} sx={{ mb: 1 }}>
+            {datasheetSectionText[language].kombi}
+          </Typography>
+          <Stack direction="row" sx={{ mb: 2.5, flexWrap: "wrap", gap: 1 }}>
+            {allDatasheets.kombi.map((sheet) => (
+              <Button
+                key={sheet}
+                size="small"
+                variant="outlined"
+                href={`/static/modules/${sheet}`}
+                target="_blank"
+                rel="noreferrer"
+              >
+                {sheet.replace("_data.pdf", "")}
+              </Button>
+            ))}
+          </Stack>
+
+          <Typography variant="body2" fontWeight={600} sx={{ mb: 1 }}>
+            {datasheetSectionText[language].kompakt}
+          </Typography>
+          <Stack direction="row" sx={{ flexWrap: "wrap", gap: 1 }}>
+            {allDatasheets.kompakt.map((sheet) => (
+              <Button
+                key={sheet}
+                size="small"
+                variant="outlined"
+                href={`/static/modules/${sheet}`}
+                target="_blank"
+                rel="noreferrer"
+              >
+                {sheet.replace("_data.pdf", "")}
+              </Button>
+            ))}
+          </Stack>
+        </CardContent>
+      </Card>
     </Box>
   );
 }
