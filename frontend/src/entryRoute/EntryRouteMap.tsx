@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, forwardRef, useImperativeHandle } from "react";
 import type { ComponentType, KeyboardEvent, SVGProps } from "react";
 
 import "./EntryRouteMap.css";
@@ -30,6 +30,12 @@ export type EntryRouteMapProps = {
   className?: string;
 };
 
+export type EntryRouteMapHandle = {
+  zoomIn: () => void;
+  zoomOut: () => void;
+  resetView: () => void;
+};
+
 const DEFAULT_ICON_SIZE = 80;
 const VIEWPORT_PADDING = 140;
 
@@ -52,17 +58,31 @@ const iconRegistry: Record<HotspotIconId, ComponentType<IconComponentProps>> = {
   "highbay-storage": HighBayStorageIcon,
 };
 
-export default function EntryRouteMap({
-  values,
-  onToggle,
-  className,
-}: EntryRouteMapProps) {
-  const { t } = useAppPreferences();
-  const [localStates, setLocalStates] = useState<Record<string, HotspotState>>({});
-  const [isPortraitMobile, setIsPortraitMobile] = useState(false);
-  const sortedHotspots = [...MAP_HOTSPOTS].sort(
-    (left, right) => (left.layer ?? 2) - (right.layer ?? 2)
-  );
+export default forwardRef<EntryRouteMapHandle, EntryRouteMapProps>(
+  function EntryRouteMap({ values, onToggle, className }: EntryRouteMapProps, ref) {
+    const { t } = useAppPreferences();
+    const [localStates, setLocalStates] = useState<Record<string, HotspotState>>({});
+    const [isPortraitMobile, setIsPortraitMobile] = useState(false);
+    const [scale, setScale] = useState(1);
+    const [panX, setPanX] = useState(0);
+    const [panY, setPanY] = useState(0);
+    const [isDragging, setIsDragging] = useState(false);
+    const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+    const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+    
+    const sortedHotspots = [...MAP_HOTSPOTS].sort(
+      (left, right) => (left.layer ?? 2) - (right.layer ?? 2)
+    );
+
+    useImperativeHandle(ref, () => ({
+      zoomIn: () => setScale((prev) => Math.min(prev + 0.2, 3)),
+      zoomOut: () => setScale((prev) => Math.max(prev - 0.2, 0.5)),
+      resetView: () => {
+        setScale(1);
+        setPanX(0);
+        setPanY(0);
+      },
+    }), []);
 
   useEffect(() => {
     const updateViewportMode = () => {
@@ -83,12 +103,14 @@ export default function EntryRouteMap({
     let maxY = Number.NEGATIVE_INFINITY;
 
     for (const hotspot of sortedHotspots) {
-      const iconSize = hotspot.iconSize ?? DEFAULT_ICON_SIZE;
-      const halfSize = iconSize / 2;
-      minX = Math.min(minX, hotspot.x - halfSize);
-      minY = Math.min(minY, hotspot.y - halfSize);
-      maxX = Math.max(maxX, hotspot.x + halfSize);
-      maxY = Math.max(maxY, hotspot.y + halfSize);
+      const iconWidth = hotspot.iconWidth ?? hotspot.iconSize ?? DEFAULT_ICON_SIZE;
+      const iconHeight = hotspot.iconHeight ?? hotspot.iconSize ?? DEFAULT_ICON_SIZE;
+      const halfWidth = iconWidth / 2;
+      const halfHeight = iconHeight / 2;
+      minX = Math.min(minX, hotspot.x - halfWidth);
+      minY = Math.min(minY, hotspot.y - halfHeight);
+      maxX = Math.max(maxX, hotspot.x + halfWidth);
+      maxY = Math.max(maxY, hotspot.y + halfHeight);
     }
 
     if (
@@ -100,8 +122,8 @@ export default function EntryRouteMap({
       return { x: 0, y: 0, width: 1, height: 1 };
     }
 
-    const x = Math.max(0, minX - VIEWPORT_PADDING);
-    const y = Math.max(0, minY - VIEWPORT_PADDING);
+    const x = minX - VIEWPORT_PADDING;
+    const y = minY - VIEWPORT_PADDING;
     const width = Math.max(1, maxX - minX + VIEWPORT_PADDING * 2);
     const height = Math.max(1, maxY - minY + VIEWPORT_PADDING * 2);
 
@@ -115,6 +137,8 @@ export default function EntryRouteMap({
     .join(" ");
 
   const mobileWidth = `max(100%, calc(72vh / ${aspect}))`;
+  const desktopHeight = "68vh";
+  const desktopWidth = `min(100%, min(1300px, calc(${desktopHeight} / ${aspect})))`;
 
   const getStateFromSource = (hotspot: HotspotConfig, source: HotspotStateSource) => {
     if (source.type === "values") {
@@ -154,6 +178,39 @@ export default function EntryRouteMap({
     }
   };
 
+  const handleMouseDown = (e: React.MouseEvent<SVGElement>) => {
+    if (e.button !== 0) return; // Only left button
+    setIsDragging(true);
+    setDragStart({ x: e.clientX, y: e.clientY });
+    setDragOffset({ x: 0, y: 0 });
+  };
+
+  const handleMouseMove = (e: React.MouseEvent<SVGElement>) => {
+    if (!isDragging) return;
+    
+    const deltaX = e.clientX - dragStart.x;
+    const deltaY = e.clientY - dragStart.y;
+    
+    setDragOffset({ x: deltaX, y: deltaY });
+  };
+
+  const handleMouseUp = () => {
+    if (isDragging) {
+      setPanX((prev) => prev + dragOffset.x);
+      setPanY((prev) => prev + dragOffset.y);
+      setIsDragging(false);
+      setDragOffset({ x: 0, y: 0 });
+    }
+  };
+
+  const handleWheel = (e: React.WheelEvent<SVGElement>) => {
+    if (!e.ctrlKey && !e.metaKey) return;
+    
+    e.preventDefault();
+    const zoomDelta = e.deltaY > 0 ? -0.2 : 0.2;
+    setScale((prev) => Math.max(0.5, Math.min(prev + zoomDelta, 3)));
+  };
+
   return (
     <div
       className={containerClassName}
@@ -161,19 +218,20 @@ export default function EntryRouteMap({
         width: "100%",
         margin: "0 auto",
         position: "relative",
-        overflowX: isPortraitMobile ? "auto" : "visible",
+        overflowX: isPortraitMobile ? "auto" : "hidden",
         overflowY: "hidden",
         WebkitOverflowScrolling: "touch",
       }}
     >
       <div
         style={{
-          width: isPortraitMobile ? mobileWidth : "min(100%, 1300px)",
+          width: isPortraitMobile ? mobileWidth : desktopWidth,
           maxWidth: isPortraitMobile ? "none" : "1300px",
-          height: isPortraitMobile ? "72vh" : "auto",
+          height: isPortraitMobile ? "72vh" : desktopHeight,
           minHeight: isPortraitMobile ? 420 : undefined,
-          paddingBottom: isPortraitMobile ? 0 : `${aspect * 100}%`,
+          paddingBottom: 0,
           position: "relative",
+          cursor: isDragging ? "grabbing" : "grab",
         }}
       >
         <svg
@@ -185,6 +243,11 @@ export default function EntryRouteMap({
             width: "100%",
             height: "100%",
           }}
+          onMouseDown={handleMouseDown}
+          onMouseMove={handleMouseMove}
+          onMouseUp={handleMouseUp}
+          onMouseLeave={handleMouseUp}
+          onWheel={handleWheel}
         >
           <defs>
             <clipPath id="map-work-area-clip">
@@ -197,14 +260,22 @@ export default function EntryRouteMap({
             </clipPath>
           </defs>
 
-          <g clipPath="url(#map-work-area-clip)">
+          <g
+            clipPath="url(#map-work-area-clip)"
+            style={{
+              transform: `translate(${panX + dragOffset.x}px, ${panY + dragOffset.y}px) scale(${scale})`,
+              transformOrigin: `${viewBounds.x + viewBounds.width / 2}px ${viewBounds.y + viewBounds.height / 2}px`,
+              transition: isDragging ? "none" : "transform 0.1s ease-out",
+            }}
+          >
             {sortedHotspots.map((hotspot) => {
               const stateSource = hotspot.stateSource ?? { type: "local" };
               const currentState = getStateFromSource(hotspot, stateSource);
               const active = currentState === "on";
               const Icon = iconRegistry[hotspot.iconId] ?? SensorGenericIcon;
               const direction = hotspot.direction ?? "left";
-              const iconSize = hotspot.iconSize ?? DEFAULT_ICON_SIZE;
+              const iconWidth = hotspot.iconWidth ?? hotspot.iconSize ?? DEFAULT_ICON_SIZE;
+              const iconHeight = hotspot.iconHeight ?? hotspot.iconSize ?? DEFAULT_ICON_SIZE;
               const rotation = hotspot.rotation ?? 0;
 
               return (
@@ -221,10 +292,10 @@ export default function EntryRouteMap({
                 >
                   <Icon
                     className="hotspot__icon"
-                    x={-iconSize / 2}
-                    y={-iconSize / 2}
-                    width={iconSize}
-                    height={iconSize}
+                    x={-iconWidth / 2}
+                    y={-iconHeight / 2}
+                    width={iconWidth}
+                    height={iconHeight}
                     preserveAspectRatio="xMidYMid meet"
                     direction={direction}
                     active={
@@ -247,5 +318,6 @@ export default function EntryRouteMap({
         </svg>
       </div>
     </div>
-  );
-}
+    );
+  }
+);

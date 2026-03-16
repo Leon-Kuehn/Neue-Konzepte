@@ -47,7 +47,7 @@ const translations = {
     "status.error": "Error",
 
     "plant.connectedLive": "Connected to MQTT broker - receiving live updates.",
-    "plant.topDownEntryRoute": "Top Down View (Entry Route)",
+    "plant.topDownEntryRoute": "Top Down View",
     "plant.highBayStorage": "High-Bay Warehouse",
     "plant.highBayTilesAria": "High-bay warehouse top-down tiles",
 
@@ -163,7 +163,7 @@ const translations = {
     "status.error": "Fehler",
 
     "plant.connectedLive": "Mit MQTT-Broker verbunden - Live-Updates werden empfangen.",
-    "plant.topDownEntryRoute": "Top-Down-Ansicht (Einlaufstrecke)",
+    "plant.topDownEntryRoute": "Top-Down-Ansicht",
     "plant.highBayStorage": "Hochregallager",
     "plant.highBayTilesAria": "Hochregallager Top-Down-Kacheln",
 
@@ -279,7 +279,7 @@ const translations = {
     "status.error": "Erreur",
 
     "plant.connectedLive": "Connecté au broker MQTT - réception des mises à jour en direct.",
-    "plant.topDownEntryRoute": "Vue de dessus (ligne d'entree)",
+    "plant.topDownEntryRoute": "Vue de dessus",
     "plant.highBayStorage": "Entrepot grande hauteur",
     "plant.highBayTilesAria": "Tuiles vue de dessus de l'entrepot grande hauteur",
 
