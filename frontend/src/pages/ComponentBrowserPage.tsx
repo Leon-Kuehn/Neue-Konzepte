@@ -6,8 +6,10 @@ import ComponentDetails from "../components/ComponentDetails";
 import { mockComponents } from "../types/mockData";
 import type { PlantComponent } from "../types/PlantComponent";
 import { getTopDownComponentIds } from "../entryRoute/componentBindings";
+import { useAppPreferences } from "../context/AppPreferencesContext";
 
 export default function ComponentBrowserPage() {
+  const { t } = useAppPreferences();
   const topDownComponentIds = useMemo(() => getTopDownComponentIds(), []);
   const [components] = useState<PlantComponent[]>(() =>
     mockComponents.filter((component) => topDownComponentIds.has(component.id))
@@ -18,16 +20,16 @@ export default function ComponentBrowserPage() {
   return (
     <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
       <Typography variant="h4" fontWeight={700}>
-        Component Browser
+        {t("componentBrowser.title")}
       </Typography>
 
       <Card>
         <CardContent sx={{ pb: 1 }}>
           <Typography variant="h6" fontWeight={700} sx={{ mb: 0.5 }}>
-            Browse Components
+            {t("componentBrowser.browseTitle")}
           </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
-            Click a row to open the details drawer. This view is dedicated to tiles and lists to keep the map clean.
+            {t("componentBrowser.browseDescription")}
           </Typography>
           <Divider sx={{ mb: 1 }} />
           <ComponentGroupList
@@ -46,7 +48,7 @@ export default function ComponentBrowserPage() {
         PaperProps={{ sx: { width: { xs: 320, sm: 380 }, p: 2 } }}
       >
         <Box sx={{ display: "flex", justifyContent: "flex-end", mb: 1 }}>
-          <IconButton size="small" onClick={() => setSelectedId(null)} aria-label="Close details">
+          <IconButton size="small" onClick={() => setSelectedId(null)} aria-label={t("common.closeDetails")}>
             <CloseIcon fontSize="small" />
           </IconButton>
         </Box>

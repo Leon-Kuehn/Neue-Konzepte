@@ -1,17 +1,20 @@
 import { Card, CardContent, Typography, Divider, Chip, Box } from "@mui/material";
 import type { PlantComponent } from "../types/PlantComponent";
+import { useAppPreferences } from "../context/AppPreferencesContext";
 
 interface Props {
   component: PlantComponent | undefined;
 }
 
 export default function ComponentDetails({ component }: Props) {
+  const { t } = useAppPreferences();
+
   if (!component) {
     return (
       <Card sx={{ height: "100%", overflow: "auto" }}>
         <CardContent>
           <Typography color="text.secondary" sx={{ textAlign: "center", py: 4 }}>
-            Select a component from the top view or component browser to view details.
+            {t("componentDetails.empty")}
           </Typography>
         </CardContent>
       </Card>
@@ -29,17 +32,17 @@ export default function ComponentDetails({ component }: Props) {
 
         {/* Basic Info */}
         <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-          Basic Information
+          {t("componentDetails.basicInformation")}
         </Typography>
         <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5, mb: 2 }}>
           <Typography variant="body2">
-            <strong>ID:</strong> {component.id}
+            <strong>{t("componentDetails.id")}:</strong> {component.id}
           </Typography>
           <Typography variant="body2">
-            <strong>Role:</strong> {component.role}
+            <strong>{t("componentDetails.role")}:</strong> {component.role}
           </Typography>
           <Typography variant="body2">
-            <strong>Category:</strong> {component.category}
+            <strong>{t("componentDetails.category")}:</strong> {component.category}
           </Typography>
         </Box>
 
@@ -47,40 +50,40 @@ export default function ComponentDetails({ component }: Props) {
 
         {/* Live Status */}
         <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-          Live Status
+          {t("componentDetails.liveStatus")}
         </Typography>
         <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap", mb: 1 }}>
           <Chip
-            label={`Status: ${component.status.toUpperCase()}`}
+            label={`${t("componentDetails.status")}: ${component.status.toUpperCase()}`}
             color={component.status === "on" ? "success" : "default"}
             size="small"
           />
           <Chip
-            label={component.online ? "Online" : "Offline"}
+            label={component.online ? t("componentDetails.online") : t("componentDetails.offline")}
             color={component.online ? "success" : "error"}
             size="small"
           />
         </Box>
         <Typography variant="body2" sx={{ mb: 0.5 }}>
-          <strong>Last Changed:</strong>{" "}
+          <strong>{t("componentDetails.lastChanged")}:</strong>{" "}
           {new Date(component.lastChanged).toLocaleString()}
         </Typography>
         {component.stats.cycles !== undefined && (
           <Typography variant="body2">
-            <strong>Cycles:</strong> {component.stats.cycles}
+            <strong>{t("componentDetails.cycles")}:</strong> {component.stats.cycles}
           </Typography>
         )}
         {component.stats.uptimeHours !== undefined && (
           <Typography variant="body2">
-            <strong>Uptime:</strong> {component.stats.uptimeHours}h
+            <strong>{t("componentDetails.uptime")}:</strong> {component.stats.uptimeHours}h
           </Typography>
         )}
         <Typography variant="body2" sx={{ mt: 0.5 }}>
-          <strong>MQTT Status Topic:</strong> {component.mqttTopics.status}
+          <strong>{t("componentDetails.mqttStatusTopic")}:</strong> {component.mqttTopics.status}
         </Typography>
         {component.mqttTopics.command && (
           <Typography variant="body2">
-            <strong>MQTT Command Topic:</strong> {component.mqttTopics.command}
+            <strong>{t("componentDetails.mqttCommandTopic")}:</strong> {component.mqttTopics.command}
           </Typography>
         )}
 
@@ -88,17 +91,17 @@ export default function ComponentDetails({ component }: Props) {
 
         {/* Placeholder sections */}
         <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-          Historical Data
+          {t("componentDetails.historicalData")}
         </Typography>
         <Typography variant="body2" color="text.secondary" sx={{ fontStyle: "italic", mb: 2 }}>
-          REST/API – TODO
+          {t("componentDetails.todoApi")}
         </Typography>
 
         <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-          Trend Chart
+          {t("componentDetails.trendChart")}
         </Typography>
         <Typography variant="body2" color="text.secondary" sx={{ fontStyle: "italic" }}>
-          Trend chart – TODO
+          {t("componentDetails.todoTrend")}
         </Typography>
       </CardContent>
     </Card>

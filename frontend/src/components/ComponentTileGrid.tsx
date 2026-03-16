@@ -1,5 +1,6 @@
 import { Card, CardContent, Typography, Chip, Box, Grid } from "@mui/material";
 import type { PlantComponent } from "../types/PlantComponent";
+import { useAppPreferences } from "../context/AppPreferencesContext";
 
 interface Props {
   components: PlantComponent[];
@@ -27,6 +28,8 @@ function categoryLabel(category: string): string {
 }
 
 export default function ComponentTileGrid({ components, selectedId, onSelect }: Props) {
+  const { t } = useAppPreferences();
+
   return (
     <Grid container spacing={2}>
       {components.map((comp) => (
@@ -58,7 +61,7 @@ export default function ComponentTileGrid({ components, selectedId, onSelect }: 
                   color={comp.status === "on" ? "success" : "default"}
                 />
                 <Chip
-                  label={comp.online ? "Online" : "Offline"}
+                  label={comp.online ? t("componentDetails.online") : t("componentDetails.offline")}
                   size="small"
                   color={comp.online ? "success" : "error"}
                   variant="outlined"

@@ -18,22 +18,28 @@ import MenuIcon from "@mui/icons-material/Menu";
 import FactoryIcon from "@mui/icons-material/Factory";
 import SettingsInputAntennaIcon from "@mui/icons-material/SettingsInputAntenna";
 import ViewModuleIcon from "@mui/icons-material/ViewModule";
+import DescriptionIcon from "@mui/icons-material/Description";
+import SmartToyIcon from "@mui/icons-material/SmartToy";
+import { useAppPreferences } from "../context/AppPreferencesContext";
 
 const DRAWER_WIDTH = 240;
 
-const navItems = [
-  { label: "Top Down View", path: "/plant", icon: <FactoryIcon /> },
-  { label: "Hochregallager", path: "/hochregallager", icon: <ViewModuleIcon /> },
-  { label: "Component Browser", path: "/components", icon: <FactoryIcon /> },
-  { label: "MQTT Settings", path: "/mqtt", icon: <SettingsInputAntennaIcon /> },
-];
-
 export default function MainLayout() {
   const theme = useTheme();
+  const { t } = useAppPreferences();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const [drawerOpen, setDrawerOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
+
+  const navItems = [
+    { label: t("nav.topDownView"), path: "/plant", icon: <FactoryIcon /> },
+    { label: t("nav.highBayStorage"), path: "/hochregallager", icon: <ViewModuleIcon /> },
+    { label: t("nav.componentBrowser"), path: "/components", icon: <FactoryIcon /> },
+    { label: t("nav.settings"), path: "/mqtt", icon: <SettingsInputAntennaIcon /> },
+    { label: t("nav.documentation"), path: "/docs", icon: <DescriptionIcon /> },
+    { label: t("nav.assistant"), path: "/assistant", icon: <SmartToyIcon /> },
+  ];
 
   const handleNav = (path: string) => {
     navigate(path);
@@ -66,7 +72,7 @@ export default function MainLayout() {
   );
 
   return (
-    <Box sx={{ display: "flex", minHeight: "100vh", bgcolor: "#f5f5f5" }}>
+    <Box sx={{ display: "flex", minHeight: "100vh", bgcolor: "background.default" }}>
       {/* App Bar */}
       <AppBar
         position="fixed"
@@ -88,10 +94,27 @@ export default function MainLayout() {
           )}
           <FactoryIcon sx={{ mr: 1.5 }} />
           <Typography variant="h6" noWrap sx={{ fontWeight: 700 }}>
-            IoT Plant Admin
+            {t("app.title")}
           </Typography>
-          <Typography variant="body2" sx={{ ml: 2, opacity: 0.85 }}>
-            DHBW Lörrach
+          <Typography
+            variant="body2"
+            component="a"
+            href="https://dhbw-loerrach.de/home"
+            target="_blank"
+            rel="noopener noreferrer"
+            sx={{
+              ml: 2,
+              opacity: 0.85,
+              color: "inherit",
+              textDecoration: "none",
+              cursor: "pointer",
+              "&:hover": {
+                textDecoration: "underline",
+                opacity: 1,
+              },
+            }}
+          >
+            {t("app.subtitle")}
           </Typography>
         </Toolbar>
       </AppBar>

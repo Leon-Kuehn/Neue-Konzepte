@@ -71,3 +71,22 @@ export default defineConfig([
   },
 ])
 ```
+
+## AI Assistant (Free API Option)
+
+The project includes an in-app AI assistant tab with slash commands such as `/help`, `/sensor`, `/component`, `/mqtt`, `/lager`, and `/analyse`.
+
+By default, it works with local project knowledge rules (no external API required).
+
+If you want optional lightweight model responses via HuggingFace free tier, create a `.env.local` in `frontend/`:
+
+```bash
+VITE_HF_API_TOKEN=your_huggingface_token
+VITE_HF_MODEL=Qwen/Qwen2.5-1.5B-Instruct
+# optional override:
+# VITE_HF_API_URL=https://router.huggingface.co/v1/chat/completions
+```
+
+Notes:
+- Keep in mind that `VITE_*` variables are exposed to the browser runtime.
+- For production or sensitive environments, proxy the API through a backend service.

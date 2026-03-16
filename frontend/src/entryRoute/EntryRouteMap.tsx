@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { ComponentType, KeyboardEvent, SVGProps } from "react";
 
 import "./EntryRouteMap.css";
@@ -21,6 +21,7 @@ import type {
   HotspotStateSource,
   HotspotState,
 } from "./mapHotspots";
+import { useAppPreferences } from "../context/AppPreferencesContext";
 
 export type EntryRouteMapProps = {
   values: Record<string, HotspotState>;
@@ -54,10 +55,24 @@ export default function EntryRouteMap({
   onToggle,
   className,
 }: EntryRouteMapProps) {
+  const { t } = useAppPreferences();
   const [localStates, setLocalStates] = useState<Record<string, HotspotState>>({});
+  const [isPortraitMobile, setIsPortraitMobile] = useState(false);
   const sortedHotspots = [...MAP_HOTSPOTS].sort(
     (left, right) => (left.layer ?? 2) - (right.layer ?? 2)
   );
+
+  useEffect(() => {
+    const updateViewportMode = () => {
+      const isMobile = window.innerWidth <= 900;
+      const isPortrait = window.innerHeight > window.innerWidth;
+      setIsPortraitMobile(isMobile && isPortrait);
+    };
+
+    updateViewportMode();
+    window.addEventListener("resize", updateViewportMode);
+    return () => window.removeEventListener("resize", updateViewportMode);
+  }, []);
 
   const viewBounds = useMemo(() => {
     let minX = Number.POSITIVE_INFINITY;
@@ -96,6 +111,8 @@ export default function EntryRouteMap({
   const containerClassName = ["responsive-map-container", className]
     .filter(Boolean)
     .join(" ");
+
+  const mobileWidth = `max(100%, calc(72vh / ${aspect}))`;
 
   const getStateFromSource = (hotspot: HotspotConfig, source: HotspotStateSource) => {
     if (source.type === "values") {
@@ -139,21 +156,27 @@ export default function EntryRouteMap({
     <div
       className={containerClassName}
       style={{
-        width: "min(100%, 1300px)",
+        width: "100%",
         margin: "0 auto",
         position: "relative",
+        overflowX: isPortraitMobile ? "auto" : "visible",
+        overflowY: "hidden",
+        WebkitOverflowScrolling: "touch",
       }}
     >
       <div
         style={{
-          width: "100%",
-          paddingBottom: `${aspect * 100}%`,
+          width: isPortraitMobile ? mobileWidth : "min(100%, 1300px)",
+          maxWidth: isPortraitMobile ? "none" : "1300px",
+          height: isPortraitMobile ? "72vh" : "auto",
+          minHeight: isPortraitMobile ? 420 : undefined,
+          paddingBottom: isPortraitMobile ? 0 : `${aspect * 100}%`,
           position: "relative",
         }}
       >
         <svg
           viewBox={`${viewBounds.x} ${viewBounds.y} ${viewBounds.width} ${viewBounds.height}`}
-          aria-label="Responsive map"
+          aria-label={t("map.responsive")}
           style={{
             position: "absolute",
             inset: 0,

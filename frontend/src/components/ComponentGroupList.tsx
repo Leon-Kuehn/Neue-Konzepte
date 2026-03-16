@@ -13,24 +13,26 @@ import {
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import type { Category, PlantComponent } from "../types/PlantComponent";
+import { useAppPreferences } from "../context/AppPreferencesContext";
+import type { TranslationKey } from "../i18n";
 
 type GroupDefinition = {
   category: Category;
-  label: string;
+  labelKey: TranslationKey;
   defaultExpanded?: boolean;
 };
 
 const GROUPS: GroupDefinition[] = [
-  { category: "conveyor", label: "Conveyors", defaultExpanded: true },
-  { category: "rotating-conveyor", label: "Rotating Conveyors", defaultExpanded: true },
-  { category: "press", label: "Presses" },
-  { category: "inductive-sensor", label: "Inductive Sensors", defaultExpanded: true },
-  { category: "rfid-sensor", label: "RFID Sensors", defaultExpanded: true },
-  { category: "optical-sensor", label: "Optical Sensors", defaultExpanded: true },
-  { category: "pneumatic-unit", label: "Pneumatic Units" },
-  { category: "crane", label: "Crane" },
-  { category: "storage", label: "Storage" },
-  { category: "input", label: "Input", defaultExpanded: true },
+  { category: "conveyor", labelKey: "group.conveyor", defaultExpanded: true },
+  { category: "rotating-conveyor", labelKey: "group.rotating-conveyor", defaultExpanded: true },
+  { category: "press", labelKey: "group.press" },
+  { category: "inductive-sensor", labelKey: "group.inductive-sensor", defaultExpanded: true },
+  { category: "rfid-sensor", labelKey: "group.rfid-sensor", defaultExpanded: true },
+  { category: "optical-sensor", labelKey: "group.optical-sensor", defaultExpanded: true },
+  { category: "pneumatic-unit", labelKey: "group.pneumatic-unit" },
+  { category: "crane", labelKey: "group.crane" },
+  { category: "storage", labelKey: "group.storage" },
+  { category: "input", labelKey: "group.input", defaultExpanded: true },
 ];
 
 interface Props {
@@ -46,6 +48,7 @@ export default function ComponentGroupList({
   onSelect,
   maxHeight = 360,
 }: Props) {
+  const { t } = useAppPreferences();
   const [expanded, setExpanded] = useState<string[]>(
     GROUPS.filter((g) => g.defaultExpanded).map((g) => g.category)
   );
@@ -105,7 +108,7 @@ export default function ComponentGroupList({
             >
               <Stack direction="row" spacing={1} alignItems="center">
                 <Typography variant="subtitle2" fontWeight={700}>
-                  {group.label}
+                  {t(group.labelKey)}
                 </Typography>
                 <Chip label={group.items.length} size="small" variant="outlined" />
               </Stack>
@@ -143,7 +146,7 @@ export default function ComponentGroupList({
                               color={component.status === "on" ? "success" : "default"}
                             />
                             <Chip
-                              label={component.online ? "Online" : "Offline"}
+                              label={component.online ? t("componentDetails.online") : t("componentDetails.offline")}
                               size="small"
                               color={component.online ? "success" : "error"}
                               variant="outlined"

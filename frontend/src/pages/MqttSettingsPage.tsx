@@ -11,6 +11,7 @@ import {
   MenuItem,
   Alert,
   Stack,
+  Divider,
 } from "@mui/material";
 import type { MqttSettings, ConnectionStatus } from "../types/MqttSettings";
 import {
@@ -21,6 +22,7 @@ import {
   generateClientId,
   getClient,
 } from "../services/mqttClient";
+import { useAppPreferences } from "../context/AppPreferencesContext";
 
 const defaultSettings: MqttSettings = {
   protocol: "ws",
@@ -41,9 +43,17 @@ function getInitialStatus(): ConnectionStatus {
 }
 
 export default function MqttSettingsPage() {
+  const { t, themeMode, setThemeMode, language, setLanguage } = useAppPreferences();
   const [settings, setSettings] = useState<MqttSettings>(getInitialSettings);
   const [status, setStatus] = useState<ConnectionStatus>(getInitialStatus);
   const [error, setError] = useState<string>("");
+
+  const statusLabel =
+    status === "Connected"
+      ? t("status.connected")
+      : status === "Error"
+        ? t("status.error")
+        : t("status.disconnected");
 
   const handleChange = (field: keyof MqttSettings, value: string | number | boolean) => {
     setSettings((prev) => ({ ...prev, [field]: value }));
@@ -61,7 +71,7 @@ export default function MqttSettingsPage() {
       setStatus("Connected");
     } catch (err) {
       setStatus("Error");
-      setError(err instanceof Error ? err.message : "Connection failed");
+      setError(err instanceof Error ? err.message : t("mqtt.connectionFailed"));
     }
   };
 
@@ -71,14 +81,14 @@ export default function MqttSettingsPage() {
       setStatus("Disconnected");
       setError("");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Disconnect failed");
+      setError(err instanceof Error ? err.message : t("mqtt.disconnectFailed"));
     }
   };
 
   return (
     <Box>
       <Typography variant="h4" fontWeight={700} gutterBottom>
-        MQTT Settings
+        {t("settings.title")}
       </Typography>
 
       <Alert
@@ -87,20 +97,70 @@ export default function MqttSettingsPage() {
         }
         sx={{ mb: 3 }}
       >
-        Connection Status: <strong>{status}</strong>
-        {error && ` — ${error}`}
+        {t("mqtt.connectionStatus")}: <strong>{statusLabel}</strong>
+        {error && ` - ${error}`}
       </Alert>
 
-      <Card sx={{ maxWidth: 600 }}>
-        <CardContent>
-          <Typography variant="h6" gutterBottom>
-            Broker Configuration
-          </Typography>
+      <Box
+        sx={{
+          display: "grid",
+          gap: 3,
+          gridTemplateColumns: { xs: "1fr", lg: "1fr 1fr" },
+          alignItems: "start",
+        }}
+      >
+        <Card sx={{ height: "100%" }}>
+          <CardContent>
+            <Typography variant="h6" gutterBottom>
+              {t("settings.applicationSettings")}
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+              {t("settings.applicationHint")}
+            </Typography>
 
-          <Stack spacing={2.5} sx={{ mt: 2 }}>
+            <Stack spacing={2.5}>
+              <TextField
+                id="app-theme"
+                label={t("settings.theme")}
+                select
+                value={themeMode}
+                onChange={(e) => setThemeMode(e.target.value as "light" | "dark")}
+                fullWidth
+                size="small"
+              >
+                <MenuItem value="light">{t("settings.themeLight")}</MenuItem>
+                <MenuItem value="dark">{t("settings.themeDark")}</MenuItem>
+              </TextField>
+
+              <TextField
+                id="app-language"
+                label={t("settings.language")}
+                select
+                value={language}
+                onChange={(e) => setLanguage(e.target.value as "de" | "en" | "fr")}
+                fullWidth
+                size="small"
+              >
+                <MenuItem value="de">{t("settings.languageGerman")}</MenuItem>
+                <MenuItem value="en">{t("settings.languageEnglish")}</MenuItem>
+                <MenuItem value="fr">{t("settings.languageFrench")}</MenuItem>
+              </TextField>
+            </Stack>
+          </CardContent>
+        </Card>
+
+        <Card sx={{ height: "100%" }}>
+          <CardContent>
+            <Typography variant="h6" gutterBottom>
+              {t("mqtt.sectionTitle")}
+            </Typography>
+
+            <Divider sx={{ mb: 2 }} />
+
+            <Stack spacing={2.5} sx={{ mt: 2 }}>
             <TextField
               id="mqtt-host"
-              label="Broker Host"
+              label={t("mqtt.brokerHost")}
               value={settings.host}
               onChange={(e) => handleChange("host", e.target.value)}
               fullWidth
@@ -110,7 +170,7 @@ export default function MqttSettingsPage() {
 
             <TextField
               id="mqtt-port"
-              label="Port"
+              label={t("mqtt.port")}
               type="number"
               value={settings.port}
               onChange={(e) => handleChange("port", parseInt(e.target.value) || 0)}
@@ -120,20 +180,20 @@ export default function MqttSettingsPage() {
 
             <TextField
               id="mqtt-protocol"
-              label="Protocol"
+              label={t("mqtt.protocol")}
               select
               value={settings.protocol}
               onChange={(e) => handleChange("protocol", e.target.value)}
               fullWidth
               size="small"
             >
-              <MenuItem value="ws">ws (WebSocket)</MenuItem>
-              <MenuItem value="wss">wss (WebSocket Secure)</MenuItem>
+              <MenuItem value="ws">{t("mqtt.protocolWs")}</MenuItem>
+              <MenuItem value="wss">{t("mqtt.protocolWss")}</MenuItem>
             </TextField>
 
             <TextField
               id="mqtt-client-id"
-              label="Client ID"
+              label={t("mqtt.clientId")}
               value={settings.clientId}
               onChange={(e) => handleChange("clientId", e.target.value)}
               fullWidth
@@ -142,7 +202,7 @@ export default function MqttSettingsPage() {
 
             <TextField
               id="mqtt-username"
-              label="Username (optional)"
+              label={t("mqtt.usernameOptional")}
               value={settings.username}
               onChange={(e) => handleChange("username", e.target.value)}
               fullWidth
@@ -151,7 +211,7 @@ export default function MqttSettingsPage() {
 
             <TextField
               id="mqtt-password"
-              label="Password (optional)"
+              label={t("mqtt.passwordOptional")}
               type="password"
               value={settings.password}
               onChange={(e) => handleChange("password", e.target.value)}
@@ -175,7 +235,7 @@ export default function MqttSettingsPage() {
                   }}
                 />
               }
-              label="Use TLS"
+              label={t("mqtt.useTls")}
             />
 
             <Box sx={{ display: "flex", gap: 2, pt: 1 }}>
@@ -185,7 +245,7 @@ export default function MqttSettingsPage() {
                 disabled={status === "Connected"}
                 sx={{ bgcolor: "#E30613", "&:hover": { bgcolor: "#c00510" } }}
               >
-                Connect
+                {t("mqtt.connect")}
               </Button>
               <Button
                 variant="outlined"
@@ -193,12 +253,13 @@ export default function MqttSettingsPage() {
                 disabled={status !== "Connected"}
                 color="error"
               >
-                Disconnect
+                {t("mqtt.disconnect")}
               </Button>
             </Box>
-          </Stack>
-        </CardContent>
-      </Card>
+            </Stack>
+          </CardContent>
+        </Card>
+      </Box>
     </Box>
   );
 }
