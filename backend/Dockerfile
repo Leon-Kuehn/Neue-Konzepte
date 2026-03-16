@@ -19,11 +19,11 @@ WORKDIR /app
 COPY --from=builder /app/package.json /app/package-lock.json ./
 RUN npm ci --omit=dev
 
-RUN npx prisma generate
-
-COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/prisma.config.ts ./prisma.config.ts
+ENV DATABASE_URL=postgresql://postgres:postgres@db:5432/iot_plant?schema=public
+RUN npx prisma generate
+COPY --from=builder /app/dist ./dist
 
 EXPOSE 3000
 
