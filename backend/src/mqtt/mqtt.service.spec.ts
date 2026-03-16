@@ -156,4 +156,10 @@ describe('MqttService', () => {
       }),
     );
   });
+
+  it('logs MQTT disconnected on disconnect event', () => {
+    const logSpy = jest.spyOn(service['logger'], 'warn');
+    mockClient.emit('disconnect');
+    expect(logSpy).toHaveBeenCalledWith('MQTT disconnected');
+  });
 });

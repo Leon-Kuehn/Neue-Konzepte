@@ -19,7 +19,7 @@ export class MqttService implements OnModuleInit, OnModuleDestroy {
 
   onModuleInit() {
     const brokerUrl =
-      process.env.MQTT_BROKER_URL ?? 'mqtt://mosquitto:1883';
+      process.env.MQTT_BROKER_URL ?? 'mqtt://localhost:1883';
 
     this.client = mqtt.connect(brokerUrl, {
       clientId: `backend-${Math.random().toString(36).substring(2, 10)}`,
@@ -44,6 +44,10 @@ export class MqttService implements OnModuleInit, OnModuleDestroy {
 
     this.client.on('message', (receivedTopic, message) => {
       void this.handleMessage(receivedTopic, message.toString());
+    });
+
+    this.client.on('disconnect', () => {
+      this.logger.warn('MQTT disconnected');
     });
 
     this.client.on('error', (err) => {
