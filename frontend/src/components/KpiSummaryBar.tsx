@@ -11,6 +11,9 @@ interface KpiSummaryBarProps {
 }
 
 export default function KpiSummaryBar({ items }: KpiSummaryBarProps) {
+  if (items.length === 0) {
+    return null;
+  }
   return (
     <Box
       sx={{
