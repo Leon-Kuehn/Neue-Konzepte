@@ -1,4 +1,5 @@
 import { useState } from "react";
+import type { ReactNode } from "react";
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
 import {
   AppBar,
@@ -51,7 +52,7 @@ export default function MainLayout() {
     if (isMobile) setDrawerOpen(false);
   };
 
-  const renderNavItem = (item: { label: string; path: string; icon: React.ReactNode }) => (
+  const renderNavItem = (item: { label: string; path: string; icon: ReactNode }) => (
     <ListItemButton
       key={item.path}
       selected={location.pathname === item.path}
