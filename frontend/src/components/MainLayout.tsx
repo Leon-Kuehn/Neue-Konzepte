@@ -36,38 +36,47 @@ export default function MainLayout() {
     { label: t("nav.topDownView"), path: "/plant", icon: <FactoryIcon /> },
     { label: t("nav.highBayStorage"), path: "/hochregallager", icon: <ViewModuleIcon /> },
     { label: t("nav.componentBrowser"), path: "/components", icon: <FactoryIcon /> },
-    { label: t("nav.settings"), path: "/mqtt", icon: <SettingsInputAntennaIcon /> },
     { label: t("nav.documentation"), path: "/docs", icon: <DescriptionIcon /> },
     { label: t("nav.assistant"), path: "/assistant", icon: <SmartToyIcon /> },
   ];
+
+  const settingsNavItem = {
+    label: t("nav.settings"),
+    path: "/mqtt",
+    icon: <SettingsInputAntennaIcon />,
+  };
 
   const handleNav = (path: string) => {
     navigate(path);
     if (isMobile) setDrawerOpen(false);
   };
 
+  const renderNavItem = (item: { label: string; path: string; icon: React.ReactNode }) => (
+    <ListItemButton
+      key={item.path}
+      selected={location.pathname === item.path}
+      onClick={() => handleNav(item.path)}
+      sx={{
+        "&.Mui-selected": {
+          backgroundColor: "rgba(227, 6, 19, 0.08)",
+          borderRight: "3px solid #E30613",
+        },
+      }}
+    >
+      <ListItemIcon sx={{ color: location.pathname === item.path ? "#E30613" : undefined }}>
+        {item.icon}
+      </ListItemIcon>
+      <ListItemText primary={item.label} />
+    </ListItemButton>
+  );
+
   const drawerContent = (
-    <Box sx={{ mt: 8 }}>
-      <List>
-        {navItems.map((item) => (
-          <ListItemButton
-            key={item.path}
-            selected={location.pathname === item.path}
-            onClick={() => handleNav(item.path)}
-            sx={{
-              "&.Mui-selected": {
-                backgroundColor: "rgba(227, 6, 19, 0.08)",
-                borderRight: "3px solid #E30613",
-              },
-            }}
-          >
-            <ListItemIcon sx={{ color: location.pathname === item.path ? "#E30613" : undefined }}>
-              {item.icon}
-            </ListItemIcon>
-            <ListItemText primary={item.label} />
-          </ListItemButton>
-        ))}
-      </List>
+    <Box sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
+      <Toolbar />
+      <Box sx={{ display: "flex", flexDirection: "column", flexGrow: 1 }}>
+        <List>{navItems.map((item) => renderNavItem(item))}</List>
+        <List sx={{ mt: "auto", pb: 2 }}>{renderNavItem(settingsNavItem)}</List>
+      </Box>
     </Box>
   );
 

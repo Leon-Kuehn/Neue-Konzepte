@@ -1,6 +1,7 @@
-import { Card, CardContent, Typography, Divider, Chip, Box } from "@mui/material";
+import { Card, CardContent, Typography, Divider, Box } from "@mui/material";
 import type { PlantComponent } from "../types/PlantComponent";
 import { useAppPreferences } from "../context/AppPreferencesContext";
+import LiveStatusChips from "./LiveStatusChips";
 
 interface Props {
   component: PlantComponent | undefined;
@@ -53,16 +54,7 @@ export default function ComponentDetails({ component }: Props) {
           {t("componentDetails.liveStatus")}
         </Typography>
         <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap", mb: 1 }}>
-          <Chip
-            label={`${t("componentDetails.status")}: ${component.status.toUpperCase()}`}
-            color={component.status === "on" ? "success" : "default"}
-            size="small"
-          />
-          <Chip
-            label={component.online ? t("componentDetails.online") : t("componentDetails.offline")}
-            color={component.online ? "success" : "error"}
-            size="small"
-          />
+          <LiveStatusChips status={component.status} online={component.online} />
         </Box>
         <Typography variant="body2" sx={{ mb: 0.5 }}>
           <strong>{t("componentDetails.lastChanged")}:</strong>{" "}

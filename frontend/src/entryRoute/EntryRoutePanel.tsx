@@ -4,18 +4,19 @@ import EntryRouteMap from "./EntryRouteMap";
 import type { EntryRouteMapHandle } from "./EntryRouteMap";
 import { MAP_HOTSPOTS } from "./mapHotspots";
 import type { HotspotAction, HotspotState } from "./mapHotspots";
-import { resolveComponentId } from "./componentBindings";
+import { getHotspotIdsForComponent, resolveComponentId } from "./componentBindings";
 import type { PlantComponent } from "../types/PlantComponent";
 
 interface EntryRoutePanelProps {
   components: PlantComponent[];
   onSelectComponent: (id: string | null) => void;
+  highlightedComponentId?: string | null;
   className?: string;
 }
 
 const EntryRoutePanel = forwardRef<EntryRouteMapHandle, EntryRoutePanelProps>(
   (
-    { components, onSelectComponent, className }: EntryRoutePanelProps,
+    { components, onSelectComponent, highlightedComponentId, className }: EntryRoutePanelProps,
     ref
   ) => {
     const navigate = useNavigate();
@@ -41,6 +42,11 @@ const EntryRoutePanel = forwardRef<EntryRouteMapHandle, EntryRoutePanelProps>(
       return result;
     }, [componentById]);
 
+    const highlightedHotspotIds = useMemo(
+      () => (highlightedComponentId ? getHotspotIdsForComponent(highlightedComponentId) : []),
+      [highlightedComponentId],
+    );
+
     const handleToggle = (_id: string, action: HotspotAction) => {
       if (action.type === "openDetails") {
         const resolvedId = resolveComponentId(action.target);
@@ -57,6 +63,7 @@ const EntryRoutePanel = forwardRef<EntryRouteMapHandle, EntryRoutePanelProps>(
       <EntryRouteMap
         ref={ref}
         values={values}
+        highlightedHotspotIds={highlightedHotspotIds}
         onToggle={handleToggle}
         className={className}
       />

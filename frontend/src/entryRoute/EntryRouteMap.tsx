@@ -26,6 +26,7 @@ import { useAppPreferences } from "../context/AppPreferencesContext";
 
 export type EntryRouteMapProps = {
   values: Record<string, HotspotState>;
+  highlightedHotspotIds?: string[];
   onToggle?: (id: string, action: HotspotAction) => void;
   className?: string;
 };
@@ -59,7 +60,7 @@ const iconRegistry: Record<HotspotIconId, ComponentType<IconComponentProps>> = {
 };
 
 export default forwardRef<EntryRouteMapHandle, EntryRouteMapProps>(
-  function EntryRouteMap({ values, onToggle, className }: EntryRouteMapProps, ref) {
+  function EntryRouteMap({ values, highlightedHotspotIds = [], onToggle, className }: EntryRouteMapProps, ref) {
     const { t } = useAppPreferences();
     const [localStates, setLocalStates] = useState<Record<string, HotspotState>>({});
     const [isPortraitMobile, setIsPortraitMobile] = useState(false);
@@ -139,6 +140,7 @@ export default forwardRef<EntryRouteMapHandle, EntryRouteMapProps>(
   const mobileWidth = `max(100%, calc(72vh / ${aspect}))`;
   const desktopHeight = "68vh";
   const desktopWidth = `min(100%, min(1300px, calc(${desktopHeight} / ${aspect})))`;
+  const hasActiveHighlight = highlightedHotspotIds.length > 0;
 
   const getStateFromSource = (hotspot: HotspotConfig, source: HotspotStateSource) => {
     if (source.type === "values") {
@@ -277,12 +279,14 @@ export default forwardRef<EntryRouteMapHandle, EntryRouteMapProps>(
               const iconWidth = hotspot.iconWidth ?? hotspot.iconSize ?? DEFAULT_ICON_SIZE;
               const iconHeight = hotspot.iconHeight ?? hotspot.iconSize ?? DEFAULT_ICON_SIZE;
               const rotation = hotspot.rotation ?? 0;
+              const isHighlighted = highlightedHotspotIds.includes(hotspot.id);
+              const isDeemphasized = hasActiveHighlight && !isHighlighted;
 
               return (
                 <g
                   key={hotspot.id}
                   transform={`translate(${hotspot.x}, ${hotspot.y}) rotate(${rotation})`}
-                  className={`hotspot hotspot--${currentState}`}
+                  className={`hotspot hotspot--${currentState}${isHighlighted ? " hotspot--selected" : ""}${isDeemphasized ? " hotspot--deemphasized" : ""}`}
                   role="button"
                   tabIndex={0}
                   aria-label={hotspot.ariaLabel ?? hotspot.name ?? hotspot.id}

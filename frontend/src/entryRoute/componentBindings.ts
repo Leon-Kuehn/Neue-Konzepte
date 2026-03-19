@@ -79,3 +79,23 @@ export function getTopDownComponentIds(): Set<string> {
 
   return ids;
 }
+
+export function getHotspotIdsForComponent(componentId: string): string[] {
+  const matchingHotspots: string[] = [];
+
+  for (const hotspot of MAP_HOTSPOTS) {
+    if (resolveComponentId(hotspot.id) === componentId) {
+      matchingHotspots.push(hotspot.id);
+      continue;
+    }
+
+    if (
+      hotspot.action.type === "openDetails" &&
+      resolveComponentId(hotspot.action.target) === componentId
+    ) {
+      matchingHotspots.push(hotspot.id);
+    }
+  }
+
+  return [...new Set(matchingHotspots)];
+}
