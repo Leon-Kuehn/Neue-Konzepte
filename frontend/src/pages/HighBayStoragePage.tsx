@@ -16,6 +16,7 @@ import {
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import { useAppPreferences } from "../context/AppPreferencesContext";
+import KpiSummaryBar from "../components/KpiSummaryBar";
 
 type StorageItem = {
   sku: string;
@@ -183,9 +184,9 @@ function Carton({ x, y, width, height }: { x: number; y: number; width: number; 
 
   return (
     <g transform={`translate(${x}, ${y})`}>
-      <rect x={0} y={lidHeight} width={width} height={height - lidHeight} rx={4} fill="#D9A05C" stroke="#9C6237" strokeWidth={2} />
-      <polygon points={`0,${lidHeight} ${width * 0.5},0 ${width},${lidHeight}`} fill="#E6B376" stroke="#9C6237" strokeWidth={2} />
-      <line x1={width * 0.5} y1={0} x2={width * 0.5} y2={height} stroke="#9C6237" strokeWidth={1.5} />
+      <rect x={0} y={lidHeight} width={width} height={height - lidHeight} rx={4} fill="#FACC15" stroke="#F59E0B" strokeWidth={2} />
+      <polygon points={`0,${lidHeight} ${width * 0.5},0 ${width},${lidHeight}`} fill="#FDE68A" stroke="#F59E0B" strokeWidth={2} />
+      <line x1={width * 0.5} y1={0} x2={width * 0.5} y2={height} stroke="#EA580C" strokeWidth={1.5} />
     </g>
   );
 }
@@ -255,6 +256,16 @@ export default function HighBayStoragePage() {
     };
   }, [slots]);
 
+  const kpiItems = useMemo(
+    () => [
+      { label: t("highBay.totalSlots"), value: `${slots.length}` },
+      { label: t("highBay.occupied"), value: `${occupiedCount}` },
+      { label: t("highBay.utilization"), value: `${fillPercent}%` },
+      { label: t("highBay.inventoryValue"), value: `${analysis.inventoryValue.toFixed(2)} EUR` },
+    ],
+    [analysis.inventoryValue, fillPercent, occupiedCount, slots.length, t],
+  );
+
   const view = {
     width: 1280,
     height: 760,
@@ -271,15 +282,11 @@ export default function HighBayStoragePage() {
     <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
       <Card>
         <CardContent>
-          <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1 }}>
-            <Typography variant="h6" fontWeight={700}>
-              {t("highBay.title")}
-            </Typography>
-            <Stack direction="row" spacing={1}>
-              <Chip label={`${t("highBay.occupied")}: ${occupiedCount}/${slots.length}`} color="primary" variant="outlined" />
-              <Chip label={`${fillPercent}% ${t("highBay.utilization")}`} color="default" variant="outlined" />
-            </Stack>
-          </Stack>
+          <Typography variant="h6" fontWeight={700} sx={{ mb: 1 }}>
+            {t("highBay.title")}
+          </Typography>
+
+          <KpiSummaryBar items={kpiItems} />
 
           <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
             {t("highBay.dummyInfo")}
@@ -293,18 +300,21 @@ export default function HighBayStoragePage() {
 
           <Box sx={{ width: "100%", maxWidth: 1200, margin: "0 auto" }}>
             <svg viewBox={`0 0 ${view.width} ${view.height}`} width="100%" role="img" aria-label={t("highBay.ariaLabel")}>
-              <rect x={0} y={0} width={view.width} height={view.height} fill="#f2f2f2" rx={10} />
+              <rect x={0} y={0} width={view.width} height={view.height} fill="#FFF7ED" rx={10} />
 
-              <rect x={view.rackX} y={view.rackY} width={view.rackW} height={view.rackH} fill="#ffffff" stroke="#8f8f8f" strokeWidth={4} />
+              <rect x={view.rackX} y={view.rackY} width={view.rackW} height={view.rackH} fill="#FEF3C7" stroke="#EA580C" strokeWidth={4} />
+
+              <rect x={view.rackX - 8} y={view.rackY - 8} width={12} height={view.rackH + 16} rx={4} fill="#F97316" />
+              <rect x={view.rackX + view.rackW - 4} y={view.rackY - 8} width={12} height={view.rackH + 16} rx={4} fill="#F97316" />
 
               {Array.from({ length: COLS + 1 }, (_, i) => {
                 const x = view.rackX + i * cellW;
-                return <line key={`v-${i}`} x1={x} y1={view.rackY} x2={x} y2={view.rackY + view.rackH} stroke="#d0d0d0" strokeWidth={2} />;
+                return <line key={`v-${i}`} x1={x} y1={view.rackY} x2={x} y2={view.rackY + view.rackH} stroke="#F59E0B" strokeWidth={1.5} opacity={0.45} />;
               })}
 
               {Array.from({ length: ROWS + 1 }, (_, i) => {
                 const y = view.rackY + i * cellH;
-                return <line key={`h-${i}`} x1={view.rackX} y1={y} x2={view.rackX + view.rackW} y2={y} stroke="#d0d0d0" strokeWidth={2} />;
+                return <line key={`h-${i}`} x1={view.rackX} y1={y} x2={view.rackX + view.rackW} y2={y} stroke="#F59E0B" strokeWidth={1.5} opacity={0.45} />;
               })}
 
               {slots.map((slot) => {
@@ -323,8 +333,8 @@ export default function HighBayStoragePage() {
                       y={cellY + 3}
                       width={cellW - 6}
                       height={cellH - 6}
-                      fill={isSelected ? "rgba(227, 6, 19, 0.12)" : "transparent"}
-                      stroke={isSelected ? "#E30613" : "rgba(90, 90, 90, 0.3)"}
+                      fill={isSelected ? "rgba(227, 6, 19, 0.12)" : "rgba(255, 255, 255, 0.35)"}
+                      stroke={isSelected ? "#E30613" : "rgba(245, 158, 11, 0.4)"}
                       strokeWidth={isSelected ? 2.5 : 1}
                       rx={4}
                     />
@@ -333,7 +343,7 @@ export default function HighBayStoragePage() {
                       x={cellX + 8}
                       y={cellY + 18}
                       fontSize={11}
-                      fill="#555"
+                      fill="#9A3412"
                       fontWeight={600}
                     >
                       {slot.id}
@@ -346,8 +356,8 @@ export default function HighBayStoragePage() {
                           y={cellY + cellH * 0.22}
                           width={cellW * 0.8}
                           height={cellH * 0.64}
-                          fill="rgba(227, 6, 19, 0.08)"
-                          stroke="rgba(227, 6, 19, 0.2)"
+                          fill="rgba(249, 115, 22, 0.14)"
+                          stroke="rgba(245, 158, 11, 0.65)"
                           strokeWidth={1.5}
                           rx={4}
                         />
@@ -365,7 +375,25 @@ export default function HighBayStoragePage() {
                 );
               })}
 
-              <rect x={view.rackX} y={view.rackY + view.rackH + 10} width={view.rackW} height={20} rx={4} fill="#c2c2c2" />
+              <rect x={view.rackX} y={view.rackY + view.rackH + 10} width={view.rackW} height={10} rx={4} fill="#F97316" />
+              <rect x={view.rackX} y={view.rackY + view.rackH + 20} width={view.rackW} height={22} rx={6} fill="#FACC15" stroke="#F59E0B" strokeWidth={2.5} />
+              {Array.from({ length: COLS * 2 }, (_, i) => {
+                const segW = view.rackW / (COLS * 2);
+                const segX = view.rackX + i * segW + 3;
+                return (
+                  <rect
+                    key={`belt-seg-${i}`}
+                    x={segX}
+                    y={view.rackY + view.rackH + 21.5}
+                    width={Math.max(segW - 6, 6)}
+                    height={19}
+                    rx={2.5}
+                    fill="#F59E0B"
+                    opacity={0.7}
+                  />
+                );
+              })}
+              <rect x={view.rackX} y={view.rackY + view.rackH + 42} width={view.rackW} height={8} rx={4} fill="#F97316" />
             </svg>
           </Box>
         </CardContent>

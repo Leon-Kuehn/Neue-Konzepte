@@ -130,6 +130,16 @@
   transform: scale(1.05);
 }
 
+.hotspot--selected .hotspot__icon {
+  transform: scale(1.08);
+  filter: drop-shadow(0 0 6px rgba(227, 6, 19, 0.8));
+}
+
+.hotspot--deemphasized .hotspot__icon {
+  opacity: 0.15;
+  filter: grayscale(1) brightness(0.85);
+}
+
 @keyframes belt-move-left {
   0% {
     transform: translateX(0);

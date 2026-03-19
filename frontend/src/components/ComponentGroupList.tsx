@@ -4,6 +4,7 @@ import {
   AccordionDetails,
   AccordionSummary,
   Box,
+  Button,
   Chip,
   List,
   ListItemButton,
@@ -15,6 +16,8 @@ import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import type { Category, PlantComponent } from "../types/PlantComponent";
 import { useAppPreferences } from "../context/AppPreferencesContext";
 import type { TranslationKey } from "../i18n";
+import LiveStatusChips from "./LiveStatusChips";
+import ComponentCategoryIcon from "./ComponentCategoryIcon";
 
 type GroupDefinition = {
   category: Category;
@@ -39,6 +42,7 @@ interface Props {
   components: PlantComponent[];
   selectedId: string | null;
   onSelect: (id: string) => void;
+  onShowInTopDown?: (id: string) => void;
   maxHeight?: number | string;
 }
 
@@ -46,6 +50,7 @@ export default function ComponentGroupList({
   components,
   selectedId,
   onSelect,
+  onShowInTopDown,
   maxHeight = 360,
 }: Props) {
   const { t } = useAppPreferences();
@@ -111,12 +116,19 @@ export default function ComponentGroupList({
                   {t(group.labelKey)}
                 </Typography>
                 <Chip label={group.items.length} size="small" variant="outlined" />
+                <Chip
+                  label={`${group.items.filter((item) => item.online).length} ${t("componentDetails.online")}`}
+                  size="small"
+                  color="success"
+                  variant="outlined"
+                />
               </Stack>
             </AccordionSummary>
             <AccordionDetails sx={{ pt: 0.5, pb: 1 }}>
               <List dense disablePadding>
                 {group.items.map((component) => {
                   const isSelected = component.id === selectedId;
+                  const lastChanged = new Date(component.lastChanged).toLocaleString();
 
                   return (
                     <ListItemButton
@@ -124,36 +136,71 @@ export default function ComponentGroupList({
                       onClick={() => onSelect(component.id)}
                       selected={isSelected}
                       sx={{
-                        mb: 0.5,
+                        mb: 0.75,
                         border: isSelected ? "1px solid #E30613" : "1px solid transparent",
-                        borderRadius: 1,
+                        borderRadius: 1.5,
                         bgcolor: isSelected ? "rgba(227, 6, 19, 0.08)" : "transparent",
-                        alignItems: "flex-start",
+                        alignItems: "stretch",
+                        px: 1,
+                        py: 0.75,
+                        "&:hover": {
+                          bgcolor: "action.hover",
+                        },
                       }}
                     >
-                      <ListItemText
-                        primary={
-                          <Typography variant="body2" fontWeight={600}>
-                            {component.name}
-                          </Typography>
-                        }
-                        secondary={
-                          <Stack direction="row" spacing={0.5} useFlexGap flexWrap="wrap" sx={{ mt: 0.5 }}>
-                            <Chip label={component.id} size="small" variant="outlined" />
-                            <Chip
-                              label={component.status.toUpperCase()}
-                              size="small"
-                              color={component.status === "on" ? "success" : "default"}
-                            />
-                            <Chip
-                              label={component.online ? t("componentDetails.online") : t("componentDetails.offline")}
-                              size="small"
-                              color={component.online ? "success" : "error"}
-                              variant="outlined"
-                            />
-                          </Stack>
-                        }
-                      />
+                      <Box sx={{ display: "grid", gridTemplateColumns: "56px minmax(0, 1fr)", gap: 1, width: "100%" }}>
+                        <Box
+                          sx={{
+                            border: "1px solid",
+                            borderColor: "divider",
+                            borderRadius: 1,
+                            bgcolor: "background.paper",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            minHeight: 42,
+                            overflow: "hidden",
+                          }}
+                        >
+                          <ComponentCategoryIcon category={component.category} active={component.status === "on"} />
+                        </Box>
+
+                        <ListItemText
+                          primary={
+                            <Stack direction="row" spacing={1} alignItems="center" useFlexGap flexWrap="wrap">
+                              <Typography variant="body2" fontWeight={700}>
+                                {component.name}
+                              </Typography>
+                              <Chip label={t(group.labelKey)} size="small" variant="outlined" />
+                            </Stack>
+                          }
+                          secondary={
+                            <Stack spacing={0.5} sx={{ mt: 0.35 }}>
+                              <Typography variant="caption" color="text.secondary">
+                                {component.id}
+                              </Typography>
+                              <LiveStatusChips status={component.status} online={component.online} />
+                              <Typography variant="caption" color="text.secondary">
+                                {t("componentDetails.lastChanged")}: {lastChanged}
+                              </Typography>
+                              {onShowInTopDown && (
+                                <Box>
+                                  <Button
+                                    size="small"
+                                    variant="outlined"
+                                    onClick={(event) => {
+                                      event.stopPropagation();
+                                      onShowInTopDown(component.id);
+                                    }}
+                                  >
+                                    {t("componentBrowser.showInTopDown")}
+                                  </Button>
+                                </Box>
+                              )}
+                            </Stack>
+                          }
+                        />
+                      </Box>
                     </ListItemButton>
                   );
                 })}

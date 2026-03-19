@@ -1,4 +1,5 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
+import { useLocation } from "react-router-dom";
 import {
   Alert,
   Box,
@@ -14,6 +15,7 @@ import RemoveIcon from "@mui/icons-material/Remove";
 import RestartAltIcon from "@mui/icons-material/RestartAlt";
 import CloseIcon from "@mui/icons-material/Close";
 import ComponentDetails from "../components/ComponentDetails";
+import KpiSummaryBar from "../components/KpiSummaryBar";
 import { mockComponents } from "../types/mockData";
 import type { PlantComponent } from "../types/PlantComponent";
 import {
@@ -30,12 +32,29 @@ import { useAppPreferences } from "../context/AppPreferencesContext";
 
 export default function PlantOverviewPage() {
   const { t } = useAppPreferences();
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const location = useLocation();
+  const showFromNavigation =
+    typeof (location.state as { showComponentId?: unknown } | null)?.showComponentId === "string"
+      ? ((location.state as { showComponentId: string }).showComponentId)
+      : null;
+  const [selectedId, setSelectedId] = useState<string | null>(showFromNavigation);
+  const [focusComponentId, setFocusComponentId] = useState<string | null>(showFromNavigation);
   const [components, setComponents] = useState<PlantComponent[]>(mockComponents);
   const [mqttConnected, setMqttConnected] = useState(false);
   const mapRef = useRef<EntryRouteMapHandle>(null);
 
   const selectedComponent = components.find((c) => c.id === selectedId) ?? null;
+
+  const onlineCount = useMemo(() => components.filter((component) => component.online).length, [components]);
+  const activeCount = useMemo(() => components.filter((component) => component.status === "on").length, [components]);
+  const latestChange = useMemo(() => {
+    if (components.length === 0) return null;
+    const latest = components.reduce((best, component) => {
+      const timestamp = new Date(component.lastChanged).getTime();
+      return timestamp > best ? timestamp : best;
+    }, 0);
+    return latest > 0 ? new Date(latest).toLocaleString() : null;
+  }, [components]);
 
   useEffect(() => {
     const settings = loadSettings();
@@ -49,11 +68,11 @@ export default function PlantOverviewPage() {
         if (cancelled) return;
         setMqttConnected(true);
 
-        const statusTopics = [...new Set(components.map((c) => c.mqttTopics.status))];
+        const statusTopics = [...new Set(mockComponents.map((c) => c.mqttTopics.status))];
         await Promise.all(statusTopics.map((topic) => subscribe(topic)));
 
         const topicToComponentId = new Map(
-          components.map((component) => [component.mqttTopics.status, component.id]),
+          mockComponents.map((component) => [component.mqttTopics.status, component.id]),
         );
 
         onMessage((topic, payload) => {
@@ -99,7 +118,7 @@ export default function PlantOverviewPage() {
       cancelled = true;
       if (getClient()) disconnect();
     };
-  }, [components]);
+  }, []);
 
   return (
     <Box
@@ -109,8 +128,17 @@ export default function PlantOverviewPage() {
         gap: 2,
       }}
     >
+      <KpiSummaryBar
+        items={[
+          { label: t("plant.kpiTotalComponents"), value: `${components.length}` },
+          { label: t("plant.kpiOnlineComponents"), value: `${onlineCount}` },
+          { label: t("plant.kpiActiveComponents"), value: `${activeCount}` },
+          { label: t("plant.kpiLastUpdate"), value: latestChange ?? t("common.notAvailable") },
+        ]}
+      />
+
       {mqttConnected && (
-        <Alert severity="success" sx={{ mb: 2 }}>
+        <Alert severity="success">
           {t("plant.connectedLive")}
         </Alert>
       )}
@@ -192,7 +220,11 @@ export default function PlantOverviewPage() {
               <EntryRoutePanel
                 ref={mapRef}
                 components={components}
-                onSelectComponent={setSelectedId}
+                onSelectComponent={(componentId) => {
+                  setSelectedId(componentId);
+                  setFocusComponentId(null);
+                }}
+                highlightedComponentId={focusComponentId}
               />
             </Box>
           </Box>
@@ -202,18 +234,28 @@ export default function PlantOverviewPage() {
       <Drawer
         anchor="right"
         open={Boolean(selectedComponent)}
-        onClose={() => setSelectedId(null)}
+        onClose={() => {
+          setSelectedId(null);
+          setFocusComponentId(null);
+        }}
         PaperProps={{ sx: { width: { xs: 320, sm: 380 }, p: 2 } }}
       >
-        <Box sx={{ display: "flex", justifyContent: "flex-end", mb: 1 }}>
+        <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 1 }}>
+          <Typography variant="h6" fontWeight={700}>
+            {selectedComponent?.name ?? t("componentDetails.liveStatus")}
+          </Typography>
           <MuiIconButton
             size="small"
-            onClick={() => setSelectedId(null)}
+            onClick={() => {
+              setSelectedId(null);
+              setFocusComponentId(null);
+            }}
             aria-label={t("common.closeDetails")}
           >
             <CloseIcon fontSize="small" />
           </MuiIconButton>
         </Box>
+        <Divider sx={{ mb: 1.5 }} />
         {selectedComponent && <ComponentDetails component={selectedComponent} />}
       </Drawer>
     </Box>
