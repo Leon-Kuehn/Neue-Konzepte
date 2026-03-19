@@ -68,11 +68,11 @@ export default function PlantOverviewPage() {
         if (cancelled) return;
         setMqttConnected(true);
 
-        const statusTopics = [...new Set(components.map((c) => c.mqttTopics.status))];
+        const statusTopics = [...new Set(mockComponents.map((c) => c.mqttTopics.status))];
         await Promise.all(statusTopics.map((topic) => subscribe(topic)));
 
         const topicToComponentId = new Map(
-          components.map((component) => [component.mqttTopics.status, component.id]),
+          mockComponents.map((component) => [component.mqttTopics.status, component.id]),
         );
 
         onMessage((topic, payload) => {
@@ -118,7 +118,7 @@ export default function PlantOverviewPage() {
       cancelled = true;
       if (getClient()) disconnect();
     };
-  }, [components]);
+  }, []);
 
   return (
     <Box
