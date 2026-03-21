@@ -4,11 +4,32 @@ import {
   OnModuleDestroy,
   OnModuleInit,
 } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import * as mqtt from 'mqtt';
 import { PrismaService } from '../prisma/prisma.service.js';
 
 /** Topics the backend subscribes to. */
 const SUBSCRIBED_TOPICS = ['entry-route/#', 'hochregallager/#', 'plant/#'];
+type JsonObject = { [key: string]: JsonValue };
+type JsonValue = string | number | boolean | null | JsonObject | JsonValue[];
+
+const isJsonValue = (value: unknown): value is JsonValue => {
+  if (
+    value === null ||
+    typeof value === 'string' ||
+    typeof value === 'number' ||
+    typeof value === 'boolean'
+  ) {
+    return true;
+  }
+  if (Array.isArray(value)) {
+    return value.every(isJsonValue);
+  }
+  if (typeof value === 'object') {
+    return Object.values(value).every(isJsonValue);
+  }
+  return false;
+};
 
 @Injectable()
 export class MqttService implements OnModuleInit, OnModuleDestroy {
@@ -84,6 +105,10 @@ export class MqttService implements OnModuleInit, OnModuleDestroy {
     } catch {
       parsedPayload = payload;
     }
+    const payloadToStore: Prisma.InputJsonValue =
+      isJsonValue(parsedPayload) && parsedPayload !== null
+        ? parsedPayload
+        : payload;
 
     try {
       await this.prisma.sensorData.create({
@@ -91,7 +116,7 @@ export class MqttService implements OnModuleInit, OnModuleDestroy {
           componentId,
           topic,
           receivedAt: new Date(),
-          payload: parsedPayload as any,
+          payload: payloadToStore,
         },
       });
       this.logger.log('SensorData stored');

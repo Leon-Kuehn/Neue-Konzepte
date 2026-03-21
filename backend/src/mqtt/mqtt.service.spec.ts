@@ -42,6 +42,14 @@ jest.mock('mqtt', () => ({
 
 import * as mqttLib from 'mqtt';
 
+type SensorDataCreateInput = {
+  data: {
+    componentId: string;
+    topic: string;
+    payload: unknown;
+  };
+};
+
 describe('MqttService', () => {
   let service: MqttService;
   let mockClient: MockMqttClient;
@@ -71,6 +79,13 @@ describe('MqttService', () => {
     mockClient = (mqttLib.connect as jest.Mock).mock.results[0]
       .value as MockMqttClient;
   });
+
+  const getLastCreatedData = (): SensorDataCreateInput['data'] => {
+    const calls = mockSensorDataCreate.mock.calls as SensorDataCreateInput[][];
+    const lastCall = calls.at(-1);
+    expect(lastCall).toBeDefined();
+    return lastCall![0].data;
+  };
 
   afterEach(() => {
     service.onModuleDestroy();
@@ -114,14 +129,9 @@ describe('MqttService', () => {
     // Allow the async handleMessage to complete
     await new Promise((r) => setTimeout(r, 10));
 
-    expect(mockSensorDataCreate).toHaveBeenCalledWith(
-      expect.objectContaining({
-        data: expect.objectContaining({
-          componentId: 'entry-route',
-          topic: 'entry-route/status',
-        }),
-      }),
-    );
+    const createdData = getLastCreatedData();
+    expect(createdData.componentId).toBe('entry-route');
+    expect(createdData.topic).toBe('entry-route/status');
   });
 
   it('stores parsed JSON payload', async () => {
@@ -134,14 +144,9 @@ describe('MqttService', () => {
 
     await new Promise((r) => setTimeout(r, 10));
 
-    expect(mockSensorDataCreate).toHaveBeenCalledWith(
-      expect.objectContaining({
-        data: expect.objectContaining({
-          componentId: 'plant',
-          payload: { speed: 3.2 },
-        }),
-      }),
-    );
+    const createdData = getLastCreatedData();
+    expect(createdData.componentId).toBe('plant');
+    expect(createdData.payload).toEqual({ speed: 3.2 });
   });
 
   it('stores non-JSON payload as string', async () => {
@@ -150,14 +155,9 @@ describe('MqttService', () => {
 
     await new Promise((r) => setTimeout(r, 10));
 
-    expect(mockSensorDataCreate).toHaveBeenCalledWith(
-      expect.objectContaining({
-        data: expect.objectContaining({
-          componentId: 'hochregallager',
-          payload: 'OPEN',
-        }),
-      }),
-    );
+    const createdData = getLastCreatedData();
+    expect(createdData.componentId).toBe('hochregallager');
+    expect(createdData.payload).toBe('OPEN');
   });
 
   it('does not attempt MQTT connection when MQTT_BROKER_URL is missing', () => {
