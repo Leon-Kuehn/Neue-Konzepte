@@ -55,6 +55,7 @@ describe('MqttService', () => {
 
   beforeEach(async () => {
     jest.clearAllMocks();
+    process.env.MQTT_BROKER_URL = 'mqtt://test-broker:1883';
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -67,11 +68,13 @@ describe('MqttService', () => {
 
     // Initialise (calls onModuleInit) and capture the mock client
     service.onModuleInit();
-    mockClient = (mqttLib.connect as jest.Mock).mock.results[0].value as MockMqttClient;
+    mockClient = (mqttLib.connect as jest.Mock).mock.results[0]
+      .value as MockMqttClient;
   });
 
   afterEach(() => {
     service.onModuleDestroy();
+    delete process.env.MQTT_BROKER_URL;
   });
 
   it('should be defined', () => {
@@ -141,7 +144,7 @@ describe('MqttService', () => {
     );
   });
 
-  it('wraps non-JSON payload in { raw: ... }', async () => {
+  it('stores non-JSON payload as string', async () => {
     mockClient.emit('connect');
     mockClient.emit('message', 'hochregallager/door', Buffer.from('OPEN'));
 
@@ -151,14 +154,20 @@ describe('MqttService', () => {
       expect.objectContaining({
         data: expect.objectContaining({
           componentId: 'hochregallager',
-          payload: { raw: 'OPEN' },
+          payload: 'OPEN',
         }),
       }),
     );
   });
 
+  it('does not attempt MQTT connection when MQTT_BROKER_URL is missing', () => {
+    delete process.env.MQTT_BROKER_URL;
+    service.onModuleInit();
+    expect(mqttLib.connect).toHaveBeenCalledTimes(1);
+  });
+
   it('logs MQTT disconnected on disconnect event', () => {
-    const logSpy = jest.spyOn(service['logger'], 'warn');
+    const logSpy = jest.spyOn(service['logger'], 'log');
     mockClient.emit('disconnect');
     expect(logSpy).toHaveBeenCalledWith('MQTT disconnected');
   });

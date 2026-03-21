@@ -18,8 +18,13 @@ export class MqttService implements OnModuleInit, OnModuleDestroy {
   constructor(private readonly prisma: PrismaService) {}
 
   onModuleInit() {
-    const brokerUrl =
-      process.env.MQTT_BROKER_URL ?? 'mqtt://localhost:1883';
+    const brokerUrl = process.env.MQTT_BROKER_URL;
+    if (!brokerUrl) {
+      this.logger.warn(
+        'MQTT_BROKER_URL is not set. MQTT ingestion is disabled.',
+      );
+      return;
+    }
 
     this.client = mqtt.connect(brokerUrl, {
       clientId: `backend-${Math.random().toString(36).substring(2, 10)}`,
@@ -47,7 +52,7 @@ export class MqttService implements OnModuleInit, OnModuleDestroy {
     });
 
     this.client.on('disconnect', () => {
-      this.logger.warn('MQTT disconnected');
+      this.logger.log('MQTT disconnected');
     });
 
     this.client.on('error', (err) => {
@@ -55,7 +60,7 @@ export class MqttService implements OnModuleInit, OnModuleDestroy {
     });
 
     this.client.on('reconnect', () => {
-      this.logger.warn('Reconnecting to MQTT broker…');
+      this.logger.log('MQTT reconnecting');
     });
   }
 
@@ -67,7 +72,7 @@ export class MqttService implements OnModuleInit, OnModuleDestroy {
   }
 
   private async handleMessage(topic: string, payload: string): Promise<void> {
-    this.logger.log(`MQTT message received: ${topic}`);
+    this.logger.log('MQTT message received');
 
     // Derive componentId from the first segment of the topic.
     // e.g. "entry-route/status" → "entry-route"
@@ -77,7 +82,7 @@ export class MqttService implements OnModuleInit, OnModuleDestroy {
     try {
       parsedPayload = JSON.parse(payload) as unknown;
     } catch {
-      parsedPayload = { raw: payload };
+      parsedPayload = payload;
     }
 
     try {
@@ -85,11 +90,11 @@ export class MqttService implements OnModuleInit, OnModuleDestroy {
         data: {
           componentId,
           topic,
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          receivedAt: new Date(),
           payload: parsedPayload as any,
         },
       });
-      this.logger.log(`SensorData stored: ${topic}`);
+      this.logger.log('SensorData stored');
     } catch (err) {
       this.logger.error(
         `Failed to persist MQTT message [${topic}]: ${(err as Error).message}`,
