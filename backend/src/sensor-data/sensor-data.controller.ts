@@ -55,7 +55,9 @@ export class SensorDataController {
     const parsedLimit = limit !== undefined ? parseInt(limit, 10) : undefined;
     return this.sensorDataService.findByComponentId(
       componentId,
-      parsedLimit !== undefined && !isNaN(parsedLimit) ? parsedLimit : undefined,
+      parsedLimit !== undefined && !isNaN(parsedLimit)
+        ? parsedLimit
+        : undefined,
     );
   }
 }
