@@ -5,10 +5,8 @@ import {
   Param,
   Query,
 } from '@nestjs/common';
+import { DEFAULT_LIMIT, MAX_LIMIT } from './sensor-data.constants.js';
 import { SensorDataService } from './sensor-data.service.js';
-
-const DEFAULT_LIMIT = 100;
-const MAX_LIMIT = 1000;
 
 const parseLimitParam = (value: string | undefined, name = 'limit'): number => {
   if (value === undefined) {

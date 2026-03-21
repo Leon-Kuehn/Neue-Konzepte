@@ -1,12 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service.js';
+import {
+  DEFAULT_LIMIT,
+  MAX_LIMIT,
+  RANGE_LIMIT,
+  STATS_SAMPLE_LIMIT,
+} from './sensor-data.constants.js';
 
 type ActivityInterval = 'minute' | 'hour';
-
-const DEFAULT_LIMIT = 100;
-const MAX_LIMIT = 1000;
-const RANGE_LIMIT = 5000;
-const STATS_SAMPLE_LIMIT = 5000;
 
 const clampLimit = (limit: number, max = MAX_LIMIT): number =>
   Math.min(Math.max(limit, 1), max);
@@ -34,9 +35,10 @@ const extractNumericPayload = (payload: unknown): number | undefined => {
 
 const bucketTimestamp = (date: Date, interval: ActivityInterval): string => {
   const bucket = new Date(date);
-  bucket.setUTCSeconds(0, 0);
   if (interval === 'hour') {
     bucket.setUTCMinutes(0, 0, 0);
+  } else {
+    bucket.setUTCSeconds(0, 0);
   }
   return bucket.toISOString();
 };
