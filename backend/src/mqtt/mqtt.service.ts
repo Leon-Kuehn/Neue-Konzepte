@@ -93,7 +93,7 @@ export class MqttService implements OnModuleInit, OnModuleDestroy {
   }
 
   private async handleMessage(topic: string, payload: string): Promise<void> {
-    this.logger.log('MQTT message received');
+    this.logger.log(`MQTT message received: ${topic}`);
 
     // Derive componentId from the first segment of the topic.
     // e.g. "entry-route/status" → "entry-route"
@@ -105,10 +105,12 @@ export class MqttService implements OnModuleInit, OnModuleDestroy {
     } catch {
       parsedPayload = payload;
     }
-    const payloadToStore: Prisma.InputJsonValue =
-      isJsonValue(parsedPayload) && parsedPayload !== null
-        ? parsedPayload
-        : payload;
+    const payloadToStore: Prisma.InputJsonValue | Prisma.JsonNullValueInput =
+      parsedPayload === null
+        ? Prisma.JsonNull
+        : isJsonValue(parsedPayload)
+          ? parsedPayload
+          : payload;
 
     try {
       await this.prisma.sensorData.create({
@@ -119,7 +121,7 @@ export class MqttService implements OnModuleInit, OnModuleDestroy {
           payload: payloadToStore,
         },
       });
-      this.logger.log('SensorData stored');
+      this.logger.log(`SensorData stored: ${topic}`);
     } catch (err) {
       this.logger.error(
         `Failed to persist MQTT message [${topic}]: ${(err as Error).message}`,

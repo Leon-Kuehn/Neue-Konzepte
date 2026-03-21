@@ -46,6 +46,7 @@ type SensorDataCreateInput = {
   data: {
     componentId: string;
     topic: string;
+    receivedAt: Date;
     payload: unknown;
   };
 };
@@ -161,9 +162,12 @@ describe('MqttService', () => {
   });
 
   it('does not attempt MQTT connection when MQTT_BROKER_URL is missing', () => {
+    const connectCallsBefore = (mqttLib.connect as jest.Mock).mock.calls.length;
     delete process.env.MQTT_BROKER_URL;
     service.onModuleInit();
-    expect(mqttLib.connect).toHaveBeenCalledTimes(1);
+    expect((mqttLib.connect as jest.Mock).mock.calls.length).toBe(
+      connectCallsBefore,
+    );
   });
 
   it('logs MQTT disconnected on disconnect event', () => {
