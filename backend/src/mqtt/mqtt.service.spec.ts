@@ -42,6 +42,15 @@ jest.mock('mqtt', () => ({
 
 import * as mqttLib from 'mqtt';
 
+type SensorDataCreateInput = {
+  data: {
+    componentId: string;
+    topic: string;
+    receivedAt: Date;
+    payload: unknown;
+  };
+};
+
 describe('MqttService', () => {
   let service: MqttService;
   let mockClient: MockMqttClient;
@@ -55,6 +64,7 @@ describe('MqttService', () => {
 
   beforeEach(async () => {
     jest.clearAllMocks();
+    process.env.MQTT_BROKER_URL = 'mqtt://test-broker:1883';
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -67,11 +77,20 @@ describe('MqttService', () => {
 
     // Initialise (calls onModuleInit) and capture the mock client
     service.onModuleInit();
-    mockClient = (mqttLib.connect as jest.Mock).mock.results[0].value as MockMqttClient;
+    mockClient = (mqttLib.connect as jest.Mock).mock.results[0]
+      .value as MockMqttClient;
   });
+
+  const getLastCreatedData = (): SensorDataCreateInput['data'] => {
+    const calls = mockSensorDataCreate.mock.calls as SensorDataCreateInput[][];
+    const lastCall = calls.at(-1);
+    expect(lastCall).toBeDefined();
+    return lastCall![0].data;
+  };
 
   afterEach(() => {
     service.onModuleDestroy();
+    delete process.env.MQTT_BROKER_URL;
   });
 
   it('should be defined', () => {
@@ -111,14 +130,9 @@ describe('MqttService', () => {
     // Allow the async handleMessage to complete
     await new Promise((r) => setTimeout(r, 10));
 
-    expect(mockSensorDataCreate).toHaveBeenCalledWith(
-      expect.objectContaining({
-        data: expect.objectContaining({
-          componentId: 'entry-route',
-          topic: 'entry-route/status',
-        }),
-      }),
-    );
+    const createdData = getLastCreatedData();
+    expect(createdData.componentId).toBe('entry-route');
+    expect(createdData.topic).toBe('entry-route/status');
   });
 
   it('stores parsed JSON payload', async () => {
@@ -131,34 +145,33 @@ describe('MqttService', () => {
 
     await new Promise((r) => setTimeout(r, 10));
 
-    expect(mockSensorDataCreate).toHaveBeenCalledWith(
-      expect.objectContaining({
-        data: expect.objectContaining({
-          componentId: 'plant',
-          payload: { speed: 3.2 },
-        }),
-      }),
-    );
+    const createdData = getLastCreatedData();
+    expect(createdData.componentId).toBe('plant');
+    expect(createdData.payload).toEqual({ speed: 3.2 });
   });
 
-  it('wraps non-JSON payload in { raw: ... }', async () => {
+  it('stores non-JSON payload as string', async () => {
     mockClient.emit('connect');
     mockClient.emit('message', 'hochregallager/door', Buffer.from('OPEN'));
 
     await new Promise((r) => setTimeout(r, 10));
 
-    expect(mockSensorDataCreate).toHaveBeenCalledWith(
-      expect.objectContaining({
-        data: expect.objectContaining({
-          componentId: 'hochregallager',
-          payload: { raw: 'OPEN' },
-        }),
-      }),
+    const createdData = getLastCreatedData();
+    expect(createdData.componentId).toBe('hochregallager');
+    expect(createdData.payload).toBe('OPEN');
+  });
+
+  it('does not attempt MQTT connection when MQTT_BROKER_URL is missing', () => {
+    const connectCallsBefore = (mqttLib.connect as jest.Mock).mock.calls.length;
+    delete process.env.MQTT_BROKER_URL;
+    service.onModuleInit();
+    expect((mqttLib.connect as jest.Mock).mock.calls.length).toBe(
+      connectCallsBefore,
     );
   });
 
   it('logs MQTT disconnected on disconnect event', () => {
-    const logSpy = jest.spyOn(service['logger'], 'warn');
+    const logSpy = jest.spyOn(service['logger'], 'log');
     mockClient.emit('disconnect');
     expect(logSpy).toHaveBeenCalledWith('MQTT disconnected');
   });
