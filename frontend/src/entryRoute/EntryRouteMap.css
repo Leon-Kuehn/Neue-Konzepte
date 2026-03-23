@@ -51,11 +51,11 @@
   transform-origin: center;
 }
 
-.hotspot .highbay__carriage {
+.hotspot--on .highbay__carriage {
   animation: highbay-carriage-move 8s ease-in-out infinite;
 }
 
-.hotspot .highbay__fork {
+.hotspot--on .highbay__fork {
   animation: highbay-fork-extend 2.6s ease-in-out infinite;
 }
 

@@ -33,6 +33,7 @@ import {
   type SimulationSpeed,
 } from "../services/simulationService";
 import { useSimulationState } from "../hooks/useSimulationState";
+import { setLiveConnectionState } from "../services/liveComponentService";
 
 const defaultSettings: MqttSettings = {
   protocol: "ws",
@@ -81,8 +82,10 @@ export default function MqttSettingsPage() {
       saveSettings(finalSettings);
       await connect(finalSettings);
       setStatus("Connected");
+      setLiveConnectionState(true);
     } catch (err) {
       setStatus("Error");
+      setLiveConnectionState(false);
       setError(err instanceof Error ? err.message : t("mqtt.connectionFailed"));
     }
   };
@@ -91,6 +94,7 @@ export default function MqttSettingsPage() {
     try {
       await disconnect();
       setStatus("Disconnected");
+      setLiveConnectionState(false);
       setError("");
     } catch (err) {
       setError(err instanceof Error ? err.message : t("mqtt.disconnectFailed"));

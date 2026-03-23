@@ -164,14 +164,13 @@ const plantDemoScenario: SimulationScenario = {
   name: "Plant Demo",
   description: "Simulates moving conveyors, sensor activity, warehouse changes, and occasional faults.",
   start: (context) => {
-    const actuators = mockComponents.filter(
-      (component) => component.role === "actuator" && component.category !== "storage",
-    );
+    const actuators = mockComponents.filter((component) => component.role === "actuator");
     const sensors = mockComponents.filter((component) => component.role === "sensor");
     const rotatingConveyors = mockComponents.filter(
       (component) => component.category === "rotating-conveyor",
     );
     const faultCandidates = mockComponents.filter((component) => component.category !== "storage");
+    const highBayStorage = mockComponents.find((component) => component.category === "storage");
     const warehouseSlots = ["R1C2", "R2C6", "R3C7", "R4C10", "R5C4", "R5C8"];
     const slotOccupancy = new Map<string, boolean>(warehouseSlots.map((slot) => [slot, false]));
 
@@ -295,6 +294,39 @@ const plantDemoScenario: SimulationScenario = {
           updatedAt: new Date().toISOString(),
         },
       });
+
+      if (highBayStorage) {
+        const runtime = getRuntime(highBayStorage);
+        runtime.online = true;
+        runtime.cycles += 1;
+        runtime.uptimeHours += 0.02;
+
+        context.emit({
+          kind: "component",
+          topic: `plant/${highBayStorage.id}/status`,
+          payload: {
+            status: "on",
+            online: true,
+            cycles: runtime.cycles,
+            uptimeHours: Number(runtime.uptimeHours.toFixed(2)),
+            health: "ok",
+          },
+        });
+
+        context.trackTimeout(() => {
+          context.emit({
+            kind: "component",
+            topic: `plant/${highBayStorage.id}/status`,
+            payload: {
+              status: "off",
+              online: true,
+              cycles: runtime.cycles,
+              uptimeHours: Number(runtime.uptimeHours.toFixed(2)),
+              health: "ok",
+            },
+          });
+        }, 3200);
+      }
     }, 6400);
 
     context.trackInterval(() => {

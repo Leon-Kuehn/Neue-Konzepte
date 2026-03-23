@@ -14,12 +14,14 @@ import {
   useAppPreferences,
 } from "./context/AppPreferencesContext";
 import { initializeSimulation } from "./services/simulationService";
+import { initializeLiveComponentFeed } from "./services/liveComponentService";
 
 function AppShell() {
   const { themeMode } = useAppPreferences();
 
   useEffect(() => {
     initializeSimulation();
+    initializeLiveComponentFeed();
   }, []);
 
   const theme = useMemo(

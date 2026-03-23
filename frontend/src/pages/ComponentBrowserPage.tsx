@@ -16,22 +16,53 @@ import CloseIcon from "@mui/icons-material/Close";
 import ComponentGroupList from "../components/ComponentGroupList";
 import ComponentDetails from "../components/ComponentDetails";
 import KpiSummaryBar from "../components/KpiSummaryBar";
-import { mockComponents } from "../types/mockData";
-import type { PlantComponent } from "../types/PlantComponent";
 import { getTopDownComponentIds } from "../entryRoute/componentBindings";
 import { useAppPreferences } from "../context/AppPreferencesContext";
+import { useLiveComponents } from "../hooks/useLiveComponents";
+import { useComponentHistory, useComponentStats, useLatestSensorData } from "../hooks/useSensorData";
+import type { SensorData } from "../services/sensorDataApi";
 
 export default function ComponentBrowserPage() {
   const { t } = useAppPreferences();
   const navigate = useNavigate();
+  const { components: liveComponents } = useLiveComponents();
   const topDownComponentIds = useMemo(() => getTopDownComponentIds(), []);
-  const [components] = useState<PlantComponent[]>(() =>
-    mockComponents.filter((component) => topDownComponentIds.has(component.id))
-  );
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [connectivityFilter, setConnectivityFilter] = useState<"all" | "online" | "offline">("all");
   const [activityFilter, setActivityFilter] = useState<"all" | "on" | "off">("all");
+
+  const components = useMemo(
+    () => liveComponents.filter((component) => topDownComponentIds.has(component.id)),
+    [liveComponents, topDownComponentIds],
+  );
+
+  const latestStoredQuery = useLatestSensorData({
+    refetchInterval: 15_000,
+  });
+
+  const selectedStatsQuery = useComponentStats(selectedId ?? undefined, {
+    enabled: Boolean(selectedId),
+    refetchInterval: 30_000,
+  });
+
+  const selectedHistoryQuery = useComponentHistory(
+    selectedId ?? undefined,
+    { limit: 10 },
+    {
+      enabled: Boolean(selectedId),
+    },
+  );
+
+  const latestStoredByComponent = useMemo(() => {
+    const byComponent = new Map<string, SensorData>();
+    for (const row of latestStoredQuery.data ?? []) {
+      if (!byComponent.has(row.componentId)) {
+        byComponent.set(row.componentId, row);
+      }
+    }
+    return byComponent;
+  }, [latestStoredQuery.data]);
 
   const filteredComponents = useMemo(() => {
     const query = searchTerm.trim().toLowerCase();
@@ -55,6 +86,7 @@ export default function ComponentBrowserPage() {
   }, [activityFilter, components, connectivityFilter, searchTerm]);
 
   const selectedComponent = filteredComponents.find((component) => component.id === selectedId) ?? null;
+  const selectedStoredEntry = selectedId ? latestStoredByComponent.get(selectedId) : undefined;
   const onlineCount = filteredComponents.filter((component) => component.online).length;
   const activeCount = filteredComponents.filter((component) => component.status === "on").length;
 
@@ -188,7 +220,18 @@ export default function ComponentBrowserPage() {
           </IconButton>
         </Box>
         <Divider sx={{ mb: 1.5 }} />
-        <ComponentDetails component={selectedComponent ?? undefined} />
+        <ComponentDetails
+          component={selectedComponent ?? undefined}
+          latestStoredEntry={selectedStoredEntry}
+          latestStoredLoading={latestStoredQuery.isLoading}
+          latestStoredError={latestStoredQuery.error?.message}
+          stats={selectedStatsQuery.data}
+          statsLoading={selectedStatsQuery.isLoading}
+          statsError={selectedStatsQuery.error?.message}
+          history={selectedHistoryQuery.data}
+          historyLoading={selectedHistoryQuery.isLoading}
+          historyError={selectedHistoryQuery.error?.message}
+        />
       </Drawer>
     </Box>
   );

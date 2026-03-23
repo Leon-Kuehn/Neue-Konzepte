@@ -923,11 +923,11 @@
       "iconSize": 2200,
       "rotation": 180,
       "stateSource": {
-        "type": "local"
+        "type": "values"
       },
       "x": 2980,
       "y": 1050,
-      "initialState": "on",
+      "initialState": "off",
       "action": {
         "type": "navigate",
         "path": "/hochregallager"
