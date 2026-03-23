@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ThemeProvider, createTheme, CssBaseline } from "@mui/material";
 import MainLayout from "./components/MainLayout";
@@ -7,15 +7,22 @@ import MqttSettingsPage from "./pages/MqttSettingsPage";
 import ComponentBrowserPage from "./pages/ComponentBrowserPage";
 import HighBayStoragePage from "./pages/HighBayStoragePage";
 import DocumentationPage from "./pages/DocumentationPage";
-import AssistantPage from "./pages/AssistantPage";
 import PlantControlPage from "./pages/PlantControlPage";
 import {
   AppPreferencesProvider,
   useAppPreferences,
 } from "./context/AppPreferencesContext";
+import { initializeSimulation } from "./services/simulationService";
+import { initializeLiveComponentFeed } from "./services/liveComponentService";
 
 function AppShell() {
   const { themeMode } = useAppPreferences();
+
+  useEffect(() => {
+    initializeSimulation();
+    initializeLiveComponentFeed();
+  }, []);
+
   const theme = useMemo(
     () =>
       createTheme({
@@ -41,12 +48,11 @@ function AppShell() {
         <Routes>
           <Route element={<MainLayout />}>
             <Route path="/plant" element={<PlantOverviewPage />} />
-            <Route path="/hochregallager" element={<HighBayStoragePage />} />
             <Route path="/components" element={<ComponentBrowserPage />} />
+            <Route path="/hochregallager" element={<HighBayStoragePage />} />
             <Route path="/plant-control" element={<PlantControlPage />} />
-            <Route path="/mqtt" element={<MqttSettingsPage />} />
             <Route path="/docs" element={<DocumentationPage />} />
-            <Route path="/assistant" element={<AssistantPage />} />
+            <Route path="/mqtt" element={<MqttSettingsPage />} />
             <Route path="*" element={<Navigate to="/plant" replace />} />
           </Route>
         </Routes>

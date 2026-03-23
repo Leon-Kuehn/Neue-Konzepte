@@ -97,6 +97,16 @@ export default function ComponentDetails({
         <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap", mb: 1 }}>
           <LiveStatusChips status={component.status} online={component.online} />
         </Box>
+        {component.healthStatus === "error" && (
+          <Alert severity="error" sx={{ mb: 1 }}>
+            Simulated fault active{component.faultMessage ? `: ${component.faultMessage}` : "."}
+          </Alert>
+        )}
+        {component.healthStatus === "offline" && (
+          <Alert severity="warning" sx={{ mb: 1 }}>
+            Component is currently offline.
+          </Alert>
+        )}
         <Typography variant="body2" sx={{ mb: 0.5 }}>
           <strong>{t("componentDetails.lastChanged")}:</strong>{" "}
           {new Date(component.lastChanged).toLocaleString()}
@@ -109,6 +119,16 @@ export default function ComponentDetails({
         {component.stats.uptimeHours !== undefined && (
           <Typography variant="body2">
             <strong>{t("componentDetails.uptime")}:</strong> {component.stats.uptimeHours}h
+          </Typography>
+        )}
+        {component.rotationDeg !== undefined && (
+          <Typography variant="body2">
+            <strong>Rotation:</strong> {component.rotationDeg} deg
+          </Typography>
+        )}
+        {component.stats.lastValue !== undefined && (
+          <Typography variant="body2">
+            <strong>Last Sensor Value:</strong> {String(component.stats.lastValue)}
           </Typography>
         )}
         <Typography variant="body2" sx={{ mt: 0.5 }}>
