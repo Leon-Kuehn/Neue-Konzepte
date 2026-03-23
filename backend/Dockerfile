@@ -8,6 +8,7 @@ RUN npm ci
 
 COPY . .
 
+ENV DATABASE_URL=postgresql://postgres:postgres@db:5432/iot_plant?schema=public
 RUN npx prisma generate
 RUN npm run build
 
