@@ -2,14 +2,15 @@
 
 ## Overview
 
-This frontend is the IoT plant admin dashboard for the "Neue Konzepte" project. It provides a top-down plant view, machine/component status, MQTT connectivity controls, and assistant/documentation pages.
+This frontend is the IoT plant admin dashboard for the "Neue Konzepte" project. It provides a top-down plant view, machine/component status, MQTT connectivity controls, documentation, and a floating project assistant powered via an internal Ollama endpoint.
 
 ## Main Routes
 
 - `/plant`: Main plant overview with interactive map, component details, live state, and backend-backed history/stats.
 - `/mqtt`: MQTT settings and connectivity management.
-- `/assistant`: In-app AI assistant tab for guided queries and operational help.
 - Additional routes include `/components`, `/hochregallager`, `/plant-control`, and `/docs`.
+
+The assistant is available globally as a floating button in the bottom-right corner (not as a sidebar route).
 
 ## Data Flow Summary
 
@@ -93,24 +94,33 @@ export default defineConfig([
 ])
 ```
 
-## AI Assistant (Free API Option)
+## Ollama Assistant (Internal-only)
 
-The project includes an in-app AI assistant tab with slash commands such as `/help`, `/sensor`, `/component`, `/mqtt`, `/lager`, and `/analyse`.
+The assistant UI is integrated as a floating chat button and drawer, available on all pages.
 
-By default, it works with local project knowledge rules (no external API required).
+The frontend calls only internal/local endpoints for assistant responses. Default target:
 
-If you want optional lightweight model responses via HuggingFace free tier, create a `.env.local` in `frontend/`:
+- `POST /api/ollama/chat`
+- `GET /api/ollama/health`
+
+Optional environment overrides in `frontend/.env.local`:
 
 ```bash
-VITE_HF_API_TOKEN=your_huggingface_token
-VITE_HF_MODEL=Qwen/Qwen2.5-1.5B-Instruct
-# optional override:
-# VITE_HF_API_URL=https://router.huggingface.co/v1/chat/completions
+# Must remain internal/local (e.g. /api/... or localhost)
+VITE_OLLAMA_CHAT_ENDPOINT=/api/ollama/chat
+
+# Optional model hint sent to the proxy/backend
+VITE_OLLAMA_MODEL=qwen2.5:7b
+
+# Optional request timeout in ms (default: 20000)
+VITE_OLLAMA_TIMEOUT_MS=20000
 ```
 
-Notes:
-- Keep in mind that `VITE_*` variables are exposed to the browser runtime.
-- For production or sensitive environments, proxy the API through a backend service.
+Behavior and constraints:
+
+- The assistant is instructed to use only project-local context and internal APIs.
+- No public internet calls are performed by the frontend assistant client.
+- If the endpoint is unreachable, the UI shows a non-blocking error message bubble.
 
 ## Sensor Data Integration
 

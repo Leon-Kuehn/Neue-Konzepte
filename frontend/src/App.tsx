@@ -7,7 +7,6 @@ import MqttSettingsPage from "./pages/MqttSettingsPage";
 import ComponentBrowserPage from "./pages/ComponentBrowserPage";
 import HighBayStoragePage from "./pages/HighBayStoragePage";
 import DocumentationPage from "./pages/DocumentationPage";
-import AssistantPage from "./pages/AssistantPage";
 import PlantControlPage from "./pages/PlantControlPage";
 import {
   AppPreferencesProvider,
@@ -49,12 +48,11 @@ function AppShell() {
         <Routes>
           <Route element={<MainLayout />}>
             <Route path="/plant" element={<PlantOverviewPage />} />
-            <Route path="/hochregallager" element={<HighBayStoragePage />} />
             <Route path="/components" element={<ComponentBrowserPage />} />
+            <Route path="/hochregallager" element={<HighBayStoragePage />} />
             <Route path="/plant-control" element={<PlantControlPage />} />
-            <Route path="/mqtt" element={<MqttSettingsPage />} />
             <Route path="/docs" element={<DocumentationPage />} />
-            <Route path="/assistant" element={<AssistantPage />} />
+            <Route path="/mqtt" element={<MqttSettingsPage />} />
             <Route path="*" element={<Navigate to="/plant" replace />} />
           </Route>
         </Routes>

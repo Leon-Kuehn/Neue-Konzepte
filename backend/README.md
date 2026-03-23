@@ -225,6 +225,32 @@ Antwort:
 { "time": "...", "count": 5 }
 ]
 
+---
+
+### Ollama Chat Proxy
+
+
+POST /api/ollama/chat
+
+
+Beispiel-Request:
+
+
+{
+	"model": "qwen2.5:7b",
+	"stream": false,
+	"messages": [
+		{ "role": "system", "content": "Du bist ein Projektassistent." },
+		{ "role": "user", "content": "Welche Sensor-Endpoints gibt es?" }
+	]
+}
+
+
+Konfiguration über Umgebungsvariablen:
+
+- `OLLAMA_CHAT_ENDPOINT` (default: `http://host.docker.internal:11434/api/chat`)
+- `OLLAMA_MODEL` (optionaler Default, z. B. `qwen2.5:7b`)
+
 
 ---
 

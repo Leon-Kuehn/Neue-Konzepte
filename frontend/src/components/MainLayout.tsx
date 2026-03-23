@@ -20,11 +20,12 @@ import FactoryIcon from "@mui/icons-material/Factory";
 import SettingsInputAntennaIcon from "@mui/icons-material/SettingsInputAntenna";
 import ViewModuleIcon from "@mui/icons-material/ViewModule";
 import DescriptionIcon from "@mui/icons-material/Description";
-import SmartToyIcon from "@mui/icons-material/SmartToy";
 import PlayCircleOutlineIcon from "@mui/icons-material/PlayCircleOutline";
 import { useAppPreferences } from "../context/AppPreferencesContext";
 import BackendStatus from "./BackendStatus";
 import SimulationStatusChip from "./SimulationStatusChip";
+import OllamaAssistantButton from "./OllamaAssistantButton";
+import OllamaAssistantPanel from "./OllamaAssistantPanel";
 
 const DRAWER_WIDTH = 240;
 
@@ -33,16 +34,16 @@ export default function MainLayout() {
   const { t } = useAppPreferences();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [assistantOpen, setAssistantOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
 
   const navItems = [
     { label: t("nav.topDownView"), path: "/plant", icon: <FactoryIcon /> },
-    { label: t("nav.highBayStorage"), path: "/hochregallager", icon: <ViewModuleIcon /> },
     { label: t("nav.componentBrowser"), path: "/components", icon: <FactoryIcon /> },
+    { label: t("nav.highBayStorage"), path: "/hochregallager", icon: <ViewModuleIcon /> },
     { label: t("nav.plantControl"), path: "/plant-control", icon: <PlayCircleOutlineIcon /> },
     { label: t("nav.documentation"), path: "/docs", icon: <DescriptionIcon /> },
-    { label: t("nav.assistant"), path: "/assistant", icon: <SmartToyIcon /> },
   ];
 
   const settingsNavItem = {
@@ -174,6 +175,12 @@ export default function MainLayout() {
       >
         <Outlet />
       </Box>
+
+      <OllamaAssistantButton
+        open={assistantOpen}
+        onToggle={() => setAssistantOpen((current) => !current)}
+      />
+      <OllamaAssistantPanel open={assistantOpen} onClose={() => setAssistantOpen(false)} />
     </Box>
   );
 }
