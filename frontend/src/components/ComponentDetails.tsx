@@ -137,6 +137,11 @@ export default function ComponentDetails({
             Failed to load latest stored values: {latestStoredError}
           </Alert>
         )}
+        {!latestStoredLoading && !latestStoredError && !latestStoredEntry && (
+          <Typography variant="body2" color="text.secondary" sx={{ fontStyle: "italic", mb: 1.5 }}>
+            No stored backend value available for this component yet.
+          </Typography>
+        )}
         {latestStoredEntry && (
           <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5, mb: 1.5 }}>
             <Typography variant="body2">
@@ -158,6 +163,11 @@ export default function ComponentDetails({
           <Alert severity="error" sx={{ mb: 1.5 }}>
             Failed to load statistics: {statsError}
           </Alert>
+        )}
+        {!statsLoading && !statsError && (!stats || stats.count === 0) && (
+          <Typography variant="body2" color="text.secondary" sx={{ fontStyle: "italic", mb: 1.5 }}>
+            No backend statistics available for this component yet.
+          </Typography>
         )}
         {stats && (
           <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 0.75, mb: 2 }}>

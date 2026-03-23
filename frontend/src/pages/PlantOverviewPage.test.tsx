@@ -138,4 +138,30 @@ describe("PlantOverviewPage sensor data integration", () => {
     expect(screen.getByText(/Failed to load statistics: stats failed/i)).toBeTruthy();
     expect(screen.getByText(/Failed to load history: history failed/i)).toBeTruthy();
   });
+
+  it("shows explicit no-data messages when backend has no stored values for selected component", () => {
+    useLatestSensorDataMock.mockReturnValue({
+      data: [],
+      isLoading: false,
+      error: null,
+    });
+    useComponentStatsMock.mockReturnValue({
+      data: { count: 0, firstTimestamp: null, lastTimestamp: null },
+      isLoading: false,
+      error: null,
+    });
+    useComponentHistoryMock.mockReturnValue({
+      data: [],
+      isLoading: false,
+      error: null,
+    });
+
+    renderPage();
+
+    fireEvent.click(screen.getByRole("button", { name: "Select conveyor-1" }));
+
+    expect(screen.getByText(/No stored backend value available for this component yet\./i)).toBeTruthy();
+    expect(screen.getByText(/No backend statistics available for this component yet\./i)).toBeTruthy();
+    expect(screen.getByText(/No historical entries available for this component yet\./i)).toBeTruthy();
+  });
 });
