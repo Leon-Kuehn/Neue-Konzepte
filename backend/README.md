@@ -22,7 +22,7 @@ MQTT Broker
 ├── Frontend (Live-Daten)
 └── Backend (Historie & Analyse)
 ↓
-PostgreSQL
+TimescaleDB (PostgreSQL)
 
 
 ### Rollen
@@ -39,7 +39,7 @@ PostgreSQL
 
 - **NestJS** – Backend Framework
 - **Prisma** – ORM
-- **PostgreSQL** – Datenbank
+- **TimescaleDB (PostgreSQL)** – Datenbank
 - **Docker** – Containerisierung
 - **MQTT (mosquitto)** – Messaging
 
