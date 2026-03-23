@@ -51,6 +51,14 @@
   transform-origin: center;
 }
 
+.hotspot .highbay__carriage {
+  animation: highbay-carriage-move 8s ease-in-out infinite;
+}
+
+.hotspot .highbay__fork {
+  animation: highbay-fork-extend 2.6s ease-in-out infinite;
+}
+
 .hotspot--on .belt--left .belt__segments {
   animation: belt-move-left 1.2s linear infinite;
 }
@@ -104,14 +112,6 @@
 .hotspot--on .inputstation__outer,
 .hotspot--on .inputstation__inner {
   animation: inputstation-pulse 1.2s ease-in-out infinite;
-}
-
-.hotspot--on .highbay__carriage {
-  animation: highbay-carriage-move 2.4s ease-in-out infinite;
-}
-
-.hotspot--on .highbay__fork {
-  animation: highbay-fork-extend 1.2s ease-in-out infinite;
 }
 
 .hotspot--off .hotspot__icon {
@@ -236,13 +236,16 @@
 
 @keyframes highbay-carriage-move {
   0% {
-    transform: translateY(0);
+    transform: translateY(-100px);
   }
-  50% {
-    transform: translateY(260px);
+  48% {
+    transform: translateY(548px);
+  }
+  52% {
+    transform: translateY(548px);
   }
   100% {
-    transform: translateY(0);
+    transform: translateY(-100px);
   }
 }
 

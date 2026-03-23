@@ -2,6 +2,13 @@ import mqtt, { type MqttClient } from "mqtt";
 import type { MqttSettings } from "../types/MqttSettings";
 
 let client: MqttClient | null = null;
+const messageListeners = new Set<(topic: string, payload: string) => void>();
+
+function dispatchIncomingMessage(topic: string, payload: string): void {
+  for (const listener of messageListeners) {
+    listener(topic, payload);
+  }
+}
 
 export function getClient(): MqttClient | null {
   return client;
@@ -43,6 +50,10 @@ export async function connect(settings: MqttSettings): Promise<void> {
     client.on("error", (err) => {
       clearTimeout(timeout);
       reject(err);
+    });
+
+    client.on("message", (topic, message) => {
+      dispatchIncomingMessage(topic, message.toString());
     });
   });
 }
@@ -94,11 +105,15 @@ export async function publish(
 
 export function onMessage(
   callback: (topic: string, payload: string) => void
-): void {
-  if (!client) return;
-  client.on("message", (topic, message) => {
-    callback(topic, message.toString());
-  });
+): () => void {
+  messageListeners.add(callback);
+  return () => {
+    messageListeners.delete(callback);
+  };
+}
+
+export function injectIncomingMessage(topic: string, payload: string): void {
+  dispatchIncomingMessage(topic, payload);
 }
 
 const SETTINGS_KEY = "mqtt-settings";

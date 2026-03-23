@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Alert,
   Box,
@@ -17,6 +17,7 @@ import {
 import CloseIcon from "@mui/icons-material/Close";
 import { useAppPreferences } from "../context/AppPreferencesContext";
 import KpiSummaryBar from "../components/KpiSummaryBar";
+import { onMessage } from "../services/mqttClient";
 
 type StorageItem = {
   sku: string;
@@ -39,140 +40,11 @@ const COLS = 10;
 const ROWS = 5;
 
 function buildDummySlots(): StorageSlot[] {
-  const itemBySlot: Record<string, StorageItem> = {
-    R1C2: {
-      sku: "BRG-6001",
-      name: "Kugellager 6001",
-      quantity: 120,
-      unitCost: 2.4,
-      unitPrice: 4.1,
-      monthlyDemand: 95,
-      daysInStock: 18,
-    },
-    R1C4: {
-      sku: "SEN-IND-12",
-      name: "Induktivsensor 12mm",
-      quantity: 35,
-      unitCost: 18,
-      unitPrice: 31,
-      monthlyDemand: 22,
-      daysInStock: 26,
-    },
-    R1C9: {
-      sku: "PLC-IOMOD",
-      name: "I/O Modul",
-      quantity: 14,
-      unitCost: 145,
-      unitPrice: 219,
-      monthlyDemand: 4,
-      daysInStock: 91,
-    },
-    R2C1: {
-      sku: "CAB-M12-5M",
-      name: "Sensorleitung M12 5m",
-      quantity: 84,
-      unitCost: 6.5,
-      unitPrice: 11.9,
-      monthlyDemand: 40,
-      daysInStock: 22,
-    },
-    R2C6: {
-      sku: "MOT-24V-DC",
-      name: "DC Motor 24V",
-      quantity: 10,
-      unitCost: 88,
-      unitPrice: 139,
-      monthlyDemand: 3,
-      daysInStock: 74,
-    },
-    R2C8: {
-      sku: "RFID-TAG-HT",
-      name: "RFID Tag HT",
-      quantity: 210,
-      unitCost: 0.95,
-      unitPrice: 2.2,
-      monthlyDemand: 130,
-      daysInStock: 11,
-    },
-    R3C3: {
-      sku: "SEN-OPT-RED",
-      name: "Lichttaster Rot",
-      quantity: 48,
-      unitCost: 14,
-      unitPrice: 24,
-      monthlyDemand: 27,
-      daysInStock: 30,
-    },
-    R3C7: {
-      sku: "LEG-OLD-01",
-      name: "Altmodul Serie A",
-      quantity: 16,
-      unitCost: 120,
-      unitPrice: 123,
-      monthlyDemand: 0,
-      daysInStock: 310,
-    },
-    R4C5: {
-      sku: "PNE-VAL-3_2",
-      name: "Pneumatikventil 3/2",
-      quantity: 26,
-      unitCost: 22,
-      unitPrice: 38,
-      monthlyDemand: 8,
-      daysInStock: 52,
-    },
-    R4C10: {
-      sku: "SAF-REL-24",
-      name: "Sicherheitsrelais 24V",
-      quantity: 9,
-      unitCost: 64,
-      unitPrice: 104,
-      monthlyDemand: 2,
-      daysInStock: 138,
-    },
-    R5C2: {
-      sku: "SCR-M6-SET",
-      name: "Montageschrauben M6",
-      quantity: 600,
-      unitCost: 0.12,
-      unitPrice: 0.45,
-      monthlyDemand: 180,
-      daysInStock: 14,
-    },
-    R5C4: {
-      sku: "CONV-BELT-S",
-      name: "Foerderband Segment S",
-      quantity: 7,
-      unitCost: 310,
-      unitPrice: 445,
-      monthlyDemand: 1,
-      daysInStock: 166,
-    },
-    R5C6: {
-      sku: "LEG-RET-09",
-      name: "Rückläufer Ventil alt",
-      quantity: 42,
-      unitCost: 9,
-      unitPrice: 11,
-      monthlyDemand: 0,
-      daysInStock: 420,
-    },
-    R5C8: {
-      sku: "WAGO-5X",
-      name: "Klemmenblock 5x",
-      quantity: 160,
-      unitCost: 1.3,
-      unitPrice: 3.2,
-      monthlyDemand: 70,
-      daysInStock: 19,
-    },
-  };
-
   const slots: StorageSlot[] = [];
   for (let row = 1; row <= ROWS; row += 1) {
     for (let col = 1; col <= COLS; col += 1) {
       const id = `R${row}C${col}`;
-      slots.push({ id, row, col, item: itemBySlot[id] ?? null });
+      slots.push({ id, row, col, item: null });
     }
   }
 
@@ -191,10 +63,67 @@ function Carton({ x, y, width, height }: { x: number; y: number; width: number; 
   );
 }
 
+function buildSimulatedItem(slotId: string, quantity: number): StorageItem {
+  return {
+    sku: `SIM-${slotId}`,
+    name: `Simulated Load ${slotId}`,
+    quantity,
+    unitCost: 4 + (quantity % 7),
+    unitPrice: 8 + (quantity % 11),
+    monthlyDemand: Math.max(1, Math.floor(quantity / 3)),
+    daysInStock: 1 + (quantity % 28),
+  };
+}
+
 export default function HighBayStoragePage() {
   const { t } = useAppPreferences();
-  const [slots] = useState<StorageSlot[]>(() => buildDummySlots());
+  const [slots, setSlots] = useState<StorageSlot[]>(() => buildDummySlots());
   const [selectedSlotId, setSelectedSlotId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const unsubscribe = onMessage((topic, payload) => {
+      if (!topic.startsWith("hochregallager/slot/")) {
+        return;
+      }
+
+      const topicParts = topic.split("/");
+      const slotId = topicParts[2];
+      if (!slotId) {
+        return;
+      }
+
+      try {
+        const data = JSON.parse(payload) as {
+          occupied?: boolean;
+          quantity?: number;
+        };
+
+        setSlots((prev) =>
+          prev.map((slot) => {
+            if (slot.id !== slotId) {
+              return slot;
+            }
+
+            if (!data.occupied) {
+              return { ...slot, item: null };
+            }
+
+            const quantity = data.quantity ?? 1;
+            return {
+              ...slot,
+              item: buildSimulatedItem(slot.id, quantity),
+            };
+          }),
+        );
+      } catch {
+        // ignore malformed payloads
+      }
+    });
+
+    return () => {
+      unsubscribe();
+    };
+  }, []);
 
   const selectedSlot = useMemo(
     () => slots.find((slot) => slot.id === selectedSlotId) ?? null,

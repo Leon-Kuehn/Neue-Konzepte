@@ -41,7 +41,19 @@ export default function PlantOverviewPage() {
       : null;
   const [selectedId, setSelectedId] = useState<string | null>(showFromNavigation);
   const [focusComponentId, setFocusComponentId] = useState<string | null>(showFromNavigation);
-  const [components, setComponents] = useState<PlantComponent[]>(mockComponents);
+  const [components, setComponents] = useState<PlantComponent[]>(() =>
+    mockComponents.map((component) => ({
+      ...component,
+      status: "off",
+      online: false,
+      healthStatus: "offline",
+      rotationDeg: 0,
+      stats: {
+        ...component.stats,
+        lastValue: undefined,
+      },
+    })),
+  );
   const [mqttConnected, setMqttConnected] = useState(false);
   const mapRef = useRef<EntryRouteMapHandle>(null);
 
@@ -92,8 +104,73 @@ export default function PlantOverviewPage() {
   }, [components]);
 
   useEffect(() => {
+    const topicToComponentId = new Map(
+      mockComponents.map((component) => [component.mqttTopics.status, component.id]),
+    );
+
+    const unsubscribe = onMessage((topic, payload) => {
+      const mappedCompId = topicToComponentId.get(topic);
+      const parts = topic.split("/");
+      const fallbackCompId = parts[1];
+      const fallbackKind = parts[2];
+
+      const compId =
+        mappedCompId ?? (fallbackKind === "status" ? fallbackCompId : undefined);
+      if (!compId) return;
+
+      try {
+        const data = JSON.parse(payload as string) as {
+          status?: "on" | "off" | "error" | "offline";
+          online?: boolean;
+          cycles?: number;
+          uptimeHours?: number;
+          value?: number | boolean;
+          rotationDeg?: number;
+          faultMessage?: string;
+          health?: "ok" | "error" | "offline";
+        };
+
+        const nextStatus = data.status === "on" ? "on" : "off";
+        const healthStatus =
+          data.health ??
+          (data.status === "error"
+            ? "error"
+            : data.status === "offline"
+              ? "offline"
+              : "ok");
+
+        setComponents((prev) =>
+          prev.map((c) =>
+            c.id === compId
+              ? {
+                  ...c,
+                  status: nextStatus,
+                  online: data.online ?? (healthStatus === "offline" ? false : c.online),
+                  healthStatus,
+                  faultMessage: data.faultMessage,
+                  rotationDeg: data.rotationDeg ?? c.rotationDeg,
+                  lastChanged: new Date().toISOString(),
+                  stats: {
+                    ...c.stats,
+                    cycles: data.cycles ?? c.stats.cycles,
+                    uptimeHours: data.uptimeHours ?? c.stats.uptimeHours,
+                    lastValue: data.value ?? c.stats.lastValue,
+                  },
+                }
+              : c,
+          ),
+        );
+      } catch {
+        // ignore non-JSON
+      }
+    });
+
     const settings = loadSettings();
-    if (!settings) return;
+    if (!settings) {
+      return () => {
+        unsubscribe();
+      };
+    }
 
     let cancelled = false;
 
@@ -105,45 +182,6 @@ export default function PlantOverviewPage() {
 
         const statusTopics = [...new Set(mockComponents.map((c) => c.mqttTopics.status))];
         await Promise.all(statusTopics.map((topic) => subscribe(topic)));
-
-        const topicToComponentId = new Map(
-          mockComponents.map((component) => [component.mqttTopics.status, component.id]),
-        );
-
-        onMessage((topic, payload) => {
-          const mappedCompId = topicToComponentId.get(topic);
-          const parts = topic.split("/");
-          const fallbackCompId = parts[1];
-          const fallbackKind = parts[2];
-
-          const compId =
-            mappedCompId ?? (fallbackKind === "status" ? fallbackCompId : undefined);
-          if (!compId) return;
-
-          try {
-            const data = JSON.parse(payload as string);
-
-            setComponents((prev) =>
-              prev.map((c) =>
-                c.id === compId
-                  ? {
-                      ...c,
-                      status: data.status ?? c.status,
-                      online: data.online ?? c.online,
-                      lastChanged: new Date().toISOString(),
-                      stats: {
-                        ...c.stats,
-                        cycles: data.cycles ?? c.stats.cycles,
-                        uptimeHours: data.uptimeHours ?? c.stats.uptimeHours,
-                      },
-                    }
-                  : c,
-              ),
-            );
-          } catch {
-            // ignore non-JSON
-          }
-        });
       } catch {
         if (!cancelled) setMqttConnected(false);
       }
@@ -151,6 +189,7 @@ export default function PlantOverviewPage() {
 
     return () => {
       cancelled = true;
+      unsubscribe();
       if (getClient()) disconnect();
     };
   }, []);

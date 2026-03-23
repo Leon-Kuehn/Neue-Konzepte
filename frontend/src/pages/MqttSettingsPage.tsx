@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type ChangeEvent } from "react";
 import {
   Typography,
   Card,
@@ -8,6 +8,7 @@ import {
   Button,
   FormControlLabel,
   Checkbox,
+  Switch,
   MenuItem,
   Alert,
   Stack,
@@ -23,6 +24,15 @@ import {
   getClient,
 } from "../services/mqttClient";
 import { useAppPreferences } from "../context/AppPreferencesContext";
+import {
+  disableSimulation,
+  enableSimulation,
+  getSimulationScenarios,
+  updateSimulationConfig,
+  type SimulationScenarioId,
+  type SimulationSpeed,
+} from "../services/simulationService";
+import { useSimulationState } from "../hooks/useSimulationState";
 
 const defaultSettings: MqttSettings = {
   protocol: "ws",
@@ -47,6 +57,8 @@ export default function MqttSettingsPage() {
   const [settings, setSettings] = useState<MqttSettings>(getInitialSettings);
   const [status, setStatus] = useState<ConnectionStatus>(getInitialStatus);
   const [error, setError] = useState<string>("");
+  const simulation = useSimulationState();
+  const scenarios = getSimulationScenarios();
 
   const statusLabel =
     status === "Connected"
@@ -83,6 +95,15 @@ export default function MqttSettingsPage() {
     } catch (err) {
       setError(err instanceof Error ? err.message : t("mqtt.disconnectFailed"));
     }
+  };
+
+  const handleSimulationToggle = (_event: ChangeEvent<HTMLInputElement>, checked: boolean) => {
+    if (checked) {
+      enableSimulation();
+      return;
+    }
+
+    disableSimulation();
   };
 
   return (
@@ -256,6 +277,64 @@ export default function MqttSettingsPage() {
                 {t("mqtt.disconnect")}
               </Button>
             </Box>
+
+            <Divider sx={{ mt: 1 }} />
+
+            <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
+              Simulation
+            </Typography>
+
+            <Typography variant="body2" color="text.secondary">
+              Simulation mode generates realistic live activity in the UI. While enabled, plant traffic is simulated and does not require physical hardware.
+            </Typography>
+
+            <FormControlLabel
+              control={<Switch checked={simulation.enabled} onChange={handleSimulationToggle} />}
+              label="Simulation mode"
+            />
+
+            <TextField
+              id="simulation-scenario"
+              label="Simulation scenario"
+              select
+              value={simulation.scenario}
+              onChange={(event) => {
+                updateSimulationConfig({
+                  scenario: event.target.value as SimulationScenarioId,
+                });
+              }}
+              fullWidth
+              size="small"
+            >
+              {scenarios.map((scenario) => (
+                <MenuItem key={scenario.id} value={scenario.id}>
+                  {scenario.name}
+                </MenuItem>
+              ))}
+            </TextField>
+
+            <TextField
+              id="simulation-speed"
+              label="Simulation speed"
+              select
+              value={simulation.speed}
+              onChange={(event) => {
+                updateSimulationConfig({
+                  speed: event.target.value as SimulationSpeed,
+                });
+              }}
+              fullWidth
+              size="small"
+            >
+              <MenuItem value="normal">Normal</MenuItem>
+              <MenuItem value="fast">Fast</MenuItem>
+            </TextField>
+
+            {simulation.enabled && (
+              <Alert severity="warning" sx={{ mt: 0.5 }}>
+                Simulation mode active - live data is simulated.
+              </Alert>
+            )}
             </Stack>
           </CardContent>
         </Card>

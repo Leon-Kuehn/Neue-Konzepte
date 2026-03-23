@@ -24,6 +24,9 @@ export interface PlantComponent {
     uptimeHours?: number;
     lastValue?: number | boolean;
   };
+  healthStatus?: "ok" | "error" | "offline";
+  faultMessage?: string;
+  rotationDeg?: number;
   mqttTopics: {
     status: string;
     command?: string;

@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ThemeProvider, createTheme, CssBaseline } from "@mui/material";
 import MainLayout from "./components/MainLayout";
@@ -13,9 +13,15 @@ import {
   AppPreferencesProvider,
   useAppPreferences,
 } from "./context/AppPreferencesContext";
+import { initializeSimulation } from "./services/simulationService";
 
 function AppShell() {
   const { themeMode } = useAppPreferences();
+
+  useEffect(() => {
+    initializeSimulation();
+  }, []);
+
   const theme = useMemo(
     () =>
       createTheme({
