@@ -29,6 +29,8 @@ import {
 import EntryRoutePanel from "../entryRoute/EntryRoutePanel";
 import type { EntryRouteMapHandle } from "../entryRoute/EntryRouteMap";
 import { useAppPreferences } from "../context/AppPreferencesContext";
+import { useComponentHistory, useComponentStats, useLatestSensorData } from "../hooks/useSensorData";
+import type { SensorData } from "../services/sensorDataApi";
 
 export default function PlantOverviewPage() {
   const { t } = useAppPreferences();
@@ -44,6 +46,39 @@ export default function PlantOverviewPage() {
   const mapRef = useRef<EntryRouteMapHandle>(null);
 
   const selectedComponent = components.find((c) => c.id === selectedId) ?? null;
+  const selectedComponentId = selectedComponent?.id;
+
+  const latestStoredQuery = useLatestSensorData({
+    refetchInterval: 15_000,
+  });
+
+  const selectedStatsQuery = useComponentStats(selectedComponentId, {
+    enabled: Boolean(selectedComponentId),
+    refetchInterval: 30_000,
+  });
+
+  const selectedHistoryQuery = useComponentHistory(
+    selectedComponentId,
+    { limit: 10 },
+    {
+      enabled: Boolean(selectedComponentId),
+    },
+  );
+
+  const latestStoredByComponent = useMemo(() => {
+    const byComponent = new Map<string, SensorData>();
+    for (const row of latestStoredQuery.data ?? []) {
+      if (!byComponent.has(row.componentId)) {
+        byComponent.set(row.componentId, row);
+      }
+    }
+    return byComponent;
+  }, [latestStoredQuery.data]);
+
+  const selectedStoredEntry = useMemo(
+    () => (selectedComponentId ? latestStoredByComponent.get(selectedComponentId) : undefined),
+    [latestStoredByComponent, selectedComponentId],
+  );
 
   const onlineCount = useMemo(() => components.filter((component) => component.online).length, [components]);
   const activeCount = useMemo(() => components.filter((component) => component.status === "on").length, [components]);
@@ -256,7 +291,20 @@ export default function PlantOverviewPage() {
           </MuiIconButton>
         </Box>
         <Divider sx={{ mb: 1.5 }} />
-        {selectedComponent && <ComponentDetails component={selectedComponent} />}
+        {selectedComponent && (
+          <ComponentDetails
+            component={selectedComponent}
+            latestStoredEntry={selectedStoredEntry}
+            latestStoredLoading={latestStoredQuery.isLoading}
+            latestStoredError={latestStoredQuery.error?.message}
+            stats={selectedStatsQuery.data}
+            statsLoading={selectedStatsQuery.isLoading}
+            statsError={selectedStatsQuery.error?.message}
+            history={selectedHistoryQuery.data}
+            historyLoading={selectedHistoryQuery.isLoading}
+            historyError={selectedHistoryQuery.error?.message}
+          />
+        )}
       </Drawer>
     </Box>
   );

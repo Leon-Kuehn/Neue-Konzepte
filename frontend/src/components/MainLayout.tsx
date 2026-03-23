@@ -23,6 +23,7 @@ import DescriptionIcon from "@mui/icons-material/Description";
 import SmartToyIcon from "@mui/icons-material/SmartToy";
 import PlayCircleOutlineIcon from "@mui/icons-material/PlayCircleOutline";
 import { useAppPreferences } from "../context/AppPreferencesContext";
+import BackendStatus from "./BackendStatus";
 
 const DRAWER_WIDTH = 240;
 
@@ -128,6 +129,9 @@ export default function MainLayout() {
           >
             {t("app.subtitle")}
           </Typography>
+          <Box sx={{ ml: "auto" }}>
+            <BackendStatus />
+          </Box>
         </Toolbar>
       </AppBar>
 
