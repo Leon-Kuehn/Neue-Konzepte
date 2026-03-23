@@ -21,6 +21,7 @@ import SettingsInputAntennaIcon from "@mui/icons-material/SettingsInputAntenna";
 import ViewModuleIcon from "@mui/icons-material/ViewModule";
 import DescriptionIcon from "@mui/icons-material/Description";
 import SmartToyIcon from "@mui/icons-material/SmartToy";
+import PlayCircleOutlineIcon from "@mui/icons-material/PlayCircleOutline";
 import { useAppPreferences } from "../context/AppPreferencesContext";
 
 const DRAWER_WIDTH = 240;
@@ -37,6 +38,7 @@ export default function MainLayout() {
     { label: t("nav.topDownView"), path: "/plant", icon: <FactoryIcon /> },
     { label: t("nav.highBayStorage"), path: "/hochregallager", icon: <ViewModuleIcon /> },
     { label: t("nav.componentBrowser"), path: "/components", icon: <FactoryIcon /> },
+    { label: t("nav.plantControl"), path: "/plant-control", icon: <PlayCircleOutlineIcon /> },
     { label: t("nav.documentation"), path: "/docs", icon: <DescriptionIcon /> },
     { label: t("nav.assistant"), path: "/assistant", icon: <SmartToyIcon /> },
   ];

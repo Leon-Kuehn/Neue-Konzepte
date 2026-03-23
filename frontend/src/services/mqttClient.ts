@@ -67,6 +67,31 @@ export async function subscribe(topic: string): Promise<void> {
   });
 }
 
+export async function publish(
+  topic: string,
+  payload: string,
+  options?: { retain?: boolean; qos?: 0 | 1 | 2 },
+): Promise<void> {
+  if (!client || !client.connected) {
+    throw new Error("Not connected");
+  }
+
+  return new Promise<void>((resolve, reject) => {
+    client!.publish(
+      topic,
+      payload,
+      {
+        retain: options?.retain ?? false,
+        qos: options?.qos ?? 0,
+      },
+      (err) => {
+        if (err) reject(err);
+        else resolve();
+      },
+    );
+  });
+}
+
 export function onMessage(
   callback: (topic: string, payload: string) => void
 ): void {
