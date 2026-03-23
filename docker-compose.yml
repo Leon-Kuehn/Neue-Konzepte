@@ -1,6 +1,6 @@
 services:
   db:
-    image: postgres:16-alpine
+    image: timescale/timescaledb:latest-pg16
     restart: unless-stopped
     environment:
       POSTGRES_USER: postgres
@@ -10,6 +10,7 @@ services:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
+      - ./docker/db/init.sql:/docker-entrypoint-initdb.d/init.sql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres -d iot_plant"]
       interval: 10s
@@ -29,6 +30,10 @@ services:
       - "3000:3000"
     environment:
       DATABASE_URL: postgresql://postgres:postgres@db:5432/iot_plant?schema=public
+      # Set MQTT_BROKER_URL to the address of your MQTT broker on the Raspberry Pi,
+      # e.g. mqtt://192.168.178.40:1883
+      MQTT_BROKER_URL: ${MQTT_BROKER_URL:-mqtt://192.168.178.40:1883}
+      CORS_ORIGIN: "http://localhost"
     healthcheck:
       test:
         [

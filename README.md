@@ -48,7 +48,7 @@ docker compose up -d --build
 
 This starts:
 
-- **PostgreSQL** on port `5432`
+- **TimescaleDB (PostgreSQL-compatible)** on port `5432`
 - **NestJS backend** on port `3000` (health check at `GET /health`)
 - **Frontend via Nginx** on [https://localhost](https://localhost) and [http://localhost](http://localhost)
 
@@ -70,5 +70,5 @@ The frontend connects as an MQTT **client** to an external broker (e.g. Mosquitt
 ## Tech Stack
 
 - **Frontend:** React 19, TypeScript, Vite, MUI 7, react-router-dom, mqtt.js
-- **Backend:** NestJS, Prisma, PostgreSQL
+- **Backend:** NestJS, Prisma, TimescaleDB (PostgreSQL-compatible)
 - **Infrastructure:** Docker, Docker Compose, Nginx

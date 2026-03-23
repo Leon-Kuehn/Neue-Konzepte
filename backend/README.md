@@ -1,98 +1,339 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# Backend – IoT Logistikmodell
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+## Überblick
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+Dieses Backend ist Teil eines IoT-Logistiksystems auf Basis von Fischertechnik und Raspberry Pi.
 
-## Description
+Es dient dazu, MQTT-Daten der Anlage zu empfangen, zu speichern und über eine REST-API für das Frontend bereitzustellen.
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+---
 
-## Project setup
+## Architektur
 
-```bash
-$ npm install
-```
+Systemübersicht:
 
-## Compile and run the project
 
-```bash
-# development
-$ npm run start
+Fischertechnik Anlage
+↓
+Raspberry Pi
+↓
+MQTT Broker
+↓
+├── Frontend (Live-Daten)
+└── Backend (Historie & Analyse)
+↓
+TimescaleDB (PostgreSQL)
 
-# watch mode
-$ npm run start:dev
 
-# production mode
-$ npm run start:prod
-```
+### Rollen
 
-## Run tests
+| Komponente | Aufgabe |
+|----------|--------|
+| MQTT Broker | verteilt Nachrichten |
+| Backend | speichert & analysiert Daten |
+| Frontend | visualisiert Daten |
 
-```bash
-# unit tests
-$ npm run test
+---
 
-# e2e tests
-$ npm run test:e2e
+## Technologien
 
-# test coverage
-$ npm run test:cov
-```
+- **NestJS** – Backend Framework
+- **Prisma** – ORM
+- **TimescaleDB (PostgreSQL)** – Datenbank
+- **Docker** – Containerisierung
+- **MQTT (mosquitto)** – Messaging
 
-## Deployment
+---
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+## Setup
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+### Voraussetzungen
 
-```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
-```
+- Docker + Docker Compose
+- Node.js (nur für lokale Entwicklung)
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+---
 
-## Resources
+### Starten
 
-Check out a few resources that may come in handy when working with NestJS:
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+docker compose up --build
 
-## Support
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+Backend läuft dann auf:
 
-## Stay in touch
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+http://localhost:3000
 
-## License
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+---
+
+## Datenmodell
+
+### SensorData
+
+Tabelle: `sensor_data`
+
+| Feld | Typ | Beschreibung |
+|-----|----|-------------|
+| id | Int | Primärschlüssel |
+| component_id | String | z. B. "entry-route" |
+| topic | String | MQTT Topic |
+| payload | JSON | Nachricht |
+| received_at | DateTime | Zeitstempel |
+
+---
+
+## MQTT Integration
+
+### Status
+
+- Implementiert ✅
+- Wartet auf echten Broker ⏳
+
+---
+
+### Verhalten
+
+Das Backend:
+
+- verbindet sich mit `MQTT_BROKER_URL`
+- subscribed auf:
+
+
+entry-route/#
+hochregallager/#
+plant/#
+
+
+- speichert jede Nachricht in der Datenbank
+
+---
+
+### Payload Handling
+
+
+try {
+JSON.parse(payload)
+} catch {
+payload als String speichern
+}
+
+
+---
+
+### Wichtige Regeln
+
+- Kein eigener MQTT Broker im Backend
+- Verbindung darf nicht zum Absturz führen
+- Reconnect muss funktionieren
+
+---
+
+## API Dokumentation
+
+Basis-URL:
+
+
+/api
+
+
+---
+
+### Health Check
+
+
+GET /api/health
+
+
+Antwort:
+
+
+{ "status": "ok" }
+
+
+---
+
+### Alle Daten
+
+
+GET /api/sensor-data
+
+
+---
+
+### Letzte Werte pro Komponente
+
+
+GET /api/sensor-data/latest
+
+
+---
+
+### Daten nach Komponente
+
+
+GET /api/sensor-data/:componentId
+
+
+Query:
+
+- `limit` (default 100)
+- `since` (ISO Timestamp)
+
+---
+
+### Zeitbereich
+
+
+GET /api/sensor-data/range?from=...&to=...
+
+
+---
+
+### Statistiken
+
+
+GET /api/sensor-data/stats/:componentId
+
+
+Antwort:
+
+
+{
+"count": 10,
+"firstTimestamp": "...",
+"lastTimestamp": "...",
+"averageValue": 50,
+"minValue": 10,
+"maxValue": 90
+}
+
+
+---
+
+### Aktivität (Zeitbuckets)
+
+
+GET /api/sensor-data/activity/:componentId?interval=minute
+
+
+Antwort:
+
+
+[
+{ "time": "...", "count": 5 }
+]
+
+
+---
+
+## Wichtige Designentscheidungen
+
+### 1. Trennung Live vs. Historie
+
+- Frontend nutzt MQTT direkt (Live)
+- Backend speichert Historie
+
+---
+
+### 2. Keine Aktorsteuerung
+
+Das Backend sendet **keine MQTT-Befehle**.
+
+→ Nur passiver Datenempfang
+
+---
+
+### 3. Skalierbarkeit
+
+- Zeitbasierte Abfragen
+- Limits für große Datenmengen
+- einfache Erweiterbarkeit
+
+---
+
+## Entwicklungshinweise
+
+### Struktur
+
+
+src/
+├── mqtt/
+├── sensor-data/
+├── prisma/
+└── app.module.ts
+
+
+---
+
+### Prisma
+
+- Kein `url` mehr im schema (Prisma 7)
+- Config über `prisma.config.ts`
+
+---
+
+### Docker
+
+- Backend läuft in Container
+- DB ist eigener Container
+- Kommunikation über Service-Namen
+
+---
+
+## Für KI-Agenten
+
+### Wichtige Regeln
+
+❗ NICHT ändern:
+
+- Prisma Schema (ohne Absprache)
+- bestehende API-Endpoints
+- Docker Struktur
+
+---
+
+### Erlaubt:
+
+- neue Endpoints
+- neue Services
+- Refactoring innerhalb Module
+
+---
+
+### Zu beachten:
+
+- immer Limits verwenden
+- keine unbounded queries
+- keine neuen PrismaClients erstellen
+- immer PrismaService verwenden
+
+---
+
+## Aktueller Stand
+
+| Bereich | Status |
+|--------|--------|
+Backend Infrastruktur | ✅ fertig |
+Datenbank | ✅ fertig |
+API | ✅ fertig |
+Statistik | ✅ fertig |
+MQTT Code | ✅ fertig |
+MQTT Verbindung | ⏳ wartet auf Broker |
+
+---
+
+## Nächste Schritte
+
+- MQTT Broker anbinden
+- Frontend Integration
+- Visualisierung (Charts)
+
+---
+
+## Kontakt / Hinweise
+
+Bei Fragen bitte im Team abstimmen.
+
+Dieses Backend ist stabil und bereit für Integration.
