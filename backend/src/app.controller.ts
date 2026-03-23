@@ -16,16 +16,4 @@ export class AppController {
       status: 'ok',
     };
   }
-
-  @Get('api/health')
-  getApiHealth(): { status: string } {
-    return {
-      status: 'ok',
-    };
-  }
-
-  @Get('api/sensor-data')
-  getSensorData(): [] {
-    return [];
-  }
 }
