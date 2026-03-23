@@ -73,7 +73,7 @@ const rotatingConveyors = buildComponents({
   category: "rotating-conveyor",
   count: 3,
   namePrefix: "Rotating Conveyor",
-  idPrefix: "rotating",
+  idPrefix: "rotating-conveyor",
   statusOnModulo: 3,
   onlineOfflineModulo: 4,
   baseCycles: 700,
@@ -82,26 +82,12 @@ const rotatingConveyors = buildComponents({
   uptimeStep: 7,
 });
 
-const presses = buildComponents({
-  role: "actuator",
-  category: "press",
-  count: 3,
-  namePrefix: "Press",
-  idPrefix: "press",
-  statusOnModulo: 2,
-  onlineOfflineModulo: 4,
-  baseCycles: 260,
-  cyclesStep: 35,
-  baseUptime: 120,
-  uptimeStep: 8,
-});
-
 const inductiveSensors = buildComponents({
   role: "sensor",
   category: "inductive-sensor",
-  count: 19,
+  count: 18,
   namePrefix: "Inductive Sensor",
-  idPrefix: "ind-sensor",
+  idPrefix: "inductive",
   statusOnModulo: 6,
   onlineOfflineModulo: 8,
   baseCycles: 3100,
@@ -124,12 +110,12 @@ const rfidSensors = buildComponents({
   uptimeStep: 4,
 });
 
-const opticalSensors = buildComponents({
+const lightBarriers = buildComponents({
   role: "sensor",
   category: "optical-sensor",
   count: 1,
-  namePrefix: "Optical Sensor",
-  idPrefix: "optical",
+  namePrefix: "Light Barrier",
+  idPrefix: "lightbarrier",
   statusOnModulo: 99,
   onlineOfflineModulo: 99,
   baseCycles: 5200,
@@ -138,12 +124,12 @@ const opticalSensors = buildComponents({
   uptimeStep: 0,
 });
 
-const pneumaticUnits = buildComponents({
+const ballLoaders = buildComponents({
   role: "actuator",
   category: "pneumatic-unit",
-  count: 5,
-  namePrefix: "Pneumatic Unit",
-  idPrefix: "pneumatic",
+  count: 6,
+  namePrefix: "Ball Loader",
+  idPrefix: "ball-loader",
   statusOnModulo: 2,
   onlineOfflineModulo: 6,
   baseCycles: 540,
@@ -152,26 +138,12 @@ const pneumaticUnits = buildComponents({
   uptimeStep: 5,
 });
 
-const crane = buildComponents({
-  role: "actuator",
-  category: "crane",
-  count: 1,
-  namePrefix: "Crane",
-  idPrefix: "crane",
-  statusOnModulo: 99,
-  onlineOfflineModulo: 99,
-  baseCycles: 410,
-  cyclesStep: 0,
-  baseUptime: 290,
-  uptimeStep: 0,
-});
-
-const storage = buildComponents({
+const highBayStorage = buildComponents({
   role: "actuator",
   category: "storage",
   count: 1,
-  namePrefix: "Storage",
-  idPrefix: "storage",
+  namePrefix: "High-Bay Storage",
+  idPrefix: "highbay-storage",
   statusOnModulo: 99,
   onlineOfflineModulo: 99,
   baseCycles: 970,
@@ -180,12 +152,12 @@ const storage = buildComponents({
   uptimeStep: 0,
 });
 
-const input = buildComponents({
+const inputStation = buildComponents({
   role: "sensor",
   category: "input",
   count: 1,
   namePrefix: "Input Station",
-  idPrefix: "input",
+  idPrefix: "input-station",
   statusOnModulo: 99,
   onlineOfflineModulo: 99,
   baseCycles: 980,
@@ -197,12 +169,10 @@ const input = buildComponents({
 export const mockComponents: PlantComponent[] = [
   ...conveyors,
   ...rotatingConveyors,
-  ...presses,
   ...inductiveSensors,
   ...rfidSensors,
-  ...opticalSensors,
-  ...pneumaticUnits,
-  ...crane,
-  ...storage,
-  ...input,
+  ...lightBarriers,
+  ...ballLoaders,
+  ...highBayStorage,
+  ...inputStation,
 ];

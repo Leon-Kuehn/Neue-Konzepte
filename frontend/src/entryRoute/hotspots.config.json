@@ -2,7 +2,7 @@
   "hotspots": [
     {
       "id": "input-station-1",
-      "name": "Input Station 1",
+      "name": "Input Station (Product Entry)",
       "iconId": "input-station",
       "layer": 1,
       "iconSize": 200,
@@ -21,7 +21,7 @@
     },
     {
       "id": "conveyor-1",
-      "name": "Foerderband 1",
+      "name": "Conveyor 1 (Main North)",
       "iconId": "conveyor-belt",
       "layer": 0,
       "iconSize": 500,
@@ -40,7 +40,7 @@
     },
     {
       "id": "conveyor-2",
-      "name": "Foerderband 2",
+      "name": "Conveyor 2 (Main North-Center)",
       "iconId": "conveyor-belt",
       "layer": 0,
       "iconSize": 500,
@@ -59,7 +59,7 @@
     },
     {
       "id": "conveyor-3",
-      "name": "Foerderband 3",
+      "name": "Conveyor 3 (Main Center)",
       "iconId": "conveyor-belt",
       "layer": 0,
       "iconSize": 500,
@@ -78,7 +78,7 @@
     },
     {
       "id": "conveyor-4",
-      "name": "Foerderband 4",
+      "name": "Conveyor 4 (Main South-Center)",
       "iconId": "conveyor-belt",
       "layer": 0,
       "iconSize": 500,
@@ -97,7 +97,7 @@
     },
     {
       "id": "conveyor-5",
-      "name": "Foerderband 5",
+      "name": "Conveyor 5 (Main South)",
       "iconId": "conveyor-belt",
       "layer": 0,
       "iconSize": 500,
@@ -116,7 +116,7 @@
     },
     {
       "id": "conveyor-6",
-      "name": "Foerderband 6",
+      "name": "Conveyor 6 (Vertical Right)",
       "iconId": "conveyor-belt",
       "layer": 0,
       "iconSize": 500,
@@ -135,7 +135,7 @@
     },
     {
       "id": "conveyor-7",
-      "name": "Foerderband 7",
+      "name": "Conveyor 7 (Vertical Right-Top)",
       "iconId": "conveyor-belt",
       "layer": 0,
       "iconSize": 500,
@@ -154,7 +154,7 @@
     },
     {
       "id": "conveyor-8",
-      "name": "Foerderband 8",
+      "name": "Conveyor 8 (Top Right-Center)",
       "iconId": "conveyor-belt",
       "layer": 0,
       "iconSize": 500,
@@ -173,7 +173,7 @@
     },
     {
       "id": "conveyor-9",
-      "name": "Foerderband 9",
+      "name": "Conveyor 9 (Top Center)",
       "iconId": "conveyor-belt",
       "layer": 0,
       "iconSize": 500,
@@ -192,7 +192,7 @@
     },
     {
       "id": "conveyor-10",
-      "name": "Foerderband 10",
+      "name": "Conveyor 10 (Top Left-Center)",
       "iconId": "conveyor-belt",
       "layer": 0,
       "iconSize": 500,
@@ -211,7 +211,7 @@
     },
     {
       "id": "conveyor-11",
-      "name": "Foerderband 11",
+      "name": "Conveyor 11 (Top South-Center)",
       "iconId": "conveyor-belt",
       "layer": 0,
       "iconSize": 500,
@@ -230,7 +230,7 @@
     },
     {
       "id": "conveyor-12",
-      "name": "Foerderband 12",
+      "name": "Conveyor 12 (Top Far Right)",
       "iconId": "conveyor-belt",
       "layer": 0,
       "iconSize": 500,
@@ -249,7 +249,7 @@
     },
     {
       "id": "conveyor-13",
-      "name": "Foerderband 13",
+      "name": "Conveyor 13 (Circle 1 South)",
       "iconId": "conveyor-belt",
       "layer": 0,
       "iconSize": 500,
@@ -268,7 +268,7 @@
     },
     {
       "id": "conveyor-14",
-      "name": "Foerderband 14",
+      "name": "Conveyor 14 (Circle 2 South)",
       "iconId": "conveyor-belt",
       "layer": 0,
       "iconSize": 500,
@@ -287,7 +287,7 @@
     },
     {
       "id": "rotating-conveyor-1",
-      "name": "Drehfoerderband 1",
+      "name": "Rotating Conveyor 1 (Main Center)",
       "iconId": "rotating-conveyor",
       "layer": 0,
       "direction": "right",
@@ -307,7 +307,7 @@
     },
     {
       "id": "rotating-conveyor-2",
-      "name": "Drehfoerderband 2",
+      "name": "Rotating Conveyor 2 (Circle Center)",
       "iconId": "rotating-conveyor",
       "layer": 0,
       "direction": "right",
@@ -327,7 +327,7 @@
     },
     {
       "id": "rotating-conveyor-3",
-      "name": "Drehfoerderband 3",
+      "name": "Rotating Conveyor 3 (Top Center)",
       "iconId": "rotating-conveyor",
       "layer": 0,
       "direction": "right",
@@ -347,7 +347,7 @@
     },
     {
       "id": "ball-loader-1",
-      "name": "Kugellade-Station 1",
+      "name": "Ball Loader 1 (Bottom Center)",
       "iconId": "ball-loader",
       "layer": 1,
       "iconSize": 260,
@@ -366,7 +366,7 @@
     },
     {
       "id": "ball-loader-2",
-      "name": "Kugellade-Station 2",
+      "name": "Ball Loader 2 (Bottom Center-Right)",
       "iconId": "ball-loader",
       "layer": 1,
       "iconSize": 260,
@@ -385,7 +385,7 @@
     },
     {
       "id": "ball-loader-3",
-      "name": "Kugellade-Station 3",
+      "name": "Ball Loader 3 (Bottom Right)",
       "iconId": "ball-loader",
       "layer": 1,
       "iconSize": 260,
@@ -404,7 +404,7 @@
     },
     {
       "id": "ball-loader-4",
-      "name": "Kugellade-Station 4",
+      "name": "Ball Loader 4 (Top Center)",
       "iconId": "ball-loader",
       "layer": 1,
       "iconSize": 260,
@@ -423,7 +423,7 @@
     },
     {
       "id": "ball-loader-5",
-      "name": "Kugellade-Station 5",
+      "name": "Ball Loader 5 (Top Left)",
       "iconId": "ball-loader",
       "layer": 1,
       "iconSize": 260,
@@ -442,7 +442,7 @@
     },
     {
       "id": "ball-loader-6",
-      "name": "Kugellade-Station 6",
+      "name": "Ball Loader 6 (Top Left-Center)",
       "iconId": "ball-loader",
       "layer": 1,
       "iconSize": 260,
@@ -460,8 +460,8 @@
       "ariaLabel": "Kugellade-Station 6"
     },
     {
-      "id": "inductive-0",
-      "name": "Induktiver Sensor 0",
+      "id": "inductive-1",
+      "name": "Inductive Sensor 1 (Entry Gate)",
       "iconId": "inductive-sensor",
       "layer": 1,
       "iconSize": 200,
@@ -474,13 +474,13 @@
       "initialState": "on",
       "action": {
         "type": "openDetails",
-        "target": "inductive-0-details"
+        "target": "inductive-1-details"
       },
-      "ariaLabel": "Induktiver Sensor 0"
+      "ariaLabel": "Inductive Sensor 1 (Entry Gate)"
     },
     {
-      "id": "inductive-1",
-      "name": "Induktiver Sensor 1",
+      "id": "inductive-2",
+      "name": "Inductive Sensor 2 (Main Conveyor 1)",
       "iconId": "inductive-sensor",
       "layer": 1,
       "iconSize": 200,
@@ -493,13 +493,13 @@
       "initialState": "on",
       "action": {
         "type": "openDetails",
-        "target": "inductive-1-details"
+        "target": "inductive-2-details"
       },
-      "ariaLabel": "Induktiver Sensor 1"
+      "ariaLabel": "Inductive Sensor 2 (Main Conveyor 1)"
     },
     {
-      "id": "inductive-2",
-      "name": "Induktiver Sensor 2",
+      "id": "inductive-3",
+      "name": "Inductive Sensor 3 (Main Conveyor 2)",
       "iconId": "inductive-sensor",
       "layer": 1,
       "iconSize": 200,
@@ -512,13 +512,13 @@
       "initialState": "on",
       "action": {
         "type": "openDetails",
-        "target": "inductive-2-details"
+        "target": "inductive-3-details"
       },
-      "ariaLabel": "Induktiver Sensor 2"
+      "ariaLabel": "Inductive Sensor 3 (Main Conveyor 2)"
     },
     {
-      "id": "inductive-3",
-      "name": "Induktiver Sensor 3",
+      "id": "inductive-4",
+      "name": "Inductive Sensor 4 (Main Conveyor 3)",
       "iconId": "inductive-sensor",
       "layer": 1,
       "iconSize": 200,
@@ -531,13 +531,13 @@
       "initialState": "on",
       "action": {
         "type": "openDetails",
-        "target": "inductive-3-details"
+        "target": "inductive-4-details"
       },
-      "ariaLabel": "Induktiver Sensor 3"
+      "ariaLabel": "Inductive Sensor 4 (Main Conveyor 3)"
     },
     {
-      "id": "inductive-4",
-      "name": "Induktiver Sensor 4",
+      "id": "inductive-5",
+      "name": "Inductive Sensor 5 (Main Conveyor 4)",
       "iconId": "inductive-sensor",
       "layer": 1,
       "iconSize": 200,
@@ -550,13 +550,13 @@
       "initialState": "on",
       "action": {
         "type": "openDetails",
-        "target": "inductive-4-details"
+        "target": "inductive-5-details"
       },
-      "ariaLabel": "Induktiver Sensor 4"
+      "ariaLabel": "Inductive Sensor 5 (Main Conveyor 4)"
     },
     {
-      "id": "inductive-5",
-      "name": "Induktiver Sensor 5",
+      "id": "inductive-6",
+      "name": "Inductive Sensor 6 (Main Conveyor 5)",
       "iconId": "inductive-sensor",
       "layer": 1,
       "iconSize": 200,
@@ -569,13 +569,13 @@
       "initialState": "on",
       "action": {
         "type": "openDetails",
-        "target": "inductive-5-details"
+        "target": "inductive-6-details"
       },
-      "ariaLabel": "Induktiver Sensor 5"
+      "ariaLabel": "Inductive Sensor 6 (Main Conveyor 5)"
     },
     {
-      "id": "inductive-6",
-      "name": "Induktiver Sensor 6",
+      "id": "inductive-7",
+      "name": "Inductive Sensor 7 (Circle Conveyor 2)",
       "iconId": "inductive-sensor",
       "layer": 1,
       "iconSize": 200,
@@ -588,13 +588,13 @@
       "initialState": "on",
       "action": {
         "type": "openDetails",
-        "target": "inductive-6-details"
+        "target": "inductive-7-details"
       },
-      "ariaLabel": "Induktiver Sensor 6"
+      "ariaLabel": "Inductive Sensor 7 (Circle Conveyor 2)"
     },
     {
-      "id": "inductive-7",
-      "name": "Induktiver Sensor 7",
+      "id": "inductive-8",
+      "name": "Inductive Sensor 8 (Circle Conveyor 1)",
       "iconId": "inductive-sensor",
       "layer": 1,
       "iconSize": 200,
@@ -607,13 +607,13 @@
       "initialState": "on",
       "action": {
         "type": "openDetails",
-        "target": "inductive-7-details"
+        "target": "inductive-8-details"
       },
-      "ariaLabel": "Induktiver Sensor 7"
+      "ariaLabel": "Inductive Sensor 8 (Circle Conveyor 1)"
     },
     {
-      "id": "inductive-8",
-      "name": "Induktiver Sensor 8",
+      "id": "inductive-9",
+      "name": "Inductive Sensor 9 (Circle Conveyor 3)",
       "iconId": "inductive-sensor",
       "layer": 1,
       "iconSize": 200,
@@ -626,13 +626,13 @@
       "initialState": "on",
       "action": {
         "type": "openDetails",
-        "target": "inductive-8-details"
+        "target": "inductive-9-details"
       },
-      "ariaLabel": "Induktiver Sensor 8"
+      "ariaLabel": "Inductive Sensor 9 (Circle Conveyor 3)"
     },
     {
-      "id": "inductive-9",
-      "name": "Induktiver Sensor 9",
+      "id": "inductive-10",
+      "name": "Inductive Sensor 10 (Top Left)",
       "iconId": "inductive-sensor",
       "layer": 1,
       "iconSize": 200,
@@ -645,13 +645,13 @@
       "initialState": "on",
       "action": {
         "type": "openDetails",
-        "target": "inductive-9-details"
+        "target": "inductive-10-details"
       },
-      "ariaLabel": "Induktiver Sensor 9"
+      "ariaLabel": "Inductive Sensor 10 (Top Left)"
     },
     {
-      "id": "inductive-10",
-      "name": "Induktiver Sensor 10",
+      "id": "inductive-11",
+      "name": "Inductive Sensor 11 (Top Left-Center)",
       "iconId": "inductive-sensor",
       "layer": 1,
       "iconSize": 200,
@@ -664,13 +664,13 @@
       "initialState": "on",
       "action": {
         "type": "openDetails",
-        "target": "inductive-10-details"
+        "target": "inductive-11-details"
       },
-      "ariaLabel": "Induktiver Sensor 10"
+      "ariaLabel": "Inductive Sensor 11 (Top Left-Center)"
     },
     {
-      "id": "inductive-11",
-      "name": "Induktiver Sensor 11",
+      "id": "inductive-12",
+      "name": "Inductive Sensor 12 (Top Center)",
       "iconId": "inductive-sensor",
       "layer": 1,
       "iconSize": 200,
@@ -683,13 +683,13 @@
       "initialState": "on",
       "action": {
         "type": "openDetails",
-        "target": "inductive-11-details"
+        "target": "inductive-12-details"
       },
-      "ariaLabel": "Induktiver Sensor 11"
+      "ariaLabel": "Inductive Sensor 12 (Top Center)"
     },
     {
-      "id": "inductive-12",
-      "name": "Induktiver Sensor 12",
+      "id": "inductive-13",
+      "name": "Inductive Sensor 13 (Top Right-Center)",
       "iconId": "inductive-sensor",
       "layer": 1,
       "iconSize": 200,
@@ -702,13 +702,13 @@
       "initialState": "on",
       "action": {
         "type": "openDetails",
-        "target": "inductive-12-details"
+        "target": "inductive-13-details"
       },
-      "ariaLabel": "Induktiver Sensor 12"
+      "ariaLabel": "Inductive Sensor 13 (Top Right-Center)"
     },
     {
-      "id": "inductive-13",
-      "name": "Induktiver Sensor 13",
+      "id": "inductive-14",
+      "name": "Inductive Sensor 14 (Top Right)",
       "iconId": "inductive-sensor",
       "layer": 1,
       "iconSize": 200,
@@ -721,13 +721,13 @@
       "initialState": "on",
       "action": {
         "type": "openDetails",
-        "target": "inductive-13-details"
+        "target": "inductive-14-details"
       },
-      "ariaLabel": "Induktiver Sensor 13"
+      "ariaLabel": "Inductive Sensor 14 (Top Right)"
     },
     {
-      "id": "inductive-14",
-      "name": "Induktiver Sensor 14",
+      "id": "inductive-15",
+      "name": "Inductive Sensor 15 (Top Far Right)",
       "iconId": "inductive-sensor",
       "layer": 1,
       "iconSize": 200,
@@ -740,13 +740,13 @@
       "initialState": "on",
       "action": {
         "type": "openDetails",
-        "target": "inductive-14-details"
+        "target": "inductive-15-details"
       },
-      "ariaLabel": "Induktiver Sensor 14"
+      "ariaLabel": "Inductive Sensor 15 (Top Far Right)"
     },
     {
-      "id": "inductive-15",
-      "name": "Induktiver Sensor 15",
+      "id": "inductive-16",
+      "name": "Inductive Sensor 16 (Vertical Conveyor 1)",
       "iconId": "inductive-sensor",
       "layer": 1,
       "iconSize": 200,
@@ -759,13 +759,13 @@
       "initialState": "on",
       "action": {
         "type": "openDetails",
-        "target": "inductive-15-details"
+        "target": "inductive-16-details"
       },
-      "ariaLabel": "Induktiver Sensor 15"
+      "ariaLabel": "Inductive Sensor 16 (Vertical Conveyor 1)"
     },
     {
-      "id": "inductive-16",
-      "name": "Induktiver Sensor 16",
+      "id": "inductive-17",
+      "name": "Inductive Sensor 17 (Vertical Conveyor 2)",
       "iconId": "inductive-sensor",
       "layer": 1,
       "iconSize": 200,
@@ -778,13 +778,13 @@
       "initialState": "on",
       "action": {
         "type": "openDetails",
-        "target": "inductive-16-details"
+        "target": "inductive-17-details"
       },
-      "ariaLabel": "Induktiver Sensor 16"
+      "ariaLabel": "Inductive Sensor 17 (Vertical Conveyor 2)"
     },
     {
-      "id": "inductive-17",
-      "name": "Induktiver Sensor 17",
+      "id": "inductive-18",
+      "name": "Inductive Sensor 18 (Vertical Conveyor 3)",
       "iconId": "inductive-sensor",
       "layer": 1,
       "iconSize": 200,
@@ -797,13 +797,13 @@
       "initialState": "on",
       "action": {
         "type": "openDetails",
-        "target": "inductive-17-details"
+        "target": "inductive-18-details"
       },
-      "ariaLabel": "Induktiver Sensor 17"
+      "ariaLabel": "Inductive Sensor 18 (Vertical Conveyor 3)"
     },
     {
       "id": "rfid-1",
-      "name": "RFID Sensor 1",
+      "name": "RFID Sensor 1 (Main North)",
       "iconId": "rfid-sensor",
       "layer": 1,
       "iconSize": 200,
@@ -822,7 +822,7 @@
     },
     {
       "id": "rfid-2",
-      "name": "RFID Sensor 2",
+      "name": "RFID Sensor 2 (Main Center)",
       "iconId": "rfid-sensor",
       "layer": 1,
       "iconSize": 200,
@@ -841,7 +841,7 @@
     },
     {
       "id": "rfid-3",
-      "name": "RFID Sensor 3",
+      "name": "RFID Sensor 3 (Main South)",
       "iconId": "rfid-sensor",
       "layer": 1,
       "iconSize": 200,
@@ -860,7 +860,7 @@
     },
     {
       "id": "rfid-4",
-      "name": "RFID Sensor 4",
+      "name": "RFID Sensor 4 (Circle Center)",
       "iconId": "rfid-sensor",
       "layer": 1,
       "iconSize": 200,
@@ -879,7 +879,7 @@
     },
     {
       "id": "rfid-5",
-      "name": "RFID Sensor 5",
+      "name": "RFID Sensor 5 (Top Center)",
       "iconId": "rfid-sensor",
       "layer": 1,
       "iconSize": 200,
@@ -898,7 +898,7 @@
     },
     {
       "id": "lightbarrier-1",
-      "name": "Lichtschranke 1",
+      "name": "Light Barrier 1 (Sorting Gate)",
       "iconId": "lightbarrier-sensor",
       "layer": 1,
       "iconSize": 200,
@@ -917,7 +917,7 @@
     },
     {
       "id": "highbay-storage-1",
-      "name": "Hochregallager",
+      "name": "High-Bay Storage (Final Storage)",
       "iconId": "highbay-storage",
       "layer": 1,
       "iconSize": 2200,
