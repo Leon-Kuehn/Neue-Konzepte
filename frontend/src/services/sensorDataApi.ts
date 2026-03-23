@@ -1,4 +1,20 @@
-const API_BASE = (import.meta.env.VITE_API_BASE_URL as string | undefined) ?? "/api";
+const resolveApiBase = (
+  env: Record<string, unknown> = import.meta.env as Record<string, unknown>,
+): string => {
+  const primary = env.VITE_API_BASE;
+  if (typeof primary === "string" && primary.trim().length > 0) {
+    return primary;
+  }
+
+  const fallback = env.VITE_API_BASE_URL;
+  if (typeof fallback === "string" && fallback.trim().length > 0) {
+    return fallback;
+  }
+
+  return "/api";
+};
+
+const API_BASE = resolveApiBase();
 
 export type SensorPayload = unknown;
 
@@ -162,6 +178,7 @@ export const sensorDataApi = {
 
 export {
   API_BASE,
+  resolveApiBase,
   buildUrl,
   getHealth,
   getAllSensorData,

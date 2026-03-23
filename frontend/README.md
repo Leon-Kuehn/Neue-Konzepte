@@ -1,6 +1,27 @@
-# React + TypeScript + Vite
+# Neue Konzepte Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+## Overview
+
+This frontend is the IoT plant admin dashboard for the "Neue Konzepte" project. It provides a top-down plant view, machine/component status, MQTT connectivity controls, and assistant/documentation pages.
+
+## Main Routes
+
+- `/plant`: Main plant overview with interactive map, component details, live state, and backend-backed history/stats.
+- `/mqtt`: MQTT settings and connectivity management.
+- `/assistant`: In-app AI assistant tab for guided queries and operational help.
+- Additional routes include `/components`, `/hochregallager`, `/plant-control`, and `/docs`.
+
+## Data Flow Summary
+
+- MQTT path (live): Frontend subscribes to MQTT status topics and updates live component state immediately.
+- REST path (historical/statistical): Frontend fetches persisted sensor data from backend endpoints under `/api/sensor-data`.
+- Health path: Frontend polls `/api/health` for backend availability status.
+
+## Development / Tech Stack
+
+Built with React + TypeScript + Vite + MUI.
+
+This project started from the standard Vite React template. Template-related notes are kept below for reference.
 
 Currently, two official plugins are available:
 
@@ -108,6 +129,18 @@ Responsibilities:
 - Build URLs with consistent base path handling (`/api` by default).
 - Encode query params safely.
 - Throw on non-2xx responses.
+
+API base behavior:
+
+- Default: relative `/api` (works behind Docker + Nginx reverse proxy).
+- Optional override for local development: `VITE_API_BASE`.
+- Backward-compatible fallback: `VITE_API_BASE_URL`.
+
+Example local override (`frontend/.env.local`):
+
+```bash
+VITE_API_BASE=http://localhost:3000/api
+```
 
 Supported backend endpoints include:
 

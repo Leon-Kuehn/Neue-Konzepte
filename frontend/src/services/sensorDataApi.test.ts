@@ -9,6 +9,7 @@ import {
   getSensorDataByComponent,
   getSensorDataRange,
   getSensorStats,
+  resolveApiBase,
   type HealthResponse,
   type SensorActivityBucket,
   type SensorData,
@@ -34,6 +35,25 @@ describe("sensorDataApi", () => {
 
   it("uses /api as default base", () => {
     expect(API_BASE).toBe("/api");
+  });
+
+  it("resolveApiBase prefers VITE_API_BASE", () => {
+    expect(
+      resolveApiBase({
+        VITE_API_BASE: "http://localhost:3000/api",
+        VITE_API_BASE_URL: "http://legacy.local/api",
+      }),
+    ).toBe("http://localhost:3000/api");
+  });
+
+  it("resolveApiBase falls back to VITE_API_BASE_URL", () => {
+    expect(resolveApiBase({ VITE_API_BASE_URL: "http://legacy.local/api" })).toBe(
+      "http://legacy.local/api",
+    );
+  });
+
+  it("resolveApiBase falls back to /api when env vars are missing", () => {
+    expect(resolveApiBase({})).toBe("/api");
   });
 
   it("builds health URL", () => {
