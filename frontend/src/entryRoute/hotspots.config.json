@@ -194,7 +194,7 @@
       "id": "conveyor-10",
       "name": "Conveyor 10 (Top Left-Center)",
       "iconId": "conveyor-belt",
-      "layer": 0,
+      "layer": 1,
       "iconSize": 500,
       "rotation": 0,
       "stateSource": {
@@ -422,12 +422,12 @@
       "ariaLabel": "Kugellade-Station 4"
     },
     {
-      "id": "ball-loader-5",
-      "name": "Ball Loader 5 (Top Left)",
-      "iconId": "ball-loader",
+      "id": "pusher-1",
+      "name": "Pusher 1 (Top Left)",
+      "iconId": "pusher",
       "layer": 1,
       "iconSize": 260,
-      "rotation": 180,
+      "rotation": 270,
       "stateSource": {
         "type": "values"
       },
@@ -436,17 +436,17 @@
       "initialState": "on",
       "action": {
         "type": "openDetails",
-        "target": "ball-loader-5-details"
+        "target": "pusher-1-details"
       },
-      "ariaLabel": "Kugellade-Station 5"
+      "ariaLabel": "Pusher 1"
     },
     {
-      "id": "ball-loader-6",
-      "name": "Ball Loader 6 (Top Left-Center)",
-      "iconId": "ball-loader",
+      "id": "pusher-2",
+      "name": "Pusher 2 (Top Left-Center)",
+      "iconId": "pusher",
       "layer": 1,
       "iconSize": 260,
-      "rotation": 180,
+      "rotation": 270,
       "stateSource": {
         "type": "values"
       },
@@ -455,9 +455,47 @@
       "initialState": "on",
       "action": {
         "type": "openDetails",
-        "target": "ball-loader-6-details"
+        "target": "pusher-2-details"
       },
-      "ariaLabel": "Kugellade-Station 6"
+      "ariaLabel": "Pusher 2"
+    },
+    {
+      "id": "deposit-place-1",
+      "name": "Deposit Place 1 (Top Left-Center)",
+      "iconId": "deposit-place",
+      "layer": 0,
+      "iconSize": 260,
+      "rotation": 180,
+      "stateSource": {
+        "type": "values"
+      },
+      "x": 300,
+      "y": 0,
+      "initialState": "on",
+      "action": {
+        "type": "openDetails",
+        "target": "deposit-place-1-details"
+      },
+      "ariaLabel": "Ablageplatz 1"
+    },
+    {
+      "id": "deposit-place-2",
+      "name": "Deposit Place 2 (Top Left-Center)",
+      "iconId": "deposit-place",
+      "layer": 0,
+      "iconSize": 260,
+      "rotation": 180,
+      "stateSource": {
+        "type": "values"
+      },
+      "x": 500,
+      "y": 0,
+      "initialState": "on",
+      "action": {
+        "type": "openDetails",
+        "target": "deposit-place-2-details"
+      },
+      "ariaLabel": "Ablageplatz 2"
     },
     {
       "id": "inductive-1",

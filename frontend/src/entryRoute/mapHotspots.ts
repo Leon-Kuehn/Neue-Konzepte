@@ -13,7 +13,9 @@ export type HotspotIconId =
   | "lightbarrier-sensor"
   | "input-station"
   | "ball-loader"
-  | "highbay-storage";
+  | "highbay-storage"
+  | "pusher"
+  | "deposit-place";
 
 export type HotspotDirection = "left" | "right";
 

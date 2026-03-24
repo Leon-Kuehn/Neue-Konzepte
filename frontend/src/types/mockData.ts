@@ -82,6 +82,20 @@ const rotatingConveyors = buildComponents({
   uptimeStep: 7,
 });
 
+const pushers = buildComponents({
+  role: "actuator",
+  category: "pusher",
+  count: 2,
+  namePrefix: "Pusher",
+  idPrefix: "pusher",
+  statusOnModulo: 2,
+  onlineOfflineModulo: 9,
+  baseCycles: 840,
+  cyclesStep: 40,
+  baseUptime: 210,
+  uptimeStep: 8,
+});
+
 const inductiveSensors = buildComponents({
   role: "sensor",
   category: "inductive-sensor",
@@ -152,6 +166,20 @@ const highBayStorage = buildComponents({
   uptimeStep: 0,
 });
 
+const depositPlaces = buildComponents({
+  role: "actuator",
+  category: "deposit-place",
+  count: 2,
+  namePrefix: "Deposit Place",
+  idPrefix: "deposit-place",
+  statusOnModulo: 3,
+  onlineOfflineModulo: 10,
+  baseCycles: 620,
+  cyclesStep: 35,
+  baseUptime: 200,
+  uptimeStep: 6,
+});
+
 const inputStation = buildComponents({
   role: "sensor",
   category: "input",
@@ -169,10 +197,12 @@ const inputStation = buildComponents({
 export const mockComponents: PlantComponent[] = [
   ...conveyors,
   ...rotatingConveyors,
+  ...pushers,
   ...inductiveSensors,
   ...rfidSensors,
   ...lightBarriers,
   ...ballLoaders,
   ...highBayStorage,
+  ...depositPlaces,
   ...inputStation,
 ];

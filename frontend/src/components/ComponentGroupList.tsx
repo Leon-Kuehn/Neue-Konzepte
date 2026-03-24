@@ -29,12 +29,14 @@ const GROUPS: GroupDefinition[] = [
   { category: "conveyor", labelKey: "group.conveyor", defaultExpanded: true },
   { category: "rotating-conveyor", labelKey: "group.rotating-conveyor", defaultExpanded: true },
   { category: "press", labelKey: "group.press" },
+  { category: "pusher", labelKey: "group.pusher", defaultExpanded: true },
   { category: "inductive-sensor", labelKey: "group.inductive-sensor", defaultExpanded: true },
   { category: "rfid-sensor", labelKey: "group.rfid-sensor", defaultExpanded: true },
   { category: "optical-sensor", labelKey: "group.optical-sensor", defaultExpanded: true },
   { category: "pneumatic-unit", labelKey: "group.pneumatic-unit" },
   { category: "crane", labelKey: "group.crane" },
   { category: "storage", labelKey: "group.storage" },
+  { category: "deposit-place", labelKey: "group.deposit-place", defaultExpanded: true },
   { category: "input", labelKey: "group.input", defaultExpanded: true },
 ];
 

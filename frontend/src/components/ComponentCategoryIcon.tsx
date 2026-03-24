@@ -8,6 +8,8 @@ import { LightSensorIcon } from "../entryRoute/icons/LightSensorIcon";
 import { BallLoaderIcon } from "../entryRoute/icons/BallLoaderIcon";
 import { HighBayStorageIcon } from "../entryRoute/icons/HighBayStorageIcon";
 import { InputStationIcon } from "../entryRoute/icons/InputStationIcon";
+import { PusherIcon } from "../entryRoute/icons/PusherIcon";
+import { DepositPlaceIcon } from "../entryRoute/icons/DepositPlaceIcon";
 import type { Category } from "../types/PlantComponent";
 
 interface ComponentCategoryIconProps {
@@ -23,6 +25,8 @@ export default function ComponentCategoryIcon({ category, active }: ComponentCat
       return <RotatingConveyorIcon width={46} height={20} direction="left" />;
     case "press":
       return <DeviceSquareIcon width={22} height={22} color={active ? "#10B981" : "#6B7280"} />;
+    case "pusher":
+      return <PusherIcon width={42} height={20} active={active} />;
     case "inductive-sensor":
       return <InductiveSensorIcon width={42} height={20} active={active} />;
     case "rfid-sensor":
@@ -35,6 +39,8 @@ export default function ComponentCategoryIcon({ category, active }: ComponentCat
       return <BallLoaderIcon width={18} height={34} active={active} />;
     case "storage":
       return <HighBayStorageIcon width={14} height={34} active={active} />;
+    case "deposit-place":
+      return <DepositPlaceIcon width={42} height={20} active={active} />;
     case "input":
       return <InputStationIcon width={26} height={26} active={active} />;
     default:

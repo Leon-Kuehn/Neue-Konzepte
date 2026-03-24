@@ -3,12 +3,14 @@ export type Category =
   | "conveyor"
   | "rotating-conveyor"
   | "press"
+  | "pusher"
   | "inductive-sensor"
   | "rfid-sensor"
   | "optical-sensor"
   | "pneumatic-unit"
   | "crane"
   | "storage"
+  | "deposit-place"
   | "input";
 
 export interface PlantComponent {

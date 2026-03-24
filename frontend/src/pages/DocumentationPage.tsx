@@ -26,6 +26,8 @@ import { HighBayStorageIcon } from "../entryRoute/icons/HighBayStorageIcon";
 import { InductiveSensorIcon } from "../entryRoute/icons/InductiveSensorIcon";
 import { InputStationIcon } from "../entryRoute/icons/InputStationIcon";
 import { LightBarrierIcon } from "../entryRoute/icons/LightBarrierIcon";
+import { DepositPlaceIcon } from "../entryRoute/icons/DepositPlaceIcon";
+import { PusherIcon } from "../entryRoute/icons/PusherIcon";
 import { RfidSensorIcon } from "../entryRoute/icons/RfidSensorIcon";
 import { RotatingConveyorIcon } from "../entryRoute/icons/RotatingConveyorIcon";
 import { useAppPreferences } from "../context/AppPreferencesContext";
@@ -53,7 +55,9 @@ type ComponentBrief = {
     | "rfid-sensor"
     | "lightbarrier-sensor"
     | "device-square"
-    | "highbay-storage";
+    | "highbay-storage"
+    | "pusher"
+    | "deposit-place";
   direction?: "left" | "right";
   animated?: boolean;
   moduleSheets?: string[];
@@ -235,7 +239,8 @@ const componentBriefs: ComponentBrief[] = [
     category: "press",
     role: "actuator",
     count: 3,
-    iconId: "device-square",
+    iconId: "pusher",
+    moduleSheets: ["221029_data.pdf", "224002_data.pdf"],
     labels: {
       de: "Pressmodul",
       en: "Press Module",
@@ -395,6 +400,10 @@ function renderBriefIcon(component: ComponentBrief) {
       return <DeviceSquareIcon {...sharedProps} />;
     case "highbay-storage":
       return <HighBayStorageIcon {...sharedProps} active={true} />;
+    case "pusher":
+      return <PusherIcon {...sharedProps} active={true} />;
+    case "deposit-place":
+      return <DepositPlaceIcon {...sharedProps} active={true} />;
     default:
       return <DeviceSquareIcon {...sharedProps} />;
   }

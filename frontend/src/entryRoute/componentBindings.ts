@@ -9,6 +9,8 @@ import { MAP_HOTSPOTS } from "./mapHotspots";
  * - inductive-1, inductive-2, ..., inductive-18 (1-based, not 0-based)
  * - rfid-1, rfid-2, ..., rfid-5
  * - ball-loader-1, ball-loader-2, ..., ball-loader-6
+ * - pusher-1, pusher-2
+ * - deposit-place-1, deposit-place-2
  * - lightbarrier-1
  * - input-station-1
  * - highbay-storage-1

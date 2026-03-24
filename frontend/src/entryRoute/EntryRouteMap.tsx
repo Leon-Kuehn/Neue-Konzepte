@@ -10,6 +10,8 @@ import { InputStationIcon } from "./icons/InputStationIcon";
 import { LightSensorIcon } from "./icons/LightSensorIcon";
 import { LightBarrierIcon } from "./icons/LightBarrierIcon";
 import { HighBayStorageIcon } from "./icons/HighBayStorageIcon";
+import { DepositPlaceIcon } from "./icons/DepositPlaceIcon";
+import { PusherIcon } from "./icons/PusherIcon";
 import { RfidSensorIcon } from "./icons/RfidSensorIcon";
 import { RotatingConveyorIcon } from "./icons/RotatingConveyorIcon";
 import { SensorGenericIcon } from "./icons/SensorGenericIcon";
@@ -68,6 +70,8 @@ const iconRegistry: Record<HotspotIconId, ComponentType<IconComponentProps>> = {
   "input-station": InputStationIcon,
   "ball-loader": BallLoaderIcon,
   "highbay-storage": HighBayStorageIcon,
+  "pusher": PusherIcon,
+  "deposit-place": DepositPlaceIcon,
 };
 
 export default forwardRef<EntryRouteMapHandle, EntryRouteMapProps>(
