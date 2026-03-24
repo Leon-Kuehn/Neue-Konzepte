@@ -1,12 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-const { injectIncomingMessageMock, disconnectMock } = vi.hoisted(() => ({
-  injectIncomingMessageMock: vi.fn(),
+const { disconnectMock } = vi.hoisted(() => ({
   disconnectMock: vi.fn().mockResolvedValue(undefined),
-}));
-
-const { ingestSensorDataMock } = vi.hoisted(() => ({
-  ingestSensorDataMock: vi.fn().mockResolvedValue({ id: 1 }),
 }));
 
 const { setLiveConnectionStateMock } = vi.hoisted(() => ({
@@ -14,12 +9,7 @@ const { setLiveConnectionStateMock } = vi.hoisted(() => ({
 }));
 
 vi.mock("./mqttClient", () => ({
-  injectIncomingMessage: injectIncomingMessageMock,
   disconnect: disconnectMock,
-}));
-
-vi.mock("./sensorDataApi", () => ({
-  ingestSensorData: ingestSensorDataMock,
 }));
 
 vi.mock("./liveComponentService", () => ({
@@ -29,10 +19,9 @@ vi.mock("./liveComponentService", () => ({
 describe("simulationService", () => {
   beforeEach(() => {
     vi.useFakeTimers();
-    injectIncomingMessageMock.mockReset();
-    ingestSensorDataMock.mockReset();
+    disconnectMock.mockReset();
+    disconnectMock.mockResolvedValue(undefined);
     setLiveConnectionStateMock.mockReset();
-    ingestSensorDataMock.mockResolvedValue({ id: 1 });
     vi.resetModules();
   });
 
@@ -40,32 +29,34 @@ describe("simulationService", () => {
     vi.useRealTimers();
   });
 
-  it("enables simulation and emits simulated mqtt-like events", async () => {
+  it("enables and disables simulation mode", async () => {
     const service = await import("./simulationService");
 
     service.disableSimulation();
     service.enableSimulation();
-
-    vi.advanceTimersByTime(7000);
 
     expect(service.getSimulationState().enabled).toBe(true);
-    expect(injectIncomingMessageMock).toHaveBeenCalled();
-    expect(ingestSensorDataMock).toHaveBeenCalled();
+
+    service.disableSimulation();
+    expect(service.getSimulationState().enabled).toBe(false);
   });
 
-  it("stops scheduled simulation events when disabled", async () => {
+  it("runs selected simulation and advances runtime", async () => {
     const service = await import("./simulationService");
 
     service.enableSimulation();
-    vi.advanceTimersByTime(5000);
-    const callsBeforeDisable = injectIncomingMessageMock.mock.calls.length;
-    const ingestCallsBeforeDisable = ingestSensorDataMock.mock.calls.length;
+    const simulationId = service.getSimulations()[0]?.id;
 
-    service.disableSimulation();
-    vi.advanceTimersByTime(20000);
+    expect(simulationId).toBeTruthy();
 
-    expect(service.getSimulationState().enabled).toBe(false);
-    expect(injectIncomingMessageMock.mock.calls.length).toBe(callsBeforeDisable);
-    expect(ingestSensorDataMock.mock.calls.length).toBe(ingestCallsBeforeDisable);
+    service.runSimulation(simulationId!);
+    vi.advanceTimersByTime(1700);
+
+    const state = service.getSimulationState();
+    expect(state.running).toBe(true);
+    expect(state.nowMs).toBeGreaterThanOrEqual(1500);
+
+    service.stopSimulation();
+    expect(service.getSimulationState().running).toBe(false);
   });
 });

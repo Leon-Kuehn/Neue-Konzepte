@@ -140,6 +140,12 @@
   filter: grayscale(1) brightness(0.85);
 }
 
+.hotspot--hidden .hotspot__icon {
+  opacity: 0.08;
+  filter: grayscale(1) brightness(0.5);
+  pointer-events: none;
+}
+
 @keyframes belt-move-left {
   0% {
     transform: translateX(0);

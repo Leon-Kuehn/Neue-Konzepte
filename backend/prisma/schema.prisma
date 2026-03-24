@@ -21,3 +21,16 @@ model SensorData {
   @@index([receivedAt])
   @@map("sensor_data")
 }
+
+/// Stores user-defined simulation configurations for the frontend designer.
+model SimulationDefinition {
+  id          String   @id
+  name        String
+  description String?
+  repeat      Int?
+  steps       Json
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("simulation_definitions")
+}

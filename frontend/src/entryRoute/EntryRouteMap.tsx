@@ -23,13 +23,24 @@ import type {
   HotspotState,
 } from "./mapHotspots";
 import { useAppPreferences } from "../context/AppPreferencesContext";
+import type { SimMotion } from "../types/simulation";
+import "./simulationAnimations.css";
 
 export type EntryRouteMapProps = {
   values: Record<string, HotspotState>;
+  simulationVisuals?: Record<
+    string,
+    {
+      rotationDeg?: number;
+      motion?: SimMotion;
+    }
+  >;
+  simulationEnabled?: boolean;
+  visibleHotspotIds?: string[] | null;
   highlightedHotspotIds?: string[];
   onToggle?: (id: string, action: HotspotAction) => void;
   className?: string;
-};
+};;
 
 export type EntryRouteMapHandle = {
   zoomIn: () => void;
@@ -60,7 +71,18 @@ const iconRegistry: Record<HotspotIconId, ComponentType<IconComponentProps>> = {
 };
 
 export default forwardRef<EntryRouteMapHandle, EntryRouteMapProps>(
-  function EntryRouteMap({ values, highlightedHotspotIds = [], onToggle, className }: EntryRouteMapProps, ref) {
+  function EntryRouteMap(
+    {
+      values,
+      simulationVisuals,
+      simulationEnabled = false,
+      visibleHotspotIds,
+      highlightedHotspotIds = [],
+      onToggle,
+      className,
+    }: EntryRouteMapProps,
+    ref,
+  ) {
     const { t } = useAppPreferences();
     const [localStates, setLocalStates] = useState<Record<string, HotspotState>>({});
     const [isPortraitMobile, setIsPortraitMobile] = useState(false);
@@ -278,15 +300,20 @@ export default forwardRef<EntryRouteMapHandle, EntryRouteMapProps>(
               const direction = hotspot.direction ?? "left";
               const iconWidth = hotspot.iconWidth ?? hotspot.iconSize ?? DEFAULT_ICON_SIZE;
               const iconHeight = hotspot.iconHeight ?? hotspot.iconSize ?? DEFAULT_ICON_SIZE;
-              const rotation = hotspot.rotation ?? 0;
+              const simulationVisual = simulationVisuals?.[hotspot.id];
+              const motionClass =
+                simulationEnabled && simulationVisual?.motion && simulationVisual.motion !== "none"
+                  ? ` sim-motion--${simulationVisual.motion}`
+                  : "";
               const isHighlighted = highlightedHotspotIds.includes(hotspot.id);
               const isDeemphasized = hasActiveHighlight && !isHighlighted;
+              const isHidden = visibleHotspotIds && !visibleHotspotIds.includes(hotspot.id);
 
               return (
                 <g
                   key={hotspot.id}
-                  transform={`translate(${hotspot.x}, ${hotspot.y}) rotate(${rotation})`}
-                  className={`hotspot hotspot--${currentState}${isHighlighted ? " hotspot--selected" : ""}${isDeemphasized ? " hotspot--deemphasized" : ""}`}
+                  transform={`translate(${hotspot.x}, ${hotspot.y})`}
+                  className={`hotspot hotspot--${currentState}${isHighlighted ? " hotspot--selected" : ""}${isDeemphasized ? " hotspot--deemphasized" : ""}${isHidden ? " hotspot--hidden" : ""}`}
                   role="button"
                   tabIndex={0}
                   aria-label={hotspot.ariaLabel ?? hotspot.name ?? hotspot.id}
@@ -294,27 +321,32 @@ export default forwardRef<EntryRouteMapHandle, EntryRouteMapProps>(
                   onClick={() => handleActivate(hotspot)}
                   onKeyDown={(event) => handleKeyDown(event, hotspot)}
                 >
-                  <Icon
-                    className="hotspot__icon"
-                    x={-iconWidth / 2}
-                    y={-iconHeight / 2}
-                    width={iconWidth}
-                    height={iconHeight}
-                    preserveAspectRatio="xMidYMid meet"
-                    direction={direction}
-                    active={
-                      hotspot.iconId === "rfid-sensor" ||
-                      hotspot.iconId === "inductive-sensor" ||
-                      hotspot.iconId === "lightbarrier-sensor" ||
-                      hotspot.iconId === "input-station" ||
-                      hotspot.iconId === "ball-loader" ||
-                      hotspot.iconId === "highbay-storage"
-                        ? active
-                        : undefined
-                    }
-                    data-testid={`icon-for-${hotspot.id}`}
-                    data-icon-id={hotspot.iconId}
-                  />
+                  <g transform={`translate(${-iconWidth / 2}, ${-iconHeight / 2})`}>
+                    <g>
+                      <Icon
+                        className={`hotspot__icon${motionClass}`}
+                        x={0}
+                        y={0}
+                        width={iconWidth}
+                        height={iconHeight}
+                        preserveAspectRatio="xMidYMid meet"
+                        style={{ overflow: "visible" }}
+                        direction={direction}
+                        active={
+                          hotspot.iconId === "rfid-sensor" ||
+                          hotspot.iconId === "inductive-sensor" ||
+                          hotspot.iconId === "lightbarrier-sensor" ||
+                          hotspot.iconId === "input-station" ||
+                          hotspot.iconId === "ball-loader" ||
+                          hotspot.iconId === "highbay-storage"
+                            ? active
+                            : undefined
+                        }
+                        data-testid={`icon-for-${hotspot.id}`}
+                        data-icon-id={hotspot.iconId}
+                      />
+                    </g>
+                  </g>
                 </g>
               );
             })}

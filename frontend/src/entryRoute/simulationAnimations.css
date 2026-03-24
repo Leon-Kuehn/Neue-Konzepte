@@ -1,0 +1,44 @@
+@keyframes sim-rotate-clockwise {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes sim-rotate-counterclockwise {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(-360deg);
+  }
+}
+
+@keyframes sim-oscillate {
+  0% {
+    transform: rotate(-6deg);
+  }
+  50% {
+    transform: rotate(6deg);
+  }
+  100% {
+    transform: rotate(-6deg);
+  }
+}
+
+.hotspot__icon.sim-motion--rotate-clockwise {
+  transform-origin: center;
+  animation: sim-rotate-clockwise 2s linear infinite;
+}
+
+.hotspot__icon.sim-motion--rotate-counterclockwise {
+  transform-origin: center;
+  animation: sim-rotate-counterclockwise 2s linear infinite;
+}
+
+.hotspot__icon.sim-motion--oscillate {
+  transform-origin: center;
+  animation: sim-oscillate 1.1s ease-in-out infinite;
+}

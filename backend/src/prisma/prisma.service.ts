@@ -30,4 +30,8 @@ export class PrismaService implements OnModuleInit, OnModuleDestroy {
   get sensorData() {
     return this.db.sensorData;
   }
+
+  get simulationDefinition() {
+    return this.db.simulationDefinition;
+  }
 }

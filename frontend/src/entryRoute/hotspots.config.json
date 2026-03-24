@@ -292,7 +292,7 @@
       "layer": 0,
       "direction": "right",
       "iconSize": 500,
-      "rotation": 45,
+      "rotation": 0,
       "stateSource": {
         "type": "values"
       },

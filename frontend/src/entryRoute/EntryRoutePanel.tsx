@@ -7,6 +7,7 @@ import type { HotspotAction, HotspotState } from "./mapHotspots";
 import { getHotspotIdsForComponent, resolveComponentId } from "./componentBindings";
 import type { PlantComponent } from "../types/PlantComponent";
 import { useSimulationState } from "../hooks/useSimulationState";
+import { useSimulationDesigner } from "../context/SimulationDesignerContext";
 
 interface EntryRoutePanelProps {
   components: PlantComponent[];
@@ -17,10 +18,16 @@ interface EntryRoutePanelProps {
 
 const EntryRoutePanel = forwardRef<EntryRouteMapHandle, EntryRoutePanelProps>(
   (
-    { components, onSelectComponent, highlightedComponentId, className }: EntryRoutePanelProps,
+    {
+      components,
+      onSelectComponent,
+      highlightedComponentId,
+      className,
+    }: EntryRoutePanelProps,
     ref
   ) => {
     const simulation = useSimulationState();
+    const { visibleHotspotIds } = useSimulationDesigner();
     const navigate = useNavigate();
     const componentById = useMemo(() => {
       const map = new Map<string, PlantComponent>();
@@ -34,7 +41,7 @@ const EntryRoutePanel = forwardRef<EntryRouteMapHandle, EntryRoutePanelProps>(
       const result: Record<string, HotspotState> = {};
       for (const hotspot of MAP_HOTSPOTS) {
         if (simulation.enabled) {
-          result[hotspot.id] = simulation.hotspotStates[hotspot.id] ?? "off";
+          result[hotspot.id] = simulation.hotspotStates[hotspot.id]?.state ?? "off";
           continue;
         }
 
@@ -70,6 +77,9 @@ const EntryRoutePanel = forwardRef<EntryRouteMapHandle, EntryRoutePanelProps>(
       <EntryRouteMap
         ref={ref}
         values={values}
+        simulationVisuals={simulation.hotspotStates}
+        simulationEnabled={simulation.enabled}
+        visibleHotspotIds={visibleHotspotIds}
         highlightedHotspotIds={highlightedHotspotIds}
         onToggle={handleToggle}
         className={className}

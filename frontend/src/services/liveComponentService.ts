@@ -33,12 +33,21 @@ function isSimulationModePersisted(): boolean {
   }
 
   try {
-    const raw = localStorage.getItem("simulation-state");
-    if (!raw) {
-      return false;
+    const keys = ["simulation-designer-state", "simulation-state"];
+
+    for (const key of keys) {
+      const raw = localStorage.getItem(key);
+      if (!raw) {
+        continue;
+      }
+
+      const parsed = JSON.parse(raw) as { enabled?: unknown; simulationEnabled?: unknown };
+      if (parsed.enabled === true || parsed.simulationEnabled === true) {
+        return true;
+      }
     }
-    const parsed = JSON.parse(raw) as { enabled?: unknown };
-    return parsed.enabled === true;
+
+    return false;
   } catch {
     return false;
   }

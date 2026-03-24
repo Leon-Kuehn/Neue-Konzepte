@@ -12,6 +12,7 @@ import {
   AppPreferencesProvider,
   useAppPreferences,
 } from "./context/AppPreferencesContext";
+import { SimulationDesignerProvider } from "./context/SimulationDesignerContext";
 import { initializeSimulation } from "./services/simulationService";
 import { initializeLiveComponentFeed } from "./services/liveComponentService";
 
@@ -44,19 +45,21 @@ function AppShell() {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <BrowserRouter>
-        <Routes>
-          <Route element={<MainLayout />}>
-            <Route path="/plant" element={<PlantOverviewPage />} />
-            <Route path="/components" element={<ComponentBrowserPage />} />
-            <Route path="/hochregallager" element={<HighBayStoragePage />} />
-            <Route path="/plant-control" element={<PlantControlPage />} />
-            <Route path="/docs" element={<DocumentationPage />} />
-            <Route path="/mqtt" element={<MqttSettingsPage />} />
-            <Route path="*" element={<Navigate to="/plant" replace />} />
-          </Route>
-        </Routes>
-      </BrowserRouter>
+      <SimulationDesignerProvider>
+        <BrowserRouter>
+          <Routes>
+            <Route element={<MainLayout />}>
+              <Route path="/plant" element={<PlantOverviewPage />} />
+              <Route path="/components" element={<ComponentBrowserPage />} />
+              <Route path="/hochregallager" element={<HighBayStoragePage />} />
+              <Route path="/plant-control" element={<PlantControlPage />} />
+              <Route path="/docs" element={<DocumentationPage />} />
+              <Route path="/mqtt" element={<MqttSettingsPage />} />
+              <Route path="*" element={<Navigate to="/plant" replace />} />
+            </Route>
+          </Routes>
+        </BrowserRouter>
+      </SimulationDesignerProvider>
     </ThemeProvider>
   );
 }
