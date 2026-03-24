@@ -1,5 +1,7 @@
 import { disconnect } from "./mqttClient";
-import { setLiveConnectionState } from "./liveComponentService";
+import { applySimulationComponentPayload, setLiveConnectionState } from "./liveComponentService";
+import { resolveComponentId } from "../entryRoute/componentBindings";
+import { ingestSensorData } from "./sensorDataApi";
 import {
   getSimulationRuntimeState,
   replaceSimulations,
@@ -28,6 +30,92 @@ export type SimulationState = SimulationRuntimeState & {
 
 let lastRuntimeSnapshot: SimulationRuntimeState | null = null;
 let lastCompatibilitySnapshot: SimulationState | null = null;
+let simulationBridgeInitialized = false;
+let previousBridgeState: SimulationRuntimeState | null = null;
+
+function pushSimulationEventToBackend(
+  componentId: string,
+  hotspotId: string,
+  state: SimState,
+  rotationDeg?: number,
+): void {
+  const health = state === "error" ? "error" : "ok";
+  const status = state === "on" ? "on" : "off";
+
+  void ingestSensorData({
+    componentId,
+    topic: `plant/${componentId}/status`,
+    payload: {
+      status,
+      online: true,
+      health,
+      rotationDeg,
+      value: status === "on",
+      source: "simulation",
+      hotspotId,
+    },
+  }).catch(() => {
+    // Simulation should continue even if backend ingest is temporarily unavailable.
+  });
+}
+
+function bridgeHotspotStateChange(
+  hotspotId: string,
+  nextHotspot: SimulationRuntimeState["hotspotStates"][string],
+): void {
+  const componentId = resolveComponentId(hotspotId);
+  const health = nextHotspot.state === "error" ? "error" : "ok";
+  const status = nextHotspot.state === "on" ? "on" : "off";
+
+  applySimulationComponentPayload(componentId, {
+    status,
+    online: true,
+    health,
+    rotationDeg: nextHotspot.rotationDeg,
+    value: status === "on",
+  });
+
+  pushSimulationEventToBackend(componentId, hotspotId, nextHotspot.state, nextHotspot.rotationDeg);
+}
+
+function initializeSimulationDataBridge(): void {
+  if (simulationBridgeInitialized) {
+    return;
+  }
+
+  simulationBridgeInitialized = true;
+
+  subscribeSimulationStore((nextState) => {
+    const previousState = previousBridgeState;
+    previousBridgeState = nextState;
+
+    if (!previousState) {
+      return;
+    }
+
+    // Process while simulation is active and also for the transition back to live mode.
+    if (!nextState.simulationEnabled && !previousState.simulationEnabled) {
+      return;
+    }
+
+    for (const [hotspotId, nextHotspot] of Object.entries(nextState.hotspotStates)) {
+      const prevHotspot = previousState.hotspotStates[hotspotId];
+      if (!prevHotspot) {
+        continue;
+      }
+
+      if (
+        prevHotspot.state === nextHotspot.state &&
+        prevHotspot.rotationDeg === nextHotspot.rotationDeg &&
+        prevHotspot.motion === nextHotspot.motion
+      ) {
+        continue;
+      }
+
+      bridgeHotspotStateChange(hotspotId, nextHotspot);
+    }
+  });
+}
 
 function toCompatibilityState(state: SimulationRuntimeState): SimulationState {
   if (lastRuntimeSnapshot === state && lastCompatibilitySnapshot) {
@@ -55,7 +143,10 @@ function disconnectLiveMqtt(): void {
 }
 
 export function initializeSimulation(): void {
+  initializeSimulationDataBridge();
+
   const runtime = simulationStore.state;
+  previousBridgeState = runtime;
   if (runtime.simulationEnabled) {
     disconnectLiveMqtt();
   }

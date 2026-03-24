@@ -27,6 +27,17 @@ let state: LiveComponentsState = {
 
 let initialized = false;
 
+type ComponentPayloadData = {
+  status?: "on" | "off" | "error" | "offline";
+  online?: boolean;
+  cycles?: number;
+  uptimeHours?: number;
+  value?: number | boolean;
+  rotationDeg?: number;
+  faultMessage?: string;
+  health?: "ok" | "error" | "offline";
+};
+
 function isSimulationModePersisted(): boolean {
   if (typeof localStorage === "undefined") {
     return false;
@@ -64,53 +75,57 @@ function setState(next: LiveComponentsState): void {
   publishState();
 }
 
+function applyComponentPayload(componentId: string, data: ComponentPayloadData): void {
+  const nextStatus = data.status === "on" ? "on" : "off";
+  const healthStatus =
+    data.health ??
+    (data.status === "error"
+      ? "error"
+      : data.status === "offline"
+        ? "offline"
+        : "ok");
+
+  setState({
+    ...state,
+    components: state.components.map((component) => {
+      if (component.id !== componentId) {
+        return component;
+      }
+
+      const previousCycles = component.stats.cycles ?? 0;
+      const inferredCycles =
+        data.cycles ?? (component.status !== "on" && nextStatus === "on" ? previousCycles + 1 : previousCycles);
+
+      return {
+        ...component,
+        status: nextStatus,
+        online: data.online ?? (healthStatus === "offline" ? false : true),
+        healthStatus,
+        faultMessage: data.faultMessage,
+        rotationDeg: data.rotationDeg ?? component.rotationDeg,
+        lastChanged: new Date().toISOString(),
+        stats: {
+          ...component.stats,
+          cycles: inferredCycles,
+          uptimeHours: data.uptimeHours ?? component.stats.uptimeHours,
+          lastValue: data.value ?? component.stats.lastValue,
+        },
+      };
+    }),
+  });
+}
+
 function updateComponentFromPayload(componentId: string, payload: string): void {
   try {
-    const data = JSON.parse(payload) as {
-      status?: "on" | "off" | "error" | "offline";
-      online?: boolean;
-      cycles?: number;
-      uptimeHours?: number;
-      value?: number | boolean;
-      rotationDeg?: number;
-      faultMessage?: string;
-      health?: "ok" | "error" | "offline";
-    };
-
-    const nextStatus = data.status === "on" ? "on" : "off";
-    const healthStatus =
-      data.health ??
-      (data.status === "error"
-        ? "error"
-        : data.status === "offline"
-          ? "offline"
-          : "ok");
-
-    setState({
-      ...state,
-      components: state.components.map((component) =>
-        component.id === componentId
-          ? {
-              ...component,
-              status: nextStatus,
-              online: data.online ?? (healthStatus === "offline" ? false : component.online),
-              healthStatus,
-              faultMessage: data.faultMessage,
-              rotationDeg: data.rotationDeg ?? component.rotationDeg,
-              lastChanged: new Date().toISOString(),
-              stats: {
-                ...component.stats,
-                cycles: data.cycles ?? component.stats.cycles,
-                uptimeHours: data.uptimeHours ?? component.stats.uptimeHours,
-                lastValue: data.value ?? component.stats.lastValue,
-              },
-            }
-          : component,
-      ),
-    });
+    const data = JSON.parse(payload) as ComponentPayloadData;
+    applyComponentPayload(componentId, data);
   } catch {
     // ignore malformed payloads
   }
+}
+
+export function applySimulationComponentPayload(componentId: string, data: ComponentPayloadData): void {
+  applyComponentPayload(componentId, data);
 }
 
 export function initializeLiveComponentFeed(): void {

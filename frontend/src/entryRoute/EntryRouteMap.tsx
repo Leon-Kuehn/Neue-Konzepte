@@ -300,7 +300,11 @@ export default forwardRef<EntryRouteMapHandle, EntryRouteMapProps>(
               const direction = hotspot.direction ?? "left";
               const iconWidth = hotspot.iconWidth ?? hotspot.iconSize ?? DEFAULT_ICON_SIZE;
               const iconHeight = hotspot.iconHeight ?? hotspot.iconSize ?? DEFAULT_ICON_SIZE;
+              const baseRotation = hotspot.rotation ?? 0;
               const simulationVisual = simulationVisuals?.[hotspot.id];
+              const rotation = simulationEnabled
+                ? simulationVisual?.rotationDeg ?? baseRotation
+                : baseRotation;
               const motionClass =
                 simulationEnabled && simulationVisual?.motion && simulationVisual.motion !== "none"
                   ? ` sim-motion--${simulationVisual.motion}`
@@ -322,7 +326,7 @@ export default forwardRef<EntryRouteMapHandle, EntryRouteMapProps>(
                   onKeyDown={(event) => handleKeyDown(event, hotspot)}
                 >
                   <g transform={`translate(${-iconWidth / 2}, ${-iconHeight / 2})`}>
-                    <g>
+                    <g transform={`rotate(${rotation}, ${iconWidth / 2}, ${iconHeight / 2})`}>
                       <Icon
                         className={`hotspot__icon${motionClass}`}
                         x={0}

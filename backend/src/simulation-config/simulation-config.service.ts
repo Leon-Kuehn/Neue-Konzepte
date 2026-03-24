@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service.js';
+import { DEFAULT_SIMULATION_SEEDS } from './default-simulations.js';
 
 type SimulationPayload = {
   id: string;
@@ -13,11 +14,13 @@ type SimulationPayload = {
 @Injectable()
 export class SimulationConfigService {
   private tableEnsured = false;
+  private defaultsSeeded = false;
 
   constructor(private readonly prisma: PrismaService) {}
 
   private async ensureTableExists(): Promise<void> {
     if (this.tableEnsured) {
+      await this.seedDefaults();
       return;
     }
 
@@ -34,6 +37,36 @@ export class SimulationConfigService {
     `);
 
     this.tableEnsured = true;
+    await this.seedDefaults();
+  }
+
+  private async seedDefaults(): Promise<void> {
+    if (this.defaultsSeeded) {
+      return;
+    }
+
+    for (const seed of DEFAULT_SIMULATION_SEEDS) {
+      const existing = await this.prisma.simulationDefinition.findUnique({
+        where: { id: seed.id },
+        select: { id: true },
+      });
+
+      if (existing) {
+        continue;
+      }
+
+      await this.prisma.simulationDefinition.create({
+        data: {
+          id: seed.id,
+          name: seed.name,
+          description: seed.description,
+          repeat: seed.repeat,
+          steps: this.normalizeSteps(seed.steps),
+        },
+      });
+    }
+
+    this.defaultsSeeded = true;
   }
 
   private normalizeSteps(steps: unknown): Prisma.InputJsonValue {
