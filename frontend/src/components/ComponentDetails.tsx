@@ -1,4 +1,5 @@
-import { Alert, Box, Card, CardContent, CircularProgress, Divider, List, ListItem, Typography } from "@mui/material";
+import { Alert, Box, Card, CardContent, Chip, CircularProgress, Divider, Stack, Typography } from "@mui/material";
+import { useMemo } from "react";
 import type { PlantComponent } from "../types/PlantComponent";
 import { useAppPreferences } from "../context/AppPreferencesContext";
 import LiveStatusChips from "./LiveStatusChips";
@@ -17,24 +18,231 @@ interface Props {
   historyError?: string;
 }
 
-function renderPayload(payload: unknown): string {
-  if (payload === null || payload === undefined) {
-    return "n/a";
-  }
+interface TrendPoint {
+  timestamp: number;
+  value: number;
+}
 
-  if (typeof payload === "string" || typeof payload === "number" || typeof payload === "boolean") {
-    return String(payload);
-  }
+interface EventSnapshot {
+  id: number;
+  receivedAt: string;
+  status?: string;
+  online?: boolean;
+  value?: number | boolean;
+  cycles?: number;
+  uptimeHours?: number;
+}
 
-  try {
-    return JSON.stringify(payload);
-  } catch {
-    return "[unserializable payload]";
-  }
+interface DerivedHistory {
+  cyclesPoints: TrendPoint[];
+  uptimePoints: TrendPoint[];
+  valuePoints: TrendPoint[];
+  latestCycles?: number;
+  latestUptimeHours?: number;
+  latestValue?: number | boolean;
+  cyclesDelta?: number;
+  uptimeDelta?: number;
+  snapshots: EventSnapshot[];
 }
 
 function renderNumber(value: number | undefined): string {
   return value === undefined ? "n/a" : Number(value.toFixed(2)).toString();
+}
+
+function readPayloadObject(payload: unknown): Record<string, unknown> | null {
+  if (!payload || typeof payload !== "object" || Array.isArray(payload)) {
+    return null;
+  }
+
+  return payload as Record<string, unknown>;
+}
+
+function toNumber(value: unknown): number | undefined {
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return value;
+  }
+
+  if (typeof value === "string") {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : undefined;
+  }
+
+  return undefined;
+}
+
+function toBoolean(value: unknown): boolean | undefined {
+  if (typeof value === "boolean") {
+    return value;
+  }
+
+  if (typeof value === "string") {
+    if (value.toLowerCase() === "true") {
+      return true;
+    }
+    if (value.toLowerCase() === "false") {
+      return false;
+    }
+  }
+
+  return undefined;
+}
+
+function deriveFromHistory(history: SensorData[] | undefined): DerivedHistory {
+  if (!history || history.length === 0) {
+    return {
+      cyclesPoints: [],
+      uptimePoints: [],
+      valuePoints: [],
+      snapshots: [],
+    };
+  }
+
+  const asc = [...history].sort(
+    (a, b) => new Date(a.receivedAt).getTime() - new Date(b.receivedAt).getTime(),
+  );
+
+  const cyclesPoints: TrendPoint[] = [];
+  const uptimePoints: TrendPoint[] = [];
+  const valuePoints: TrendPoint[] = [];
+
+  for (const entry of asc) {
+    const ts = new Date(entry.receivedAt).getTime();
+    const payload = readPayloadObject(entry.payload);
+    if (!payload) {
+      continue;
+    }
+
+    const cycles = toNumber(payload.cycles);
+    const uptimeHours = toNumber(payload.uptimeHours);
+    const value = toNumber(payload.value);
+
+    if (cycles !== undefined) {
+      cyclesPoints.push({ timestamp: ts, value: cycles });
+    }
+    if (uptimeHours !== undefined) {
+      uptimePoints.push({ timestamp: ts, value: uptimeHours });
+    }
+    if (value !== undefined) {
+      valuePoints.push({ timestamp: ts, value });
+    }
+  }
+
+  const latestEntry = asc.at(-1);
+  const latestPayload = latestEntry ? readPayloadObject(latestEntry.payload) : null;
+  const latestCycles = latestPayload ? toNumber(latestPayload.cycles) : undefined;
+  const latestUptimeHours = latestPayload ? toNumber(latestPayload.uptimeHours) : undefined;
+  const rawLatestValue = latestPayload?.value;
+  const latestValue =
+    typeof rawLatestValue === "boolean"
+      ? rawLatestValue
+      : toNumber(rawLatestValue);
+
+  const snapshots: EventSnapshot[] = [...history]
+    .sort((a, b) => new Date(b.receivedAt).getTime() - new Date(a.receivedAt).getTime())
+    .slice(0, 8)
+    .map((entry) => {
+      const payload = readPayloadObject(entry.payload);
+      return {
+        id: entry.id,
+        receivedAt: entry.receivedAt,
+        status:
+          payload && typeof payload.status === "string"
+            ? payload.status
+            : undefined,
+        online: payload ? toBoolean(payload.online) : undefined,
+        value:
+          payload && typeof payload.value === "boolean"
+            ? payload.value
+            : payload
+              ? toNumber(payload.value)
+              : undefined,
+        cycles: payload ? toNumber(payload.cycles) : undefined,
+        uptimeHours: payload ? toNumber(payload.uptimeHours) : undefined,
+      };
+    });
+
+  return {
+    cyclesPoints,
+    uptimePoints,
+    valuePoints,
+    latestCycles,
+    latestUptimeHours,
+    latestValue,
+    cyclesDelta:
+      cyclesPoints.length > 1
+        ? cyclesPoints[cyclesPoints.length - 1]!.value - cyclesPoints[0]!.value
+        : undefined,
+    uptimeDelta:
+      uptimePoints.length > 1
+        ? uptimePoints[uptimePoints.length - 1]!.value - uptimePoints[0]!.value
+        : undefined,
+    snapshots,
+  };
+}
+
+function SimpleTrendChart({
+  title,
+  points,
+  color,
+  suffix,
+}: {
+  title: string;
+  points: TrendPoint[];
+  color: string;
+  suffix?: string;
+}) {
+  if (points.length === 0) {
+    return (
+      <Box sx={{ border: "1px dashed", borderColor: "divider", borderRadius: 1.5, p: 1.25 }}>
+        <Typography variant="caption" color="text.secondary">
+          {title}: no numeric data in history yet.
+        </Typography>
+      </Box>
+    );
+  }
+
+  const width = 420;
+  const height = 140;
+  const pad = 18;
+  const min = Math.min(...points.map((point) => point.value));
+  const max = Math.max(...points.map((point) => point.value));
+  const span = max - min || 1;
+  const xStep = points.length > 1 ? (width - pad * 2) / (points.length - 1) : 0;
+
+  const coords = points.map((point, index) => {
+    const x = pad + xStep * index;
+    const y = height - pad - ((point.value - min) / span) * (height - pad * 2);
+    return { x, y, point };
+  });
+
+  const path = coords.map((coord, index) => `${index === 0 ? "M" : "L"}${coord.x} ${coord.y}`).join(" ");
+
+  return (
+    <Box sx={{ border: "1px solid", borderColor: "divider", borderRadius: 1.5, p: 1.25 }}>
+      <Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 0.5 }}>
+        {title}
+      </Typography>
+      <Box
+        component="svg"
+        viewBox={`0 0 ${width} ${height}`}
+        sx={{ width: "100%", height: 140, display: "block" }}
+      >
+        <line x1={pad} y1={height - pad} x2={width - pad} y2={height - pad} stroke="#9e9e9e" strokeWidth="1" />
+        <path d={path} fill="none" stroke={color} strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round" />
+        {coords.map((coord) => (
+          <circle key={`${coord.x}-${coord.y}`} cx={coord.x} cy={coord.y} r={2.5} fill={color} />
+        ))}
+      </Box>
+      <Box sx={{ display: "flex", justifyContent: "space-between", mt: 0.5 }}>
+        <Typography variant="caption" color="text.secondary">
+          Min: {renderNumber(min)}{suffix ?? ""}
+        </Typography>
+        <Typography variant="caption" color="text.secondary">
+          Max: {renderNumber(max)}{suffix ?? ""}
+        </Typography>
+      </Box>
+    </Box>
+  );
 }
 
 export default function ComponentDetails({
@@ -50,6 +258,11 @@ export default function ComponentDetails({
   historyError,
 }: Props) {
   const { t } = useAppPreferences();
+  const historyDerived = useMemo(() => deriveFromHistory(history), [history]);
+
+  const backendCycles = historyDerived.latestCycles;
+  const backendUptime = historyDerived.latestUptimeHours;
+  const backendLastValue = historyDerived.latestValue;
 
   if (!component) {
     return (
@@ -111,14 +324,14 @@ export default function ComponentDetails({
           <strong>{t("componentDetails.lastChanged")}:</strong>{" "}
           {new Date(component.lastChanged).toLocaleString()}
         </Typography>
-        {component.stats.cycles !== undefined && (
+        {backendCycles !== undefined && (
           <Typography variant="body2">
-            <strong>{t("componentDetails.cycles")}:</strong> {component.stats.cycles}
+            <strong>{t("componentDetails.cycles")}:</strong> {backendCycles}
           </Typography>
         )}
-        {component.stats.uptimeHours !== undefined && (
+        {backendUptime !== undefined && (
           <Typography variant="body2">
-            <strong>{t("componentDetails.uptime")}:</strong> {component.stats.uptimeHours}h
+            <strong>{t("componentDetails.uptime")}:</strong> {renderNumber(backendUptime)}h
           </Typography>
         )}
         {component.rotationDeg !== undefined && (
@@ -126,9 +339,9 @@ export default function ComponentDetails({
             <strong>Rotation:</strong> {component.rotationDeg} deg
           </Typography>
         )}
-        {component.stats.lastValue !== undefined && (
+        {backendLastValue !== undefined && (
           <Typography variant="body2">
-            <strong>Last Sensor Value:</strong> {String(component.stats.lastValue)}
+            <strong>Last Sensor Value:</strong> {String(backendLastValue)}
           </Typography>
         )}
         <Typography variant="body2" sx={{ mt: 0.5 }}>
@@ -167,9 +380,6 @@ export default function ComponentDetails({
             <Typography variant="body2">
               <strong>Latest stored at:</strong> {new Date(latestStoredEntry.receivedAt).toLocaleString()}
             </Typography>
-            <Typography variant="body2">
-              <strong>Latest stored payload:</strong> {renderPayload(latestStoredEntry.payload)}
-            </Typography>
           </Box>
         )}
 
@@ -190,13 +400,32 @@ export default function ComponentDetails({
           </Typography>
         )}
         {stats && (
-          <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 0.75, mb: 2 }}>
-            <Typography variant="body2"><strong>Stored rows:</strong> {stats.count}</Typography>
-            <Typography variant="body2"><strong>Average:</strong> {renderNumber(stats.averageValue)}</Typography>
-            <Typography variant="body2"><strong>Min:</strong> {renderNumber(stats.minValue)}</Typography>
-            <Typography variant="body2"><strong>Max:</strong> {renderNumber(stats.maxValue)}</Typography>
+          <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 1, mb: 2 }}>
+            <Card variant="outlined"><CardContent sx={{ p: 1.25, "&:last-child": { pb: 1.25 } }}><Typography variant="caption" color="text.secondary">Stored rows</Typography><Typography variant="h6" fontWeight={700}>{stats.count}</Typography></CardContent></Card>
+            <Card variant="outlined"><CardContent sx={{ p: 1.25, "&:last-child": { pb: 1.25 } }}><Typography variant="caption" color="text.secondary">Average value</Typography><Typography variant="h6" fontWeight={700}>{renderNumber(stats.averageValue)}</Typography></CardContent></Card>
+            <Card variant="outlined"><CardContent sx={{ p: 1.25, "&:last-child": { pb: 1.25 } }}><Typography variant="caption" color="text.secondary">Min value</Typography><Typography variant="h6" fontWeight={700}>{renderNumber(stats.minValue)}</Typography></CardContent></Card>
+            <Card variant="outlined"><CardContent sx={{ p: 1.25, "&:last-child": { pb: 1.25 } }}><Typography variant="caption" color="text.secondary">Max value</Typography><Typography variant="h6" fontWeight={700}>{renderNumber(stats.maxValue)}</Typography></CardContent></Card>
           </Box>
         )}
+
+        <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 1, mb: 2 }}>
+          <Card variant="outlined">
+            <CardContent sx={{ p: 1.25, "&:last-child": { pb: 1.25 } }}>
+              <Typography variant="caption" color="text.secondary">Backend cycle change</Typography>
+              <Typography variant="h6" fontWeight={700}>
+                {historyDerived.cyclesDelta === undefined ? "n/a" : `+${Math.round(historyDerived.cyclesDelta)}`}
+              </Typography>
+            </CardContent>
+          </Card>
+          <Card variant="outlined">
+            <CardContent sx={{ p: 1.25, "&:last-child": { pb: 1.25 } }}>
+              <Typography variant="caption" color="text.secondary">Backend uptime change</Typography>
+              <Typography variant="h6" fontWeight={700}>
+                {historyDerived.uptimeDelta === undefined ? "n/a" : `+${renderNumber(historyDerived.uptimeDelta)}h`}
+              </Typography>
+            </CardContent>
+          </Card>
+        </Box>
 
         <Typography variant="subtitle2" color="text.secondary" gutterBottom>
           {t("componentDetails.trendChart")}
@@ -218,16 +447,73 @@ export default function ComponentDetails({
           </Typography>
         )}
         {(history?.length ?? 0) > 0 && (
-          <List disablePadding sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
-            {history!.slice(0, 6).map((entry) => (
-              <ListItem key={entry.id} disableGutters sx={{ py: 0.25, display: "block" }}>
-                <Typography variant="caption" color="text.secondary">
-                  {new Date(entry.receivedAt).toLocaleString()}
-                </Typography>
-                <Typography variant="body2">{renderPayload(entry.payload)}</Typography>
-              </ListItem>
-            ))}
-          </List>
+          <Stack spacing={1}>
+            <SimpleTrendChart
+              title="Sensor Value Trend"
+              points={historyDerived.valuePoints}
+              color="#1976d2"
+            />
+            <SimpleTrendChart
+              title="Cycles Trend"
+              points={historyDerived.cyclesPoints}
+              color="#2e7d32"
+            />
+            <SimpleTrendChart
+              title="Uptime Trend"
+              points={historyDerived.uptimePoints}
+              color="#ed6c02"
+              suffix="h"
+            />
+
+            <Box sx={{ border: "1px solid", borderColor: "divider", borderRadius: 1.5, p: 1.25 }}>
+              <Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 0.75 }}>
+                Recent event timeline
+              </Typography>
+              <Stack spacing={0.75}>
+                {historyDerived.snapshots.map((snapshot) => (
+                  <Box
+                    key={snapshot.id}
+                    sx={{
+                      display: "grid",
+                      gridTemplateColumns: "1fr auto",
+                      border: "1px solid",
+                      borderColor: "divider",
+                      borderRadius: 1,
+                      p: 0.75,
+                      gap: 0.5,
+                    }}
+                  >
+                    <Box>
+                      <Typography variant="caption" color="text.secondary">
+                        {new Date(snapshot.receivedAt).toLocaleString()}
+                      </Typography>
+                      <Typography variant="body2">
+                        value: {snapshot.value === undefined ? "n/a" : String(snapshot.value)} | cycles: {snapshot.cycles ?? "n/a"} | uptime: {snapshot.uptimeHours === undefined ? "n/a" : `${renderNumber(snapshot.uptimeHours)}h`}
+                      </Typography>
+                    </Box>
+                    <Stack direction="row" spacing={0.5}>
+                      {snapshot.status && (
+                        <Chip
+                          size="small"
+                          label={snapshot.status}
+                          color={snapshot.status === "error" ? "error" : snapshot.status === "on" ? "success" : "default"}
+                          variant="outlined"
+                        />
+                      )}
+                      {snapshot.online !== undefined && (
+                        <Chip
+                          size="small"
+                          label={snapshot.online ? "online" : "offline"}
+                          color={snapshot.online ? "success" : "warning"}
+                          variant="outlined"
+                        />
+                      )}
+                    </Stack>
+                  </Box>
+                ))}
+              </Stack>
+            </Box>
+          </Stack>
         )}
       </CardContent>
     </Card>

@@ -7,6 +7,7 @@ describe('SensorDataController', () => {
   let controller: SensorDataController;
 
   const mockService = {
+    ingest: jest.fn(),
     findAll: jest.fn(),
     findLatestPerComponent: jest.fn(),
     findByRange: jest.fn(),
@@ -28,6 +29,27 @@ describe('SensorDataController', () => {
   it('forwards latest query to service', () => {
     void controller.findLatest();
     expect(mockService.findLatestPerComponent).toHaveBeenCalled();
+  });
+
+  it('forwards direct ingest payload to service', () => {
+    void controller.ingest({
+      topic: 'plant/conveyor-1/status',
+      payload: { status: 'on', value: 42 },
+      receivedAt: '2026-03-24T10:00:00.000Z',
+    });
+
+    expect(mockService.ingest).toHaveBeenCalledWith({
+      topic: 'plant/conveyor-1/status',
+      payload: { status: 'on', value: 42 },
+      componentId: undefined,
+      receivedAt: new Date('2026-03-24T10:00:00.000Z'),
+    });
+  });
+
+  it('rejects ingest when topic is missing', () => {
+    expect(() => controller.ingest({ payload: { value: 1 } })).toThrow(
+      BadRequestException,
+    );
   });
 
   it('validates and forwards range query', () => {

@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service.js';
 import {
   DEFAULT_LIMIT,
@@ -9,8 +10,65 @@ import {
 
 type ActivityInterval = 'minute' | 'hour';
 
+type JsonObject = { [key: string]: JsonValue };
+type JsonValue = string | number | boolean | null | JsonObject | JsonValue[];
+
 const clampLimit = (limit: number, max = MAX_LIMIT): number =>
   Math.min(Math.max(limit, 1), max);
+
+const isJsonValue = (value: unknown): value is JsonValue => {
+  if (
+    value === null ||
+    typeof value === 'string' ||
+    typeof value === 'number' ||
+    typeof value === 'boolean'
+  ) {
+    return true;
+  }
+  if (Array.isArray(value)) {
+    return value.every(isJsonValue);
+  }
+  if (typeof value === 'object') {
+    return Object.values(value).every(isJsonValue);
+  }
+  return false;
+};
+
+const deriveComponentIdFromTopic = (topic: string): string => {
+  const segments = topic.split('/').filter((segment) => segment.length > 0);
+  if (segments.length === 0) {
+    return 'unknown';
+  }
+  // plant/<componentId>/status should map to the real component id.
+  if (segments[0] === 'plant' && segments.length >= 2) {
+    return segments[1];
+  }
+  return segments[0];
+};
+
+const normalizePayloadToJson = (
+  payload: unknown,
+  parseJsonString = false,
+): Prisma.InputJsonValue | Prisma.JsonNullValueInput => {
+  const rawPayload =
+    parseJsonString && typeof payload === 'string'
+      ? (() => {
+          try {
+            return JSON.parse(payload) as unknown;
+          } catch {
+            return payload;
+          }
+        })()
+      : payload;
+
+  if (rawPayload === null) {
+    return Prisma.JsonNull;
+  }
+  if (isJsonValue(rawPayload)) {
+    return rawPayload;
+  }
+  return String(payload);
+};
 
 const extractNumericPayload = (payload: unknown): number | undefined => {
   if (typeof payload === 'number' && Number.isFinite(payload)) {
@@ -46,6 +104,30 @@ const bucketTimestamp = (date: Date, interval: ActivityInterval): string => {
 @Injectable()
 export class SensorDataService {
   constructor(private readonly prisma: PrismaService) {}
+
+  /** Ingest one reading from MQTT or simulator and persist it. */
+  ingest(params: {
+    topic: string;
+    payload: unknown;
+    componentId?: string;
+    receivedAt?: Date;
+    parseJsonString?: boolean;
+  }) {
+    const componentId = params.componentId ?? deriveComponentIdFromTopic(params.topic);
+    const payload = normalizePayloadToJson(
+      params.payload,
+      params.parseJsonString ?? false,
+    );
+
+    return this.prisma.sensorData.create({
+      data: {
+        componentId,
+        topic: params.topic,
+        payload,
+        receivedAt: params.receivedAt ?? new Date(),
+      },
+    });
+  }
 
   /** Return paginated sensor readings with optional filters. */
   findAll(params: {

@@ -49,9 +49,10 @@ export default function PlantOverviewPage() {
 
   const selectedHistoryQuery = useComponentHistory(
     selectedComponentId,
-    { limit: 10 },
+    { limit: 120 },
     {
       enabled: Boolean(selectedComponentId),
+      refetchInterval: 15_000,
     },
   );
 

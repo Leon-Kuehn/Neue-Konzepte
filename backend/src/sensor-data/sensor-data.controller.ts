@@ -1,7 +1,9 @@
 import {
+  Body,
   BadRequestException,
   Controller,
   Get,
+  Post,
   Param,
   Query,
 } from '@nestjs/common';
@@ -41,6 +43,44 @@ const parseDateParam = (value: string, name: string): Date => {
 @Controller('sensor-data')
 export class SensorDataController {
   constructor(private readonly sensorDataService: SensorDataService) {}
+
+  /**
+   * POST /api/sensor-data/ingest
+   * Direct ingest path for simulator or other non-MQTT producers.
+   */
+  @Post('ingest')
+  ingest(
+    @Body()
+    body: {
+      topic?: unknown;
+      payload?: unknown;
+      componentId?: unknown;
+      receivedAt?: unknown;
+    },
+  ) {
+    if (typeof body.topic !== 'string' || body.topic.trim().length === 0) {
+      throw new BadRequestException('topic must be a non-empty string');
+    }
+
+    if (body.componentId !== undefined && typeof body.componentId !== 'string') {
+      throw new BadRequestException('componentId must be a string when provided');
+    }
+
+    let parsedReceivedAt: Date | undefined;
+    if (body.receivedAt !== undefined) {
+      if (typeof body.receivedAt !== 'string') {
+        throw new BadRequestException('receivedAt must be an ISO timestamp string');
+      }
+      parsedReceivedAt = parseDateParam(body.receivedAt, 'receivedAt');
+    }
+
+    return this.sensorDataService.ingest({
+      topic: body.topic,
+      payload: body.payload,
+      componentId: body.componentId,
+      receivedAt: parsedReceivedAt,
+    });
+  }
 
   /**
    * GET /api/sensor-data

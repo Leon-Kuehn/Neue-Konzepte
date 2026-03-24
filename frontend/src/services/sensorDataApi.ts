@@ -63,6 +63,13 @@ export interface GetSensorDataRangeParams {
   to: string;
 }
 
+export interface IngestSensorDataRequest {
+  topic: string;
+  payload: unknown;
+  componentId?: string;
+  receivedAt?: string;
+}
+
 const normalizeBase = (base: string): string => base.replace(/\/+$/, "");
 
 const buildUrl = (
@@ -96,6 +103,30 @@ const requestJson = async <T>(url: string): Promise<T> => {
   }
 
   return response.json() as Promise<T>;
+};
+
+const postJson = async <TRequest, TResponse>(
+  url: string,
+  body: TRequest,
+): Promise<TResponse> => {
+  const response = await fetch(url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(body),
+  });
+
+  if (!response.ok) {
+    const message = await response.text();
+    throw new Error(
+      message
+        ? `Request failed (${response.status}): ${message}`
+        : `Request failed (${response.status})`,
+    );
+  }
+
+  return response.json() as Promise<TResponse>;
 };
 
 /** Fetches backend health status. */
@@ -166,6 +197,14 @@ const getSensorActivity = async (
   );
 };
 
+/** Sends one reading to backend direct-ingest endpoint (e.g. simulation events). */
+const ingestSensorData = async (payload: IngestSensorDataRequest): Promise<SensorData> => {
+  return postJson<IngestSensorDataRequest, SensorData>(
+    buildUrl("/sensor-data/ingest"),
+    payload,
+  );
+};
+
 export const sensorDataApi = {
   getHealth,
   getAllSensorData,
@@ -174,6 +213,7 @@ export const sensorDataApi = {
   getSensorDataRange,
   getSensorStats,
   getSensorActivity,
+  ingestSensorData,
 };
 
 export {
@@ -187,4 +227,5 @@ export {
   getSensorDataRange,
   getSensorStats,
   getSensorActivity,
+  ingestSensorData,
 };

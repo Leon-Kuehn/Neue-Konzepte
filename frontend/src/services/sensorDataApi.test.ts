@@ -4,6 +4,7 @@ import {
   buildUrl,
   getAllSensorData,
   getHealth,
+  ingestSensorData,
   getLatestSensorData,
   getSensorActivity,
   getSensorDataByComponent,
@@ -180,6 +181,34 @@ describe("sensorDataApi", () => {
     expect(fetchMock).toHaveBeenCalledWith(
       "/api/sensor-data/activity/entry-route?interval=hour",
     );
+  });
+
+  it("ingestSensorData posts payload to ingest endpoint", async () => {
+    const response: SensorData = {
+      id: 1,
+      componentId: "conveyor-1",
+      topic: "plant/conveyor-1/status",
+      payload: { status: "on" },
+      receivedAt: "2026-03-24T10:00:00.000Z",
+    };
+    mockOkJson(response);
+    vi.stubGlobal("fetch", fetchMock);
+
+    await ingestSensorData({
+      topic: "plant/conveyor-1/status",
+      payload: { status: "on" },
+      receivedAt: "2026-03-24T10:00:00.000Z",
+    });
+
+    expect(fetchMock).toHaveBeenCalledWith("/api/sensor-data/ingest", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        topic: "plant/conveyor-1/status",
+        payload: { status: "on" },
+        receivedAt: "2026-03-24T10:00:00.000Z",
+      }),
+    });
   });
 
   it("throws on non-2xx responses", async () => {

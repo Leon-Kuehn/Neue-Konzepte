@@ -74,6 +74,14 @@ export default function MqttSettingsPage() {
 
   const handleConnect = async () => {
     setError("");
+
+    if (simulation.enabled) {
+      setStatus("Error");
+      setLiveConnectionState(false);
+      setError("Disable simulation mode before connecting to a real MQTT broker.");
+      return;
+    }
+
     try {
       const finalSettings: MqttSettings = {
         ...settings,
@@ -267,7 +275,7 @@ export default function MqttSettingsPage() {
               <Button
                 variant="contained"
                 onClick={handleConnect}
-                disabled={status === "Connected"}
+                disabled={status === "Connected" || simulation.enabled}
                 sx={{ bgcolor: "#E30613", "&:hover": { bgcolor: "#c00510" } }}
               >
                 {t("mqtt.connect")}

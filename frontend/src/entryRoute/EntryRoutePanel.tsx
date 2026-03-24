@@ -6,6 +6,7 @@ import { MAP_HOTSPOTS } from "./mapHotspots";
 import type { HotspotAction, HotspotState } from "./mapHotspots";
 import { getHotspotIdsForComponent, resolveComponentId } from "./componentBindings";
 import type { PlantComponent } from "../types/PlantComponent";
+import { useSimulationState } from "../hooks/useSimulationState";
 
 interface EntryRoutePanelProps {
   components: PlantComponent[];
@@ -19,6 +20,7 @@ const EntryRoutePanel = forwardRef<EntryRouteMapHandle, EntryRoutePanelProps>(
     { components, onSelectComponent, highlightedComponentId, className }: EntryRoutePanelProps,
     ref
   ) => {
+    const simulation = useSimulationState();
     const navigate = useNavigate();
     const componentById = useMemo(() => {
       const map = new Map<string, PlantComponent>();
@@ -31,6 +33,11 @@ const EntryRoutePanel = forwardRef<EntryRouteMapHandle, EntryRoutePanelProps>(
     const values = useMemo(() => {
       const result: Record<string, HotspotState> = {};
       for (const hotspot of MAP_HOTSPOTS) {
+        if (simulation.enabled) {
+          result[hotspot.id] = simulation.hotspotStates[hotspot.id] ?? "off";
+          continue;
+        }
+
         const compId = resolveComponentId(hotspot.id);
         const comp = componentById.get(compId);
         if (comp) {
@@ -40,7 +47,7 @@ const EntryRoutePanel = forwardRef<EntryRouteMapHandle, EntryRoutePanelProps>(
         }
       }
       return result;
-    }, [componentById]);
+    }, [componentById, simulation.enabled, simulation.hotspotStates]);
 
     const highlightedHotspotIds = useMemo(
       () => (highlightedComponentId ? getHotspotIdsForComponent(highlightedComponentId) : []),

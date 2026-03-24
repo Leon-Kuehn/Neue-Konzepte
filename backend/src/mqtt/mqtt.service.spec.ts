@@ -1,13 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { MqttService } from './mqtt.service';
-import { PrismaService } from '../prisma/prisma.service';
-
-// Prevent Jest from loading the actual PrismaService (which pulls in the
-// Prisma-generated ESM client that uses import.meta and can't run in Jest).
-// Using a factory avoids Jest ever touching the real prisma.service.ts file.
-jest.mock('../prisma/prisma.service', () => ({
-  PrismaService: jest.fn(),
-}));
+import { SensorDataService } from '../sensor-data/sensor-data.service';
 
 /** Minimal mock for the mqtt client returned by mqtt.connect(). */
 class MockMqttClient {
@@ -42,25 +35,14 @@ jest.mock('mqtt', () => ({
 
 import * as mqttLib from 'mqtt';
 
-type SensorDataCreateInput = {
-  data: {
-    componentId: string;
-    topic: string;
-    receivedAt: Date;
-    payload: unknown;
-  };
-};
-
 describe('MqttService', () => {
   let service: MqttService;
   let mockClient: MockMqttClient;
 
-  const mockSensorDataCreate = jest.fn().mockResolvedValue({ id: 1 });
-  const mockPrismaService = {
-    sensorData: {
-      create: mockSensorDataCreate,
-    },
-  } as unknown as PrismaService;
+  const mockIngest = jest.fn().mockResolvedValue({ id: 1 });
+  const mockSensorDataService = {
+    ingest: mockIngest,
+  } as unknown as SensorDataService;
 
   beforeEach(async () => {
     jest.clearAllMocks();
@@ -69,7 +51,7 @@ describe('MqttService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         MqttService,
-        { provide: PrismaService, useValue: mockPrismaService },
+        { provide: SensorDataService, useValue: mockSensorDataService },
       ],
     }).compile();
 
@@ -80,13 +62,6 @@ describe('MqttService', () => {
     mockClient = (mqttLib.connect as jest.Mock).mock.results[0]
       .value as MockMqttClient;
   });
-
-  const getLastCreatedData = (): SensorDataCreateInput['data'] => {
-    const calls = mockSensorDataCreate.mock.calls as SensorDataCreateInput[][];
-    const lastCall = calls.at(-1);
-    expect(lastCall).toBeDefined();
-    return lastCall![0].data;
-  };
 
   afterEach(() => {
     service.onModuleDestroy();
@@ -130,12 +105,16 @@ describe('MqttService', () => {
     // Allow the async handleMessage to complete
     await new Promise((r) => setTimeout(r, 10));
 
-    const createdData = getLastCreatedData();
-    expect(createdData.componentId).toBe('entry-route');
-    expect(createdData.topic).toBe('entry-route/status');
+    expect(mockIngest).toHaveBeenCalledWith(
+      expect.objectContaining({
+        topic: 'entry-route/status',
+        payload: '{"sensor":"entry","value":1}',
+        parseJsonString: true,
+      }),
+    );
   });
 
-  it('stores parsed JSON payload', async () => {
+  it('forwards plant topic payload for normalized ingestion', async () => {
     mockClient.emit('connect');
     mockClient.emit(
       'message',
@@ -145,9 +124,13 @@ describe('MqttService', () => {
 
     await new Promise((r) => setTimeout(r, 10));
 
-    const createdData = getLastCreatedData();
-    expect(createdData.componentId).toBe('plant');
-    expect(createdData.payload).toEqual({ speed: 3.2 });
+    expect(mockIngest).toHaveBeenCalledWith(
+      expect.objectContaining({
+        topic: 'plant/conveyor-1/telemetry',
+        payload: '{"speed":3.2}',
+        parseJsonString: true,
+      }),
+    );
   });
 
   it('stores non-JSON payload as string', async () => {
@@ -156,9 +139,13 @@ describe('MqttService', () => {
 
     await new Promise((r) => setTimeout(r, 10));
 
-    const createdData = getLastCreatedData();
-    expect(createdData.componentId).toBe('hochregallager');
-    expect(createdData.payload).toBe('OPEN');
+    expect(mockIngest).toHaveBeenCalledWith(
+      expect.objectContaining({
+        topic: 'hochregallager/door',
+        payload: 'OPEN',
+        parseJsonString: true,
+      }),
+    );
   });
 
   it('does not attempt MQTT connection when MQTT_BROKER_URL is missing', () => {

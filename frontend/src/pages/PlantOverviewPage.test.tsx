@@ -104,13 +104,13 @@ describe("PlantOverviewPage sensor data integration", () => {
     );
     expect(useComponentHistoryMock).toHaveBeenCalledWith(
       "conveyor-1",
-      { limit: 10 },
-      expect.objectContaining({ enabled: true }),
+      { limit: 120 },
+      expect.objectContaining({ enabled: true, refetchInterval: 15_000 }),
     );
 
-    expect(screen.getByText('{"value":42}')).toBeTruthy();
+    expect(screen.getByText(/Latest stored at:/i)).toBeTruthy();
     expect(screen.getByText("90")).toBeTruthy();
-    expect(screen.getByText('{"value":40}')).toBeTruthy();
+    expect(screen.getByText(/value: 40/i)).toBeTruthy();
   });
 
   it("shows loading and error states from backend hooks in the details drawer", () => {

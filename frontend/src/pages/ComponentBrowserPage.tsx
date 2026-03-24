@@ -48,9 +48,10 @@ export default function ComponentBrowserPage() {
 
   const selectedHistoryQuery = useComponentHistory(
     selectedId ?? undefined,
-    { limit: 10 },
+    { limit: 120 },
     {
       enabled: Boolean(selectedId),
+      refetchInterval: 15_000,
     },
   );
 

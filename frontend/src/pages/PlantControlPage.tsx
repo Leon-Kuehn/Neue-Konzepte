@@ -1,17 +1,34 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ChangeEvent } from "react";
 import {
   Alert,
   Box,
   Button,
   Card,
   CardContent,
+  Checkbox,
+  FormControlLabel,
+  FormGroup,
   MenuItem,
   Stack,
+  Switch,
   TextField,
   Typography,
 } from "@mui/material";
 import { getClient, publish } from "../services/mqttClient";
 import { useAppPreferences } from "../context/AppPreferencesContext";
+import { useSimulationState } from "../hooks/useSimulationState";
+import {
+  getSimulationGroups,
+  getSimulationRecipes,
+  setSelectedRecipe,
+  setSimulationGroups,
+  startRecipe,
+  startSimulation,
+  stopSimulation,
+  type SimulationGroupId,
+  type SimulationRecipeId,
+  resetRecipeState,
+} from "../services/simulationService";
 
 type OperationConfig = {
   value: string;
@@ -34,6 +51,9 @@ const operationOptions: OperationConfig[] = [
 
 export default function PlantControlPage() {
   const { t } = useAppPreferences();
+  const simulation = useSimulationState();
+  const simulationGroups = getSimulationGroups();
+  const simulationRecipes = getSimulationRecipes();
   const [selectedOperation, setSelectedOperation] = useState(operationOptions[0].value);
   const [x, setX] = useState<number>(1);
   const [z, setZ] = useState<number>(1);
@@ -44,6 +64,9 @@ export default function PlantControlPage() {
   const [resultType, setResultType] = useState<"success" | "error" | "info">("info");
 
   const connected = getClient()?.connected ?? false;
+  const selectedRecipeLabel =
+    simulationRecipes.find((recipe) => recipe.id === simulation.selectedRecipe)?.name ??
+    simulation.selectedRecipe;
 
   const selectedConfig = useMemo(
     () =>
@@ -88,6 +111,22 @@ export default function PlantControlPage() {
     }
   };
 
+  const handleSimulationToggle = (_event: ChangeEvent<HTMLInputElement>, checked: boolean) => {
+    if (checked) {
+      startSimulation();
+      return;
+    }
+    stopSimulation();
+  };
+
+  const handleGroupToggle = (groupId: SimulationGroupId, checked: boolean) => {
+    const nextGroups = checked
+      ? [...new Set([...simulation.activeGroups, groupId])]
+      : simulation.activeGroups.filter((group) => group !== groupId);
+
+    setSimulationGroups(nextGroups);
+  };
+
   return (
     <Box>
       <Typography variant="h4" fontWeight={700} gutterBottom>
@@ -105,6 +144,100 @@ export default function PlantControlPage() {
       <Alert severity={connected ? "success" : "warning"} sx={{ mb: 3 }}>
         {connected ? t("plantControl.connected") : t("plantControl.disconnected")}
       </Alert>
+
+      <Card sx={{ mb: 3 }}>
+        <CardContent>
+          <Stack spacing={2.5}>
+            <Typography variant="h6" fontWeight={700}>
+              Local Simulation Recipes
+            </Typography>
+
+            <Alert severity={simulation.enabled ? "warning" : "info"}>
+              {simulation.enabled
+                ? "Simulation mode is active. Real MQTT connection is blocked while simulation runs."
+                : "Enable simulation mode to run recipe sequences locally without real MQTT."}
+            </Alert>
+
+            <FormControlLabel
+              control={
+                <Switch checked={simulation.enabled} onChange={handleSimulationToggle} />
+              }
+              label="Simulation mode"
+            />
+
+            <Box>
+              <Typography variant="subtitle2" sx={{ mb: 1 }}>
+                Simulated groups
+              </Typography>
+              <FormGroup row>
+                {simulationGroups.map((group) => (
+                  <FormControlLabel
+                    key={group.id}
+                    control={
+                      <Checkbox
+                        checked={simulation.activeGroups.includes(group.id)}
+                        onChange={(event) => handleGroupToggle(group.id, event.target.checked)}
+                      />
+                    }
+                    label={group.name}
+                  />
+                ))}
+              </FormGroup>
+            </Box>
+
+            <TextField
+              id="plant-control-simulation-recipe"
+              label="Simulation recipe"
+              select
+              size="small"
+              fullWidth
+              value={simulation.selectedRecipe}
+              onChange={(event) => setSelectedRecipe(event.target.value as SimulationRecipeId)}
+              disabled={!simulation.enabled}
+            >
+              {simulationRecipes.map((recipe) => (
+                <MenuItem key={recipe.id} value={recipe.id}>
+                  {recipe.name}
+                </MenuItem>
+              ))}
+            </TextField>
+
+            <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
+              <Button
+                variant="contained"
+                sx={{ bgcolor: "#E30613", "&:hover": { bgcolor: "#c00510" } }}
+                disabled={!simulation.enabled || simulation.recipeStatus === "running"}
+                onClick={() => startRecipe()}
+              >
+                Start Recipe
+              </Button>
+              <Button
+                variant="outlined"
+                color="inherit"
+                disabled={!simulation.enabled}
+                onClick={resetRecipeState}
+              >
+                Reset Recipe State
+              </Button>
+            </Box>
+
+            <Alert
+              severity={
+                simulation.recipeStatus === "error"
+                  ? "error"
+                  : simulation.recipeStatus === "finished"
+                    ? "success"
+                    : simulation.recipeStatus === "running"
+                      ? "info"
+                      : "warning"
+              }
+            >
+              Recipe: {selectedRecipeLabel} | Status: {simulation.recipeStatus}
+              {simulation.recipeMessage ? ` | ${simulation.recipeMessage}` : ""}
+            </Alert>
+          </Stack>
+        </CardContent>
+      </Card>
 
       <Card>
         <CardContent>

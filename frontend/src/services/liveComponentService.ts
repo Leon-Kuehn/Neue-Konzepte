@@ -17,7 +17,8 @@ let state: LiveComponentsState = {
     healthStatus: "offline",
     rotationDeg: 0,
     stats: {
-      ...component.stats,
+      cycles: undefined,
+      uptimeHours: undefined,
       lastValue: undefined,
     },
   })),
@@ -25,6 +26,23 @@ let state: LiveComponentsState = {
 };
 
 let initialized = false;
+
+function isSimulationModePersisted(): boolean {
+  if (typeof localStorage === "undefined") {
+    return false;
+  }
+
+  try {
+    const raw = localStorage.getItem("simulation-state");
+    if (!raw) {
+      return false;
+    }
+    const parsed = JSON.parse(raw) as { enabled?: unknown };
+    return parsed.enabled === true;
+  } catch {
+    return false;
+  }
+}
 
 function publishState(): void {
   for (const listener of listeners) {
@@ -114,6 +132,14 @@ export function initializeLiveComponentFeed(): void {
 
   const settings = loadSettings();
   if (!settings) {
+    return;
+  }
+
+  if (isSimulationModePersisted()) {
+    setState({
+      ...state,
+      mqttConnected: false,
+    });
     return;
   }
 

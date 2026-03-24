@@ -1,15 +1,25 @@
-import { mockComponents } from "../types/mockData";
-import type { PlantComponent } from "../types/PlantComponent";
-import { injectIncomingMessage } from "./mqttClient";
+import { MAP_HOTSPOTS, type HotspotState } from "../entryRoute/mapHotspots";
+import { resolveComponentId } from "../entryRoute/componentBindings";
+import { injectIncomingMessage, disconnect } from "./mqttClient";
+import { ingestSensorData } from "./sensorDataApi";
+import { setLiveConnectionState } from "./liveComponentService";
 
 export type SimulationScenarioId = "plant-demo";
 export type SimulationSpeed = "normal" | "fast";
+export type SimulationRecipeId = "recipe-a" | "recipe-b" | "recipe-c";
+export type SimulationRecipeStatus = "idle" | "running" | "finished" | "error";
+export type SimulationGroupId = "entry-route" | "high-bay";
 
 export interface SimulationState {
   enabled: boolean;
   scenario: SimulationScenarioId;
   speed: SimulationSpeed;
   startedAt: number | null;
+  selectedRecipe: SimulationRecipeId;
+  recipeStatus: SimulationRecipeStatus;
+  recipeMessage: string | null;
+  activeGroups: SimulationGroupId[];
+  hotspotStates: Record<string, HotspotState>;
 }
 
 export interface SimulatedEvent {
@@ -23,45 +33,82 @@ export interface SimulationScenario {
   id: SimulationScenarioId;
   name: string;
   description: string;
-  start: (context: SimulationContext) => () => void;
+  start: () => () => void;
 }
 
-interface SimulationContext {
-  emit: (event: Omit<SimulatedEvent, "timestamp">) => void;
-  speedFactor: number;
-  trackInterval: (callback: () => void, ms: number) => void;
-  trackTimeout: (callback: () => void, ms: number) => void;
+export interface SimulationRecipe {
+  id: SimulationRecipeId;
+  name: string;
+  description: string;
+}
+
+export interface SimulationGroup {
+  id: SimulationGroupId;
+  name: string;
+  description: string;
 }
 
 type RuntimeComponentState = {
   cycles: number;
   uptimeHours: number;
-  rotationDeg: number;
-  online: boolean;
 };
 
 const STORAGE_KEY = "simulation-state";
+const DEFAULT_GROUPS: SimulationGroupId[] = ["entry-route", "high-bay"];
 
 const runtimeByComponent = new Map<string, RuntimeComponentState>();
 const intervals = new Set<ReturnType<typeof setInterval>>();
 const timeouts = new Set<ReturnType<typeof setTimeout>>();
 const listeners = new Set<(state: SimulationState) => void>();
 
-let scenarioCleanup: (() => void) | null = null;
 let isInitialized = false;
+let recipeRunToken = 0;
 
 const defaultState: SimulationState = {
   enabled: false,
   scenario: "plant-demo",
   speed: "normal",
   startedAt: null,
+  selectedRecipe: "recipe-a",
+  recipeStatus: "idle",
+  recipeMessage: null,
+  activeGroups: DEFAULT_GROUPS,
+  hotspotStates: {},
 };
 
 let state: SimulationState = loadState();
+const knownHotspotIds = MAP_HOTSPOTS.map((hotspot) => hotspot.id);
 
-const randomPick = <T>(items: readonly T[]): T => {
-  return items[Math.floor(Math.random() * items.length)] as T;
-};
+const simulationGroups: SimulationGroup[] = [
+  {
+    id: "entry-route",
+    name: "Entry Route",
+    description: "Conveyors and sensors in the entry route area.",
+  },
+  {
+    id: "high-bay",
+    name: "High-Bay Storage",
+    description: "High-bay storage actuator and related indicators.",
+  },
+];
+
+const recipes: SimulationRecipe[] = [
+  {
+    id: "recipe-a",
+    name: "Recipe A - Entry Route",
+    description: "Runs the entry-route transfer sequence with sensors and conveyors.",
+  },
+  {
+    id: "recipe-b",
+    name: "Recipe B - Alternate Path",
+    description: "Reserved for alternate transfer flow.",
+  },
+  {
+    id: "recipe-c",
+    name: "Recipe C - Buffer Cycle",
+    description: "Reserved for buffering and release flow.",
+  },
+];
 
 const speedFactor = (speed: SimulationSpeed): number => (speed === "fast" ? 2 : 1);
 
@@ -76,11 +123,27 @@ function loadState(): SimulationState {
       return { ...defaultState };
     }
     const parsed = JSON.parse(raw) as Partial<SimulationState>;
+    const parsedGroups = Array.isArray(parsed.activeGroups)
+      ? parsed.activeGroups.filter(
+          (group): group is SimulationGroupId => group === "entry-route" || group === "high-bay",
+        )
+      : [];
+
     return {
       enabled: Boolean(parsed.enabled),
       scenario: parsed.scenario === "plant-demo" ? parsed.scenario : "plant-demo",
       speed: parsed.speed === "fast" ? "fast" : "normal",
       startedAt: typeof parsed.startedAt === "number" ? parsed.startedAt : null,
+      selectedRecipe:
+        parsed.selectedRecipe === "recipe-b"
+          ? "recipe-b"
+          : parsed.selectedRecipe === "recipe-c"
+            ? "recipe-c"
+            : "recipe-a",
+      recipeStatus: "idle",
+      recipeMessage: null,
+      activeGroups: parsedGroups.length > 0 ? parsedGroups : [...DEFAULT_GROUPS],
+      hotspotStates: {},
     };
   } catch {
     return { ...defaultState };
@@ -91,7 +154,17 @@ function persistState(): void {
   if (typeof localStorage === "undefined") {
     return;
   }
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  localStorage.setItem(
+    STORAGE_KEY,
+    JSON.stringify({
+      enabled: state.enabled,
+      scenario: state.scenario,
+      speed: state.speed,
+      startedAt: state.startedAt,
+      selectedRecipe: state.selectedRecipe,
+      activeGroups: state.activeGroups,
+    }),
+  );
 }
 
 function notifyState(): void {
@@ -112,17 +185,46 @@ function clearScheduledTasks(): void {
   timeouts.clear();
 }
 
+function groupForHotspot(hotspotId: string): SimulationGroupId {
+  if (hotspotId.startsWith("highbay-storage")) {
+    return "high-bay";
+  }
+  return "entry-route";
+}
+
+function isHotspotActive(hotspotId: string): boolean {
+  return state.activeGroups.includes(groupForHotspot(hotspotId));
+}
+
+function getRuntime(componentId: string): RuntimeComponentState {
+  const existing = runtimeByComponent.get(componentId);
+  if (existing) {
+    return existing;
+  }
+
+  const created: RuntimeComponentState = {
+    cycles: 0,
+    uptimeHours: 0,
+  };
+  runtimeByComponent.set(componentId, created);
+  return created;
+}
+
 function emit(event: Omit<SimulatedEvent, "timestamp">): void {
   const completeEvent: SimulatedEvent = {
     ...event,
     timestamp: Date.now(),
   };
   injectIncomingMessage(completeEvent.topic, JSON.stringify(completeEvent.payload));
-}
 
-function scheduleInterval(callback: () => void, baseMs: number): void {
-  const intervalId = setInterval(callback, Math.max(400, Math.floor(baseMs / speedFactor(state.speed))));
-  intervals.add(intervalId);
+  // Mirror simulated events into backend history so analytics and timelines can be tested.
+  void ingestSensorData({
+    topic: completeEvent.topic,
+    payload: completeEvent.payload,
+    receivedAt: new Date(completeEvent.timestamp).toISOString(),
+  }).catch(() => {
+    // Ignore transient API failures so local simulation remains responsive.
+  });
 }
 
 function scheduleTimeout(callback: () => void, baseMs: number): void {
@@ -133,258 +235,141 @@ function scheduleTimeout(callback: () => void, baseMs: number): void {
   timeouts.add(timeoutId);
 }
 
-function getRuntime(component: PlantComponent): RuntimeComponentState {
-  const existing = runtimeByComponent.get(component.id);
-  if (existing) {
-    return existing;
+function emitComponentState(componentId: string, nextState: HotspotState): void {
+  const runtime = getRuntime(componentId);
+  if (nextState === "on") {
+    runtime.cycles += 1;
+    runtime.uptimeHours += 0.02;
   }
 
-  const created: RuntimeComponentState = {
-    cycles: component.stats.cycles ?? 0,
-    uptimeHours: component.stats.uptimeHours ?? 0,
-    rotationDeg: 0,
-    online: component.online,
+  emit({
+    kind: nextState === "error" ? "fault" : "component",
+    topic: `plant/${componentId}/status`,
+    payload: {
+      status: nextState,
+      online: nextState !== "error",
+      health: nextState === "error" ? "error" : "ok",
+      cycles: runtime.cycles,
+      uptimeHours: Number(runtime.uptimeHours.toFixed(2)),
+      fault: nextState === "error",
+      faultMessage: nextState === "error" ? "Simulated recipe fault" : undefined,
+      simulated: true,
+    },
+  });
+}
+
+function setSimStateInternal(hotspotId: string, nextState: HotspotState): void {
+  if (!knownHotspotIds.includes(hotspotId)) {
+    return;
+  }
+
+  if (!isHotspotActive(hotspotId)) {
+    return;
+  }
+
+  const componentId = resolveComponentId(hotspotId);
+
+  state = {
+    ...state,
+    hotspotStates: {
+      ...state.hotspotStates,
+      [hotspotId]: nextState,
+    },
   };
-  runtimeByComponent.set(component.id, created);
-  return created;
+
+  emitComponentState(componentId, nextState);
+  notifyState();
 }
 
-function getRandomSensorValue(componentId: string): number | boolean {
-  if (componentId.includes("rfid")) {
-    return Math.random() > 0.55;
+function applyAllStates(nextState: HotspotState): void {
+  for (const hotspotId of knownHotspotIds) {
+    if (!isHotspotActive(hotspotId)) {
+      continue;
+    }
+    setSimStateInternal(hotspotId, nextState);
   }
-  if (componentId.includes("inductive") || componentId.includes("lightbarrier")) {
-    return Math.random() > 0.45;
-  }
-  return Number((Math.random() * 100).toFixed(1));
 }
 
-const plantDemoScenario: SimulationScenario = {
-  id: "plant-demo",
-  name: "Plant Demo",
-  description: "Simulates moving conveyors, sensor activity, warehouse changes, and occasional faults.",
-  start: (context) => {
-    const actuators = mockComponents.filter((component) => component.role === "actuator");
-    const sensors = mockComponents.filter((component) => component.role === "sensor");
-    const rotatingConveyors = mockComponents.filter(
-      (component) => component.category === "rotating-conveyor",
-    );
-    const faultCandidates = mockComponents.filter((component) => component.category !== "storage");
-    const highBayStorage = mockComponents.find((component) => component.category === "storage");
-    const warehouseSlots = ["R1C2", "R2C6", "R3C7", "R4C10", "R5C4", "R5C8"];
-    const slotOccupancy = new Map<string, boolean>(warehouseSlots.map((slot) => [slot, false]));
+function runInitialCheckSequence(): void {
+  applyAllStates("on");
 
-    // Start from a clean baseline so the scenario visibly "comes alive" over time.
-    for (const component of mockComponents) {
-      const runtime = getRuntime(component);
-      runtime.online = true;
+  scheduleTimeout(() => {
+    applyAllStates("off");
 
-      context.emit({
-        kind: "component",
-        topic: `plant/${component.id}/status`,
-        payload: {
-          status: "off",
-          online: true,
-          cycles: runtime.cycles,
-          uptimeHours: Number(runtime.uptimeHours.toFixed(2)),
-          health: "ok",
-          rotationDeg: 0,
-        },
-      });
+    // Rare startup fault injection to test operator reaction flows.
+    if (Math.random() < 0.08) {
+      const activeIds = knownHotspotIds.filter((id) => isHotspotActive(id));
+      if (activeIds.length > 0) {
+        const randomIndex = Math.floor(Math.random() * activeIds.length);
+        const hotspotId = activeIds[randomIndex];
+        if (hotspotId) {
+          setSimStateInternal(hotspotId, "error");
+        }
+      }
     }
+  }, 1400);
+}
 
-    for (const slot of warehouseSlots) {
-      context.emit({
-        kind: "warehouse",
-        topic: `hochregallager/slot/${slot}/status`,
-        payload: {
-          slotId: slot,
-          occupied: false,
-          status: "ok",
-          quantity: 0,
-          updatedAt: new Date().toISOString(),
-        },
-      });
-    }
+function resetRecipeRuntime(status: SimulationRecipeStatus = "idle", message: string | null = null): void {
+  recipeRunToken += 1;
+  state = {
+    ...state,
+    recipeStatus: status,
+    recipeMessage: message,
+  };
+  notifyState();
+}
 
-    context.trackInterval(() => {
-      const component = randomPick(actuators);
-      const runtime = getRuntime(component);
-      runtime.online = true;
-      runtime.cycles += 1 + Math.floor(Math.random() * 4);
-      runtime.uptimeHours += 0.03;
+function runRecipeA(token: number): void {
+  const steps: Array<{ delayMs: number; hotspotId: string; state: HotspotState }> = [
+    { delayMs: 300, hotspotId: "input-station-1", state: "on" },
+    { delayMs: 700, hotspotId: "inductive-1", state: "on" },
+    { delayMs: 1100, hotspotId: "conveyor-1", state: "on" },
+    { delayMs: 1700, hotspotId: "inductive-2", state: "on" },
+    { delayMs: 2300, hotspotId: "rfid-1", state: "on" },
+    { delayMs: 2900, hotspotId: "conveyor-2", state: "on" },
+    { delayMs: 4000, hotspotId: "inductive-1", state: "off" },
+    { delayMs: 4300, hotspotId: "inductive-2", state: "off" },
+    { delayMs: 4600, hotspotId: "rfid-1", state: "off" },
+    { delayMs: 5000, hotspotId: "conveyor-1", state: "off" },
+    { delayMs: 5300, hotspotId: "conveyor-2", state: "off" },
+    { delayMs: 5600, hotspotId: "input-station-1", state: "off" },
+  ];
 
-      const isRunning = Math.random() > 0.35;
-      context.emit({
-        kind: "component",
-        topic: `plant/${component.id}/status`,
-        payload: {
-          status: isRunning ? "on" : "off",
-          online: true,
-          cycles: runtime.cycles,
-          uptimeHours: Number(runtime.uptimeHours.toFixed(2)),
-          health: "ok",
-        },
-      });
-    }, 4200);
-
-    context.trackInterval(() => {
-      if (rotatingConveyors.length === 0) {
+  for (const step of steps) {
+    scheduleTimeout(() => {
+      if (!state.enabled || recipeRunToken !== token) {
         return;
       }
-      const component = randomPick(rotatingConveyors);
-      const runtime = getRuntime(component);
-      runtime.online = true;
-      runtime.rotationDeg = (runtime.rotationDeg + 90) % 360;
-      runtime.cycles += 1;
-      runtime.uptimeHours += 0.02;
+      setSimStateInternal(step.hotspotId, step.state);
+    }, step.delayMs);
+  }
 
-      context.emit({
-        kind: "component",
-        topic: `plant/${component.id}/status`,
-        payload: {
-          status: "on",
-          online: true,
-          cycles: runtime.cycles,
-          uptimeHours: Number(runtime.uptimeHours.toFixed(2)),
-          rotationDeg: runtime.rotationDeg,
-          health: "ok",
-        },
-      });
-    }, 5800);
-
-    context.trackInterval(() => {
-      const sensor = randomPick(sensors);
-      const runtime = getRuntime(sensor);
-      runtime.online = true;
-      runtime.cycles += 1;
-      runtime.uptimeHours += 0.01;
-
-      const injectAnomaly = Math.random() < 0.08;
-      const value = injectAnomaly ? 9999 : getRandomSensorValue(sensor.id);
-
-      context.emit({
-        kind: "sensor",
-        topic: `plant/${sensor.id}/status`,
-        payload: {
-          status: injectAnomaly ? "error" : "on",
-          online: true,
-          cycles: runtime.cycles,
-          uptimeHours: Number(runtime.uptimeHours.toFixed(2)),
-          value,
-          sensorError: injectAnomaly,
-          health: injectAnomaly ? "error" : "ok",
-        },
-      });
-    }, 2600);
-
-    context.trackInterval(() => {
-      const slot = randomPick(warehouseSlots);
-      const occupied = !(slotOccupancy.get(slot) ?? false);
-      slotOccupancy.set(slot, occupied);
-
-      context.emit({
-        kind: "warehouse",
-        topic: `hochregallager/slot/${slot}/status`,
-        payload: {
-          slotId: slot,
-          occupied,
-          status: "ok",
-          quantity: occupied ? 1 + Math.floor(Math.random() * 50) : 0,
-          updatedAt: new Date().toISOString(),
-        },
-      });
-
-      if (highBayStorage) {
-        const runtime = getRuntime(highBayStorage);
-        runtime.online = true;
-        runtime.cycles += 1;
-        runtime.uptimeHours += 0.02;
-
-        context.emit({
-          kind: "component",
-          topic: `plant/${highBayStorage.id}/status`,
-          payload: {
-            status: "on",
-            online: true,
-            cycles: runtime.cycles,
-            uptimeHours: Number(runtime.uptimeHours.toFixed(2)),
-            health: "ok",
-          },
-        });
-
-        context.trackTimeout(() => {
-          context.emit({
-            kind: "component",
-            topic: `plant/${highBayStorage.id}/status`,
-            payload: {
-              status: "off",
-              online: true,
-              cycles: runtime.cycles,
-              uptimeHours: Number(runtime.uptimeHours.toFixed(2)),
-              health: "ok",
-            },
-          });
-        }, 3200);
-      }
-    }, 6400);
-
-    context.trackInterval(() => {
-      const component = randomPick(faultCandidates);
-      const runtime = getRuntime(component);
-      runtime.online = false;
-
-      context.emit({
-        kind: "fault",
-        topic: `plant/${component.id}/status`,
-        payload: {
-          status: "error",
-          online: false,
-          cycles: runtime.cycles,
-          uptimeHours: Number(runtime.uptimeHours.toFixed(2)),
-          fault: true,
-          faultMessage: "Simulated transient fault",
-          health: "error",
-        },
-      });
-
-      context.trackTimeout(() => {
-        runtime.online = true;
-        context.emit({
-          kind: "component",
-          topic: `plant/${component.id}/status`,
-          payload: {
-            status: component.role === "actuator" ? "on" : "off",
-            online: true,
-            cycles: runtime.cycles + 1,
-            uptimeHours: Number((runtime.uptimeHours + 0.02).toFixed(2)),
-            fault: false,
-            health: "ok",
-          },
-        });
-      }, 7200);
-    }, 19000);
-
-    return () => {
-      // All cleanup is handled centrally by clearScheduledTasks.
+  scheduleTimeout(() => {
+    if (!state.enabled || recipeRunToken !== token) {
+      return;
+    }
+    state = {
+      ...state,
+      recipeStatus: "finished",
+      recipeMessage: "Recipe A finished successfully.",
     };
-  },
-};
+    notifyState();
+  }, 6100);
+}
 
-const scenarios: Record<SimulationScenarioId, SimulationScenario> = {
-  "plant-demo": plantDemoScenario,
-};
-
-function startScenario(): void {
-  clearScheduledTasks();
-
-  const scenario = scenarios[state.scenario];
-  scenarioCleanup = scenario.start({
-    emit,
-    speedFactor: speedFactor(state.speed),
-    trackInterval: scheduleInterval,
-    trackTimeout: scheduleTimeout,
-  });
+function runRecipePlaceholder(token: number, recipeName: string): void {
+  scheduleTimeout(() => {
+    if (!state.enabled || recipeRunToken !== token) {
+      return;
+    }
+    state = {
+      ...state,
+      recipeStatus: "finished",
+      recipeMessage: `${recipeName} placeholder completed.`,
+    };
+    notifyState();
+  }, 1800);
 }
 
 export function initializeSimulation(): void {
@@ -395,7 +380,11 @@ export function initializeSimulation(): void {
 
   if (state.enabled) {
     state = { ...state, startedAt: state.startedAt ?? Date.now() };
-    startScenario();
+    void disconnect().catch(() => {
+      // MQTT disconnect failures should not block simulation startup.
+    });
+    setLiveConnectionState(false);
+    runInitialCheckSequence();
     notifyState();
   }
 }
@@ -414,14 +403,22 @@ export function subscribeSimulationState(listener: (nextState: SimulationState) 
 export function enableSimulation(
   partialConfig?: Partial<Pick<SimulationState, "scenario" | "speed">>,
 ): void {
+  void disconnect().catch(() => {
+    // MQTT disconnect failures should not block simulation startup.
+  });
+  setLiveConnectionState(false);
+
   state = {
     ...state,
     ...partialConfig,
     enabled: true,
     startedAt: Date.now(),
+    recipeStatus: "idle",
+    recipeMessage: null,
   };
 
-  startScenario();
+  clearScheduledTasks();
+  runInitialCheckSequence();
   persistState();
   notifyState();
 }
@@ -431,10 +428,11 @@ export function disableSimulation(): void {
     ...state,
     enabled: false,
     startedAt: null,
+    recipeStatus: "idle",
+    recipeMessage: null,
   };
 
-  scenarioCleanup?.();
-  scenarioCleanup = null;
+  resetRecipeRuntime("idle", null);
   clearScheduledTasks();
   persistState();
   notifyState();
@@ -448,14 +446,109 @@ export function updateSimulationConfig(
     ...partialConfig,
   };
 
-  if (state.enabled) {
-    startScenario();
-  }
-
   persistState();
   notifyState();
 }
 
 export function getSimulationScenarios(): SimulationScenario[] {
-  return Object.values(scenarios);
+  return [
+    {
+      id: "plant-demo",
+      name: "Plant Demo",
+      description: "Simulation recipes and hotspot state machine.",
+      start: () => () => {
+        // Scenario start is not used in the recipe-based simulation mode.
+      },
+    },
+  ];
+}
+
+export function getSimulationRecipes(): SimulationRecipe[] {
+  return recipes;
+}
+
+export function getSimulationGroups(): SimulationGroup[] {
+  return simulationGroups;
+}
+
+export function setSimulationGroups(groups: SimulationGroupId[]): void {
+  const uniqueGroups = [...new Set(groups)].filter(
+    (group): group is SimulationGroupId => group === "entry-route" || group === "high-bay",
+  );
+
+  state = {
+    ...state,
+    activeGroups: uniqueGroups.length > 0 ? uniqueGroups : [...DEFAULT_GROUPS],
+  };
+
+  persistState();
+  notifyState();
+}
+
+export function setSelectedRecipe(recipeId: SimulationRecipeId): void {
+  state = {
+    ...state,
+    selectedRecipe: recipeId,
+    recipeStatus: state.recipeStatus === "running" ? "running" : "idle",
+    recipeMessage: null,
+  };
+
+  persistState();
+  notifyState();
+}
+
+export function startSimulation(
+  partialConfig?: Partial<Pick<SimulationState, "scenario" | "speed">>,
+): void {
+  enableSimulation(partialConfig);
+}
+
+export function stopSimulation(): void {
+  disableSimulation();
+}
+
+export function startRecipe(recipeId?: SimulationRecipeId): void {
+  if (!state.enabled) {
+    return;
+  }
+
+  const selected = recipeId ?? state.selectedRecipe;
+  setSelectedRecipe(selected);
+
+  clearScheduledTasks();
+  resetRecipeRuntime("running", `${selected.toUpperCase()} started.`);
+  const token = recipeRunToken;
+
+  if (selected === "recipe-a") {
+    runRecipeA(token);
+    return;
+  }
+
+  if (selected === "recipe-b") {
+    runRecipePlaceholder(token, "Recipe B");
+    return;
+  }
+
+  runRecipePlaceholder(token, "Recipe C");
+}
+
+export function resetRecipeState(): void {
+  if (!state.enabled) {
+    return;
+  }
+
+  clearScheduledTasks();
+  resetRecipeRuntime("idle", "Recipe state reset.");
+  applyAllStates("off");
+}
+
+export function setSimState(hotspotId: string, nextState: HotspotState): void {
+  if (!state.enabled) {
+    return;
+  }
+  setSimStateInternal(hotspotId, nextState);
+}
+
+export function getSimulationHotspotStates(): Record<string, HotspotState> {
+  return state.hotspotStates;
 }
