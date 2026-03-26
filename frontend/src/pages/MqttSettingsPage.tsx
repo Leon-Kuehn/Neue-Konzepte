@@ -24,6 +24,11 @@ import {
   getClient,
 } from "../services/mqttClient";
 import { useAppPreferences } from "../context/AppPreferencesContext";
+import type {
+  AppColorStyle,
+  AppTextScale,
+  AppThemeMode,
+} from "../context/AppPreferencesContext";
 import {
   disableSimulation,
   enableSimulation,
@@ -54,7 +59,19 @@ function getInitialStatus(): ConnectionStatus {
 }
 
 export default function MqttSettingsPage() {
-  const { t, themeMode, setThemeMode, language, setLanguage } = useAppPreferences();
+  const {
+    t,
+    themeMode,
+    setThemeMode,
+    colorStyle,
+    setColorStyle,
+    language,
+    setLanguage,
+    simulatorVisibility,
+    setSimulatorVisibility,
+    accessibility,
+    setAccessibility,
+  } = useAppPreferences();
   const [settings, setSettings] = useState<MqttSettings>(getInitialSettings);
   const [status, setStatus] = useState<ConnectionStatus>(getInitialStatus);
   const [error, setError] = useState<string>("");
@@ -157,12 +174,28 @@ export default function MqttSettingsPage() {
                 label={t("settings.theme")}
                 select
                 value={themeMode}
-                onChange={(e) => setThemeMode(e.target.value as "light" | "dark")}
+                onChange={(e) => setThemeMode(e.target.value as AppThemeMode)}
                 fullWidth
                 size="small"
               >
                 <MenuItem value="light">{t("settings.themeLight")}</MenuItem>
                 <MenuItem value="dark">{t("settings.themeDark")}</MenuItem>
+                <MenuItem value="system">{t("settings.themeSystem")}</MenuItem>
+              </TextField>
+
+              <TextField
+                id="app-color-style"
+                label={t("settings.colorStyle")}
+                select
+                value={colorStyle}
+                onChange={(e) => setColorStyle(e.target.value as AppColorStyle)}
+                fullWidth
+                size="small"
+              >
+                <MenuItem value="dhbw-red">{t("settings.colorStyleDhbw")}</MenuItem>
+                <MenuItem value="ocean-blue">{t("settings.colorStyleOcean")}</MenuItem>
+                <MenuItem value="forest-green">{t("settings.colorStyleForest")}</MenuItem>
+                <MenuItem value="violet">{t("settings.colorStyleViolet")}</MenuItem>
               </TextField>
 
               <TextField
@@ -178,6 +211,79 @@ export default function MqttSettingsPage() {
                 <MenuItem value="en">{t("settings.languageEnglish")}</MenuItem>
                 <MenuItem value="fr">{t("settings.languageFrench")}</MenuItem>
               </TextField>
+
+              <Divider />
+
+              <Typography variant="subtitle2" fontWeight={700}>
+                {t("settings.accessibility")}
+              </Typography>
+
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={accessibility.reducedMotion}
+                    onChange={(_event, checked) => {
+                      setAccessibility({ reducedMotion: checked });
+                    }}
+                  />
+                }
+                label={t("settings.reduceMotion")}
+              />
+
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={accessibility.highContrast}
+                    onChange={(_event, checked) => {
+                      setAccessibility({ highContrast: checked });
+                    }}
+                  />
+                }
+                label={t("settings.highContrast")}
+              />
+
+              <TextField
+                id="app-text-scale"
+                label={t("settings.textSize")}
+                select
+                value={accessibility.textScale}
+                onChange={(e) => setAccessibility({ textScale: e.target.value as AppTextScale })}
+                fullWidth
+                size="small"
+              >
+                <MenuItem value="normal">{t("settings.textSizeNormal")}</MenuItem>
+                <MenuItem value="large">{t("settings.textSizeLarge")}</MenuItem>
+              </TextField>
+
+              <Divider />
+
+              <Typography variant="subtitle2" fontWeight={700}>
+                {t("settings.simulators")}
+              </Typography>
+
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={simulatorVisibility.plantSimulator}
+                    onChange={(_event, checked) => {
+                      setSimulatorVisibility({ plantSimulator: checked });
+                    }}
+                  />
+                }
+                label={t("settings.showPlantSimulator")}
+              />
+
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={simulatorVisibility.warehouseSimulator}
+                    onChange={(_event, checked) => {
+                      setSimulatorVisibility({ warehouseSimulator: checked });
+                    }}
+                  />
+                }
+                label={t("settings.showWarehouseSimulator")}
+              />
             </Stack>
           </CardContent>
         </Card>
@@ -276,7 +382,6 @@ export default function MqttSettingsPage() {
                 variant="contained"
                 onClick={handleConnect}
                 disabled={status === "Connected" || simulation.enabled}
-                sx={{ bgcolor: "#E30613", "&:hover": { bgcolor: "#c00510" } }}
               >
                 {t("mqtt.connect")}
               </Button>

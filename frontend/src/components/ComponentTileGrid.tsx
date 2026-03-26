@@ -38,11 +38,12 @@ export default function ComponentTileGrid({ components, selectedId, onSelect }: 
             onClick={() => onSelect(comp.id)}
             sx={{
               cursor: "pointer",
-              border: selectedId === comp.id ? "2px solid #E30613" : "2px solid transparent",
+              border: "2px solid",
+              borderColor: selectedId === comp.id ? "primary.main" : "transparent",
               transition: "border-color 0.2s, box-shadow 0.2s",
               "&:hover": {
                 boxShadow: 4,
-                borderColor: "#E30613",
+                borderColor: "primary.main",
               },
             }}
           >

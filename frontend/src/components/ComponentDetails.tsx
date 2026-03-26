@@ -37,11 +37,17 @@ interface DerivedHistory {
   cyclesPoints: TrendPoint[];
   uptimePoints: TrendPoint[];
   valuePoints: TrendPoint[];
+  onTimePercentPoints: TrendPoint[];
+  switchCountPoints: TrendPoint[];
+  averageOnDurationMinutesPoints: TrendPoint[];
   latestCycles?: number;
   latestUptimeHours?: number;
   latestValue?: number | boolean;
   cyclesDelta?: number;
   uptimeDelta?: number;
+  latestOnTimePercent?: number;
+  latestSwitchCount?: number;
+  latestAverageOnDurationMinutes?: number;
   snapshots: EventSnapshot[];
 }
 
@@ -87,12 +93,29 @@ function toBoolean(value: unknown): boolean | undefined {
   return undefined;
 }
 
+function resolveOnState(payload: Record<string, unknown>): boolean | undefined {
+  if (typeof payload.status === "string") {
+    const normalized = payload.status.toLowerCase();
+    if (normalized === "on") {
+      return true;
+    }
+    if (normalized === "off" || normalized === "offline" || normalized === "error") {
+      return false;
+    }
+  }
+
+  return toBoolean(payload.value);
+}
+
 function deriveFromHistory(history: SensorData[] | undefined): DerivedHistory {
   if (!history || history.length === 0) {
     return {
       cyclesPoints: [],
       uptimePoints: [],
       valuePoints: [],
+      onTimePercentPoints: [],
+      switchCountPoints: [],
+      averageOnDurationMinutesPoints: [],
       snapshots: [],
     };
   }
@@ -104,6 +127,10 @@ function deriveFromHistory(history: SensorData[] | undefined): DerivedHistory {
   const cyclesPoints: TrendPoint[] = [];
   const uptimePoints: TrendPoint[] = [];
   const valuePoints: TrendPoint[] = [];
+  const onTimePercentPoints: TrendPoint[] = [];
+  const switchCountPoints: TrendPoint[] = [];
+  const averageOnDurationMinutesPoints: TrendPoint[] = [];
+  const statusTimeline: Array<{ timestamp: number; isOn: boolean }> = [];
 
   for (const entry of asc) {
     const ts = new Date(entry.receivedAt).getTime();
@@ -125,6 +152,79 @@ function deriveFromHistory(history: SensorData[] | undefined): DerivedHistory {
     if (value !== undefined) {
       valuePoints.push({ timestamp: ts, value });
     }
+
+    const isOn = resolveOnState(payload);
+    if (isOn !== undefined) {
+      statusTimeline.push({ timestamp: ts, isOn });
+    }
+  }
+
+  let observedDurationMs = 0;
+  let onDurationMs = 0;
+  for (let index = 0; index < statusTimeline.length - 1; index += 1) {
+    const current = statusTimeline[index];
+    const next = statusTimeline[index + 1];
+    if (!current || !next) {
+      continue;
+    }
+
+    const deltaMs = Math.max(0, next.timestamp - current.timestamp);
+    observedDurationMs += deltaMs;
+    if (current.isOn) {
+      onDurationMs += deltaMs;
+    }
+
+    if (observedDurationMs > 0) {
+      onTimePercentPoints.push({
+        timestamp: next.timestamp,
+        value: (onDurationMs / observedDurationMs) * 100,
+      });
+    }
+  }
+
+  let latestSwitchCount = 0;
+  let previousStatus: boolean | undefined;
+  let sessionStartTimestamp: number | undefined;
+  let completedOnSessions = 0;
+  let totalCompletedOnMinutes = 0;
+
+  for (const point of statusTimeline) {
+    if (previousStatus === false && point.isOn) {
+      latestSwitchCount += 1;
+    }
+    previousStatus = point.isOn;
+
+    switchCountPoints.push({
+      timestamp: point.timestamp,
+      value: latestSwitchCount,
+    });
+
+    if (point.isOn && sessionStartTimestamp === undefined) {
+      sessionStartTimestamp = point.timestamp;
+      continue;
+    }
+
+    if (!point.isOn && sessionStartTimestamp !== undefined) {
+      const durationMinutes = Math.max(0, (point.timestamp - sessionStartTimestamp) / 60_000);
+      completedOnSessions += 1;
+      totalCompletedOnMinutes += durationMinutes;
+      averageOnDurationMinutesPoints.push({
+        timestamp: point.timestamp,
+        value: totalCompletedOnMinutes / completedOnSessions,
+      });
+      sessionStartTimestamp = undefined;
+    }
+  }
+
+  if (sessionStartTimestamp !== undefined && statusTimeline.length > 0) {
+    const lastTimestamp = statusTimeline[statusTimeline.length - 1]!.timestamp;
+    const openDurationMinutes = Math.max(0, (lastTimestamp - sessionStartTimestamp) / 60_000);
+    averageOnDurationMinutesPoints.push({
+      timestamp: lastTimestamp,
+      value:
+        (totalCompletedOnMinutes + openDurationMinutes) /
+        (completedOnSessions + 1),
+    });
   }
 
   const latestEntry = asc.at(-1);
@@ -165,6 +265,9 @@ function deriveFromHistory(history: SensorData[] | undefined): DerivedHistory {
     cyclesPoints,
     uptimePoints,
     valuePoints,
+    onTimePercentPoints,
+    switchCountPoints,
+    averageOnDurationMinutesPoints,
     latestCycles,
     latestUptimeHours,
     latestValue,
@@ -176,6 +279,9 @@ function deriveFromHistory(history: SensorData[] | undefined): DerivedHistory {
       uptimePoints.length > 1
         ? uptimePoints[uptimePoints.length - 1]!.value - uptimePoints[0]!.value
         : undefined,
+    latestOnTimePercent: onTimePercentPoints.at(-1)?.value,
+    latestSwitchCount,
+    latestAverageOnDurationMinutes: averageOnDurationMinutesPoints.at(-1)?.value,
     snapshots,
   };
 }
@@ -263,6 +369,9 @@ export default function ComponentDetails({
   const backendCycles = historyDerived.latestCycles;
   const backendUptime = historyDerived.latestUptimeHours;
   const backendLastValue = historyDerived.latestValue;
+  const backendOnTimePercent = historyDerived.latestOnTimePercent;
+  const backendSwitchCount = historyDerived.latestSwitchCount;
+  const backendAverageOnDurationMinutes = historyDerived.latestAverageOnDurationMinutes;
 
   if (!component) {
     return (
@@ -411,6 +520,30 @@ export default function ComponentDetails({
         <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 1, mb: 2 }}>
           <Card variant="outlined">
             <CardContent sx={{ p: 1.25, "&:last-child": { pb: 1.25 } }}>
+              <Typography variant="caption" color="text.secondary">On-Time ratio</Typography>
+              <Typography variant="h6" fontWeight={700}>
+                {backendOnTimePercent === undefined ? "n/a" : `${renderNumber(backendOnTimePercent)}%`}
+              </Typography>
+            </CardContent>
+          </Card>
+          <Card variant="outlined">
+            <CardContent sx={{ p: 1.25, "&:last-child": { pb: 1.25 } }}>
+              <Typography variant="caption" color="text.secondary">Switch activations</Typography>
+              <Typography variant="h6" fontWeight={700}>
+                {backendSwitchCount === undefined ? "n/a" : Math.round(backendSwitchCount)}
+              </Typography>
+            </CardContent>
+          </Card>
+          <Card variant="outlined">
+            <CardContent sx={{ p: 1.25, "&:last-child": { pb: 1.25 } }}>
+              <Typography variant="caption" color="text.secondary">Average ON duration</Typography>
+              <Typography variant="h6" fontWeight={700}>
+                {backendAverageOnDurationMinutes === undefined ? "n/a" : `${renderNumber(backendAverageOnDurationMinutes)} min`}
+              </Typography>
+            </CardContent>
+          </Card>
+          <Card variant="outlined">
+            <CardContent sx={{ p: 1.25, "&:last-child": { pb: 1.25 } }}>
               <Typography variant="caption" color="text.secondary">Backend cycle change</Typography>
               <Typography variant="h6" fontWeight={700}>
                 {historyDerived.cyclesDelta === undefined ? "n/a" : `+${Math.round(historyDerived.cyclesDelta)}`}
@@ -448,6 +581,23 @@ export default function ComponentDetails({
         )}
         {(history?.length ?? 0) > 0 && (
           <Stack spacing={1}>
+            <SimpleTrendChart
+              title="On-Time Trend"
+              points={historyDerived.onTimePercentPoints}
+              color="#6a1b9a"
+              suffix="%"
+            />
+            <SimpleTrendChart
+              title="Switch Activations Trend"
+              points={historyDerived.switchCountPoints}
+              color="#00838f"
+            />
+            <SimpleTrendChart
+              title="Average ON Duration Trend"
+              points={historyDerived.averageOnDurationMinutesPoints}
+              color="#5d4037"
+              suffix=" min"
+            />
             <SimpleTrendChart
               title="Sensor Value Trend"
               points={historyDerived.valuePoints}
