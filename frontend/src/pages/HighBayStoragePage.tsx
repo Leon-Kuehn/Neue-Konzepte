@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import {
   Alert,
   Box,
+  Button,
   Card,
   CardContent,
   Chip,
@@ -18,6 +19,13 @@ import CloseIcon from "@mui/icons-material/Close";
 import { useAppPreferences } from "../context/AppPreferencesContext";
 import KpiSummaryBar from "../components/KpiSummaryBar";
 import { onMessage } from "../services/mqttClient";
+import {
+  getWarehouseSimulatorStatus,
+  startWarehouseSimulator,
+  stopWarehouseSimulator,
+  tickWarehouseSimulator,
+  type WarehouseSimulatorStatus,
+} from "../services/warehouseSimulatorApi";
 
 type StorageItem = {
   sku: string;
@@ -75,10 +83,34 @@ function buildSimulatedItem(slotId: string, quantity: number): StorageItem {
   };
 }
 
+function applySimulatorStatusToSlots(
+  previousSlots: StorageSlot[],
+  simulatorStatus: WarehouseSimulatorStatus,
+): StorageSlot[] {
+  const occupancyBySlot = new Map(
+    simulatorStatus.slots.map((slot) => [slot.slotId, slot]),
+  );
+
+  return previousSlots.map((slot) => {
+    const backendSlot = occupancyBySlot.get(slot.id);
+    if (!backendSlot || !backendSlot.occupied) {
+      return { ...slot, item: null };
+    }
+
+    return {
+      ...slot,
+      item: buildSimulatedItem(slot.id, backendSlot.quantity),
+    };
+  });
+}
+
 export default function HighBayStoragePage() {
-  const { t } = useAppPreferences();
+  const { t, simulatorVisibility } = useAppPreferences();
   const [slots, setSlots] = useState<StorageSlot[]>(() => buildDummySlots());
   const [selectedSlotId, setSelectedSlotId] = useState<string | null>(null);
+  const [simulatorStatus, setSimulatorStatus] = useState<WarehouseSimulatorStatus | null>(null);
+  const [simulatorLoading, setSimulatorLoading] = useState(false);
+  const [simulatorError, setSimulatorError] = useState<string | null>(null);
 
   useEffect(() => {
     const unsubscribe = onMessage((topic, payload) => {
@@ -124,6 +156,87 @@ export default function HighBayStoragePage() {
       unsubscribe();
     };
   }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const refreshSimulator = async () => {
+      try {
+        const status = await getWarehouseSimulatorStatus();
+
+        if (cancelled) {
+          return;
+        }
+
+        setSimulatorStatus(status);
+        setSimulatorError(null);
+        setSlots((previousSlots) => applySimulatorStatusToSlots(previousSlots, status));
+      } catch (error) {
+        if (cancelled) {
+          return;
+        }
+
+        setSimulatorError(
+          error instanceof Error ? error.message : "Failed to load warehouse simulator state.",
+        );
+      }
+    };
+
+    void refreshSimulator();
+    const intervalId = window.setInterval(() => {
+      void refreshSimulator();
+    }, 4_000);
+
+    return () => {
+      cancelled = true;
+      window.clearInterval(intervalId);
+    };
+  }, []);
+
+  const refreshSimulatorState = async () => {
+    const status = await getWarehouseSimulatorStatus();
+    setSimulatorStatus(status);
+    setSlots((previousSlots) => applySimulatorStatusToSlots(previousSlots, status));
+  };
+
+  const handleStartSimulator = async () => {
+    setSimulatorLoading(true);
+    try {
+      await startWarehouseSimulator(4_000);
+      await refreshSimulatorState();
+      setSimulatorError(null);
+    } catch (error) {
+      setSimulatorError(error instanceof Error ? error.message : "Failed to start simulator.");
+    } finally {
+      setSimulatorLoading(false);
+    }
+  };
+
+  const handleStopSimulator = async () => {
+    setSimulatorLoading(true);
+    try {
+      await stopWarehouseSimulator();
+      await refreshSimulatorState();
+      setSimulatorError(null);
+    } catch (error) {
+      setSimulatorError(error instanceof Error ? error.message : "Failed to stop simulator.");
+    } finally {
+      setSimulatorLoading(false);
+    }
+  };
+
+  const handleSingleTick = async () => {
+    setSimulatorLoading(true);
+    try {
+      await tickWarehouseSimulator();
+      await refreshSimulatorState();
+      setSimulatorError(null);
+    } catch (error) {
+      setSimulatorError(error instanceof Error ? error.message : "Failed to execute simulator tick.");
+    } finally {
+      setSimulatorLoading(false);
+    }
+  };
 
   const selectedSlot = useMemo(
     () => slots.find((slot) => slot.id === selectedSlotId) ?? null,
@@ -214,6 +327,72 @@ export default function HighBayStoragePage() {
           <Typography variant="h6" fontWeight={700} sx={{ mb: 1 }}>
             {t("highBay.title")}
           </Typography>
+
+          {simulatorVisibility.warehouseSimulator && (
+            <Card variant="outlined" sx={{ mb: 1.5 }}>
+              <CardContent>
+                <Typography variant="subtitle2" fontWeight={700} sx={{ mb: 1 }}>
+                  {t("highBay.simulatorTitle")}
+                </Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
+                  {t("highBay.simulatorHint")}
+                </Typography>
+
+                {simulatorError && (
+                  <Alert severity="error" sx={{ mb: 1.5 }}>
+                    {simulatorError}
+                  </Alert>
+                )}
+
+                <Stack direction={{ xs: "column", sm: "row" }} spacing={1} sx={{ mb: 1.5 }}>
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    onClick={handleStartSimulator}
+                    disabled={simulatorLoading || Boolean(simulatorStatus?.running)}
+                  >
+                    {t("highBay.simulatorStart")}
+                  </Button>
+                  <Button
+                    variant="outlined"
+                    color="warning"
+                    onClick={handleStopSimulator}
+                    disabled={simulatorLoading || !simulatorStatus?.running}
+                  >
+                    {t("highBay.simulatorStop")}
+                  </Button>
+                  <Button
+                    variant="outlined"
+                    onClick={handleSingleTick}
+                    disabled={simulatorLoading}
+                  >
+                    {t("highBay.simulatorTick")}
+                  </Button>
+                </Stack>
+
+                <Stack direction={{ xs: "column", md: "row" }} spacing={1} useFlexGap flexWrap="wrap">
+                  <Chip
+                    label={`${t("highBay.simulatorState")}: ${simulatorStatus?.running ? t("status.on") : t("status.off")}`}
+                    color={simulatorStatus?.running ? "success" : "default"}
+                    variant={simulatorStatus?.running ? "filled" : "outlined"}
+                  />
+                  <Chip
+                    label={`${t("highBay.simulatorEvents")}: ${simulatorStatus?.totalEvents ?? 0}`}
+                    variant="outlined"
+                  />
+                  <Chip
+                    label={`${t("highBay.simulatorStored")} / ${t("highBay.simulatorRetrieved")}: ${simulatorStatus?.storedCount ?? 0} / ${simulatorStatus?.retrievedCount ?? 0}`}
+                    variant="outlined"
+                  />
+                </Stack>
+
+                <Divider sx={{ my: 1.5 }} />
+                <Typography variant="body2" color="text.secondary">
+                  {t("highBay.simulatorNoLogs")}
+                </Typography>
+              </CardContent>
+            </Card>
+          )}
 
           <KpiSummaryBar items={kpiItems} />
 

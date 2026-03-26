@@ -18,6 +18,7 @@ import {
   TableRow,
   Typography,
 } from "@mui/material";
+import { useMemo } from "react";
 import "../entryRoute/EntryRouteMap.css";
 import { BallLoaderIcon } from "../entryRoute/icons/BallLoaderIcon";
 import { ConveyorBeltIcon } from "../entryRoute/icons/ConveyorBeltIcon";
@@ -31,6 +32,8 @@ import { PusherIcon } from "../entryRoute/icons/PusherIcon";
 import { RfidSensorIcon } from "../entryRoute/icons/RfidSensorIcon";
 import { RotatingConveyorIcon } from "../entryRoute/icons/RotatingConveyorIcon";
 import { useAppPreferences } from "../context/AppPreferencesContext";
+import { useLiveComponents } from "../hooks/useLiveComponents";
+import { getTopDownComponentIds } from "../entryRoute/componentBindings";
 
 type AppLang = "de" | "en" | "fr";
 
@@ -82,7 +85,7 @@ const componentSectionText: Record<
   de: {
     title: "Einzelkomponenten: Kurzfassung",
     intro:
-      "Alle in der App verwendeten Komponententypen mit Kurzbeschreibung und animierter Vorschau.",
+      "Alle in der App verwendeten Komponententypen mit Kurzbeschreibung und animierter Vorschau. Anzahl und Sichtbarkeit werden automatisch aus der Top-Down-Ansicht synchronisiert.",
     roleSensor: "Sensor",
     roleActuator: "Aktor",
     countLabel: "Anzahl",
@@ -93,7 +96,7 @@ const componentSectionText: Record<
   en: {
     title: "Individual Components: Quick Reference",
     intro:
-      "All component types used in the app, with short descriptions and animated previews.",
+      "All component types used in the app, with short descriptions and animated previews. Counts and visibility are synchronized with the Top-Down view.",
     roleSensor: "Sensor",
     roleActuator: "Actuator",
     countLabel: "Count",
@@ -104,7 +107,7 @@ const componentSectionText: Record<
   fr: {
     title: "Composants Individuels : Resume",
     intro:
-      "Tous les types de composants utilises dans l'application avec resume et apercu anime.",
+      "Tous les types de composants utilises dans l'application avec resume et apercu anime. Les quantites et la visibilite sont synchronisees avec la vue de dessus.",
     roleSensor: "Capteur",
     roleActuator: "Actionneur",
     countLabel: "Quantite",
@@ -214,7 +217,7 @@ const componentBriefs: ComponentBrief[] = [
     key: "pneumatic-unit",
     category: "pneumatic-unit",
     role: "actuator",
-    count: 5,
+    count: 6,
     iconId: "ball-loader",
     animated: true,
     moduleSheets: ["224005_data.pdf"],
@@ -235,33 +238,33 @@ const componentBriefs: ComponentBrief[] = [
     },
   },
   {
-    key: "press",
-    category: "press",
+    key: "pusher",
+    category: "pusher",
     role: "actuator",
-    count: 3,
+    count: 2,
     iconId: "pusher",
-    moduleSheets: ["221029_data.pdf", "224002_data.pdf"],
+    moduleSheets: ["224002_data.pdf"],
     labels: {
-      de: "Pressmodul",
-      en: "Press Module",
-      fr: "Module de presse",
+      de: "Pusher",
+      en: "Pusher",
+      fr: "Poussoir",
     },
     summaries: {
-      de: "Bearbeitet oder trennt Werkstuecke durch geregelte Hubbewegung.",
-      en: "Processes or separates workpieces through controlled stroke movement.",
-      fr: "Traite ou separe les pieces par mouvement de course controle.",
+      de: "Seitliches Ausschleusen oder Positionieren von Werkstuecken auf der Strecke.",
+      en: "Performs lateral transfer or positioning of workpieces on the line.",
+      fr: "Assure le transfert lateral ou le positionnement des pieces sur la ligne.",
     },
     signals: {
-      de: "Hub aus/ein, Endschalter, Zykluszaehler",
-      en: "Stroke extend/retract, end switch, cycle counter",
-      fr: "Course sortie/rentree, fin de course, compteur",
+      de: "Ausfahren, Einfahren, Endlage, Taktzaehler",
+      en: "Extend, retract, end position, cycle counter",
+      fr: "Sortie, rentree, position finale, compteur de cycles",
     },
   },
   {
     key: "inductive-sensor",
     category: "inductive-sensor",
     role: "sensor",
-    count: 19,
+    count: 18,
     iconId: "inductive-sensor",
     animated: true,
     labels: {
@@ -327,28 +330,6 @@ const componentBriefs: ComponentBrief[] = [
     },
   },
   {
-    key: "crane",
-    category: "crane",
-    role: "actuator",
-    count: 1,
-    iconId: "device-square",
-    labels: {
-      de: "Kran / Lift",
-      en: "Crane / Lift",
-      fr: "Grue / Lift",
-    },
-    summaries: {
-      de: "Vertikales Handling fuer Ein- und Auslagerbewegungen im Lagerbereich.",
-      en: "Vertical handling for storage and retrieval movements in the warehouse.",
-      fr: "Manutention verticale pour mouvements de stockage et destockage.",
-    },
-    signals: {
-      de: "Position X/Z, Fahrstatus, Endlage",
-      en: "Position X/Z, motion status, end position",
-      fr: "Position X/Z, etat mouvement, position finale",
-    },
-  },
-  {
     key: "storage",
     category: "storage",
     role: "actuator",
@@ -369,6 +350,29 @@ const componentBriefs: ComponentBrief[] = [
       de: "Slot belegt/frei, Einlagerung, Auslagerung",
       en: "Slot occupied/free, store command, retrieve command",
       fr: "Emplacement occupe/libre, commande stockage, commande sortie",
+    },
+  },
+  {
+    key: "deposit-place",
+    category: "deposit-place",
+    role: "actuator",
+    count: 2,
+    iconId: "deposit-place",
+    moduleSheets: ["224006_data.pdf"],
+    labels: {
+      de: "Ablageplatz",
+      en: "Deposit Place",
+      fr: "Poste de depot",
+    },
+    summaries: {
+      de: "Definierter Uebergabepunkt fuer Ablage, Pufferung und Weitertransport.",
+      en: "Defined transfer point for placement, buffering, and downstream transport.",
+      fr: "Point de transfert defini pour depot, tamponnage et transport aval.",
+    },
+    signals: {
+      de: "Belegt/Frei, Ablage freigegeben, Uebergabe bestaetigt",
+      en: "Occupied/free, placement enabled, handover confirmed",
+      fr: "Occupe/libre, depot autorise, transfert confirme",
     },
   },
 ];
@@ -707,8 +711,26 @@ const docsByLanguage: Record<"de" | "en" | "fr", DocsContent> = {
 
 export default function DocumentationPage() {
   const { language } = useAppPreferences();
+  const { components } = useLiveComponents();
   const docs = docsByLanguage[language];
   const sectionText = componentSectionText[language];
+  const topDownComponentIds = useMemo(() => getTopDownComponentIds(), []);
+
+  const synchronizedComponentBriefs = useMemo(() => {
+    const relevantComponents = components.filter((component) => topDownComponentIds.has(component.id));
+    const categoryCounts = new Map<string, number>();
+
+    for (const component of relevantComponents) {
+      categoryCounts.set(component.category, (categoryCounts.get(component.category) ?? 0) + 1);
+    }
+
+    return componentBriefs
+      .map((brief) => ({
+        ...brief,
+        count: categoryCounts.get(brief.category) ?? 0,
+      }))
+      .filter((brief) => brief.count > 0);
+  }, [components, topDownComponentIds]);
 
   return (
     <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
@@ -817,11 +839,11 @@ export default function DocumentationPage() {
               gap: 2,
             }}
           >
-            {componentBriefs.map((component) => (
+            {synchronizedComponentBriefs.map((component) => (
               <Card key={component.key} variant="outlined">
                 <CardContent>
                   <Box
-                    className={`hotspot ${component.animated ? "hotspot--on" : "hotspot--off"}`}
+                    className="hotspot hotspot--on"
                     aria-label={component.labels[language]}
                     sx={{
                       width: "100%",

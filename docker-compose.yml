@@ -41,6 +41,7 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
+    command: sh -c "npx prisma db push && node dist/src/main.js"
     restart: unless-stopped
     depends_on:
       db:

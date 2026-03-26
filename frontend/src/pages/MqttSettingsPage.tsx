@@ -54,7 +54,15 @@ function getInitialStatus(): ConnectionStatus {
 }
 
 export default function MqttSettingsPage() {
-  const { t, themeMode, setThemeMode, language, setLanguage } = useAppPreferences();
+  const {
+    t,
+    themeMode,
+    setThemeMode,
+    language,
+    setLanguage,
+    simulatorVisibility,
+    setSimulatorVisibility,
+  } = useAppPreferences();
   const [settings, setSettings] = useState<MqttSettings>(getInitialSettings);
   const [status, setStatus] = useState<ConnectionStatus>(getInitialStatus);
   const [error, setError] = useState<string>("");
@@ -178,6 +186,36 @@ export default function MqttSettingsPage() {
                 <MenuItem value="en">{t("settings.languageEnglish")}</MenuItem>
                 <MenuItem value="fr">{t("settings.languageFrench")}</MenuItem>
               </TextField>
+
+              <Divider />
+
+              <Typography variant="subtitle2" fontWeight={700}>
+                {t("settings.simulators")}
+              </Typography>
+
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={simulatorVisibility.plantSimulator}
+                    onChange={(_event, checked) => {
+                      setSimulatorVisibility({ plantSimulator: checked });
+                    }}
+                  />
+                }
+                label={t("settings.showPlantSimulator")}
+              />
+
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={simulatorVisibility.warehouseSimulator}
+                    onChange={(_event, checked) => {
+                      setSimulatorVisibility({ warehouseSimulator: checked });
+                    }}
+                  />
+                }
+                label={t("settings.showWarehouseSimulator")}
+              />
             </Stack>
           </CardContent>
         </Card>

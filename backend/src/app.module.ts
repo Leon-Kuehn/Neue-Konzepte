@@ -6,6 +6,7 @@ import { MqttModule } from './mqtt/mqtt.module.js';
 import { SensorDataModule } from './sensor-data/sensor-data.module.js';
 import { OllamaModule } from './ollama/ollama.module.js';
 import { SimulationConfigModule } from './simulation-config/simulation-config.module.js';
+import { WarehouseSimulatorModule } from './warehouse-simulator/warehouse-simulator.module.js';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { SimulationConfigModule } from './simulation-config/simulation-config.mo
     SensorDataModule,
     OllamaModule,
     SimulationConfigModule,
+    WarehouseSimulatorModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -41,7 +41,7 @@ import SimulationDesignerDialog from "../components/SimulationDesignerDialog";
 import { getSimulationConfigs } from "../services/simulationApi";
 
 export default function PlantOverviewPage() {
-  const { t } = useAppPreferences();
+  const { t, simulatorVisibility } = useAppPreferences();
   const location = useLocation();
   const showFromNavigation =
     typeof (location.state as { showComponentId?: unknown } | null)?.showComponentId === "string"
@@ -249,96 +249,100 @@ export default function PlantOverviewPage() {
               </Box>
             </Box>
 
-            <Divider orientation="vertical" flexItem sx={{ display: { xs: "none", lg: "block" } }} />
+            {simulatorVisibility.plantSimulator && (
+              <>
+                <Divider orientation="vertical" flexItem sx={{ display: { xs: "none", lg: "block" } }} />
 
-            <Stack spacing={1.5} sx={{ width: { xs: "100%", lg: 360 }, flexShrink: 0 }}>
-              <Typography variant="subtitle1" fontWeight={700}>
-                Simulation Mode
-              </Typography>
+                <Stack spacing={1.5} sx={{ width: { xs: "100%", lg: 360 }, flexShrink: 0 }}>
+                  <Typography variant="subtitle1" fontWeight={700}>
+                    Simulation Mode
+                  </Typography>
 
-              <Alert severity={simulation.enabled ? "warning" : "info"}>
-                {simulation.enabled
-                  ? "Simulation mode is active. Hotspot state comes from the simulation engine only."
-                  : "Simulation mode is off. Hotspot state comes from live MQTT/backend data."}
-              </Alert>
+                  <Alert severity={simulation.enabled ? "warning" : "info"}>
+                    {simulation.enabled
+                      ? "Simulation mode is active. Hotspot state comes from the simulation engine only."
+                      : "Simulation mode is off. Hotspot state comes from live MQTT/backend data."}
+                  </Alert>
 
-              <FormControlLabel
-                control={
-                  <Switch
-                    checked={simulation.enabled}
-                    onChange={(_event, checked) => {
-                      if (checked) {
-                        enableSimulation();
-                        return;
-                      }
-                      disableSimulation();
-                    }}
+                  <FormControlLabel
+                    control={
+                      <Switch
+                        checked={simulation.enabled}
+                        onChange={(_event, checked) => {
+                          if (checked) {
+                            enableSimulation();
+                            return;
+                          }
+                          disableSimulation();
+                        }}
+                      />
+                    }
+                    label="Simulation Mode"
                   />
-                }
-                label="Simulation Mode"
-              />
 
-              <TextField
-                select
-                size="small"
-                label="Simulation"
-                value={selectedSimulationId}
-                onChange={(event) => setSelectedSimulationId(event.target.value)}
-              >
-                {availableSimulations.map((entry) => (
-                  <MenuItem key={entry.id} value={entry.id}>
-                    {entry.name}
-                  </MenuItem>
-                ))}
-              </TextField>
+                  <TextField
+                    select
+                    size="small"
+                    label="Simulation"
+                    value={selectedSimulationId}
+                    onChange={(event) => setSelectedSimulationId(event.target.value)}
+                  >
+                    {availableSimulations.map((entry) => (
+                      <MenuItem key={entry.id} value={entry.id}>
+                        {entry.name}
+                      </MenuItem>
+                    ))}
+                  </TextField>
 
-              <Stack direction={{ xs: "column", sm: "row", lg: "column" }} spacing={1}>
-                <Button
-                  variant="contained"
-                  disabled={!simulation.enabled || !selectedSimulationId}
-                  onClick={() => runSimulation(selectedSimulationId)}
-                >
-                  Start
-                </Button>
-                <Button
-                  variant="outlined"
-                  disabled={!simulation.enabled}
-                  onClick={() => {
-                    stopSimulation();
-                    resetHotspotStates();
-                  }}
-                >
-                  Stop / Reset
-                </Button>
-              </Stack>
+                  <Stack direction={{ xs: "column", sm: "row", lg: "column" }} spacing={1}>
+                    <Button
+                      variant="contained"
+                      disabled={!simulation.enabled || !selectedSimulationId}
+                      onClick={() => runSimulation(selectedSimulationId)}
+                    >
+                      Start
+                    </Button>
+                    <Button
+                      variant="outlined"
+                      disabled={!simulation.enabled}
+                      onClick={() => {
+                        stopSimulation();
+                        resetHotspotStates();
+                      }}
+                    >
+                      Stop / Reset
+                    </Button>
+                  </Stack>
 
-              <Stack direction={{ xs: "column", sm: "row", lg: "column" }} spacing={1}>
-                <Button
-                  variant="outlined"
-                  color="secondary"
-                  onClick={() => {
-                    setDesignerSimulationId(selectedSimulationId || undefined);
-                    setDesignerOpen(true);
-                  }}
-                >
-                  Edit Simulation
-                </Button>
-                <Button
-                  variant="outlined"
-                  color="secondary"
-                  onClick={() => {
-                    setDesignerSimulationId(undefined);
-                    setDesignerOpen(true);
-                  }}
-                >
-                  New Simulation
-                </Button>
-              </Stack>
+                  <Stack direction={{ xs: "column", sm: "row", lg: "column" }} spacing={1}>
+                    <Button
+                      variant="outlined"
+                      color="secondary"
+                      onClick={() => {
+                        setDesignerSimulationId(selectedSimulationId || undefined);
+                        setDesignerOpen(true);
+                      }}
+                    >
+                      Edit Simulation
+                    </Button>
+                    <Button
+                      variant="outlined"
+                      color="secondary"
+                      onClick={() => {
+                        setDesignerSimulationId(undefined);
+                        setDesignerOpen(true);
+                      }}
+                    >
+                      New Simulation
+                    </Button>
+                  </Stack>
 
-              <Typography variant="body2" color="text.secondary">
-                Running: {simulation.running ? "yes" : "no"} | Elapsed: {simulation.nowMs} ms
-              </Typography>
-            </Stack>
+                  <Typography variant="body2" color="text.secondary">
+                    Running: {simulation.running ? "yes" : "no"} | Elapsed: {simulation.nowMs} ms
+                  </Typography>
+                </Stack>
+              </>
+            )}
           </Stack>
         </CardContent>
       </Card>
@@ -384,14 +388,16 @@ export default function PlantOverviewPage() {
         )}
       </Drawer>
 
-      <SimulationDesignerDialog
-        open={designerOpen}
-        onClose={() => {
-          setDesignerOpen(false);
-          setDesignerSimulationId(undefined);
-        }}
-        initialSimulationId={designerSimulationId}
-      />
+      {simulatorVisibility.plantSimulator && (
+        <SimulationDesignerDialog
+          open={designerOpen}
+          onClose={() => {
+            setDesignerOpen(false);
+            setDesignerSimulationId(undefined);
+          }}
+          initialSimulationId={designerSimulationId}
+        />
+      )}
     </Box>
   );
 }
