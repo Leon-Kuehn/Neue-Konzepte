@@ -55,7 +55,7 @@ export default function ComponentGroupList({
   onShowInTopDown,
   maxHeight = 360,
 }: Props) {
-  const { t } = useAppPreferences();
+  const { t, accessibility } = useAppPreferences();
   const [expanded, setExpanded] = useState<string[]>(
     GROUPS.filter((g) => g.defaultExpanded).map((g) => g.category)
   );
@@ -130,6 +130,8 @@ export default function ComponentGroupList({
               <List dense disablePadding>
                 {group.items.map((component) => {
                   const isSelected = component.id === selectedId;
+                  const shouldPulseError =
+                    accessibility.errorPulse && component.healthStatus === "error";
                   const lastChanged = new Date(component.lastChanged).toLocaleString();
 
                   return (
@@ -137,7 +139,7 @@ export default function ComponentGroupList({
                       key={component.id}
                       onClick={() => onSelect(component.id)}
                       selected={isSelected}
-                      sx={{
+                      sx={(theme) => ({
                         mb: 0.75,
                         border: "1px solid",
                         borderColor: isSelected ? "primary.main" : "transparent",
@@ -149,7 +151,26 @@ export default function ComponentGroupList({
                         "&:hover": {
                           bgcolor: "action.hover",
                         },
-                      }}
+                        ...(shouldPulseError
+                          ? {
+                              animation: "componentErrorPulse 1.2s ease-in-out infinite",
+                              "@keyframes componentErrorPulse": {
+                                "0%, 100%": {
+                                  borderColor: isSelected
+                                    ? theme.palette.primary.main
+                                    : theme.palette.divider,
+                                  backgroundColor: isSelected
+                                    ? theme.palette.action.selected
+                                    : theme.palette.background.paper,
+                                },
+                                "50%": {
+                                  borderColor: theme.palette.error.main,
+                                  backgroundColor: theme.palette.error.light,
+                                },
+                              },
+                            }
+                          : {}),
+                      })}
                     >
                       <Box sx={{ display: "grid", gridTemplateColumns: "56px minmax(0, 1fr)", gap: 1, width: "100%" }}>
                         <Box
@@ -182,7 +203,11 @@ export default function ComponentGroupList({
                               <Typography variant="caption" color="text.secondary">
                                 {component.id}
                               </Typography>
-                              <LiveStatusChips status={component.status} online={component.online} />
+                              <LiveStatusChips
+                                status={component.status}
+                                online={component.online}
+                                healthStatus={component.healthStatus}
+                              />
                               <Typography variant="caption" color="text.secondary">
                                 {t("componentDetails.lastChanged")}: {lastChanged}
                               </Typography>

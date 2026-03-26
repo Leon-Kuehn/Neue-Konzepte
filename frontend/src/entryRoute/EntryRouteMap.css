@@ -149,6 +149,23 @@
   opacity: 1;
 }
 
+.hotspot__error-ring {
+  fill: none;
+  stroke: #d32f2f;
+  stroke-width: 3;
+  opacity: 0.9;
+  filter: drop-shadow(0 0 4px rgba(211, 47, 47, 0.7));
+  pointer-events: none;
+}
+
+.hotspot--error-pulse .hotspot__icon {
+  animation: hotspot-error-pulse 1.2s ease-in-out infinite;
+}
+
+.hotspot--error-pulse .hotspot__error-ring {
+  animation: hotspot-error-ring-pulse 1.2s ease-in-out infinite;
+}
+
 .hotspot:hover .hotspot__icon,
 .hotspot:focus-visible .hotspot__icon {
   transform: scale(1.05);
@@ -310,6 +327,30 @@
   100% {
     opacity: 0.25;
     transform: scale(0.96);
+  }
+}
+
+@keyframes hotspot-error-pulse {
+  0%,
+  100% {
+    opacity: 0.78;
+    filter: drop-shadow(0 0 0 currentColor);
+  }
+  50% {
+    opacity: 1;
+    filter: drop-shadow(0 0 8px currentColor);
+  }
+}
+
+@keyframes hotspot-error-ring-pulse {
+  0%,
+  100% {
+    opacity: 0.65;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.08);
   }
 }
 

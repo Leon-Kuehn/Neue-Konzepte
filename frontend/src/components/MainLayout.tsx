@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { ReactNode } from "react";
-import { Outlet, useNavigate, useLocation } from "react-router-dom";
+import { Outlet, useNavigate, useLocation, Link as RouterLink } from "react-router-dom";
 import {
   AppBar,
   Toolbar,
@@ -12,6 +12,7 @@ import {
   ListItemText,
   Box,
   IconButton,
+  Divider,
   useMediaQuery,
   useTheme,
 } from "@mui/material";
@@ -109,7 +110,19 @@ export default function MainLayout() {
             </IconButton>
           )}
           <FactoryIcon sx={{ mr: 1.5 }} />
-          <Typography variant="h6" noWrap sx={{ fontWeight: 700 }}>
+          <Typography
+            variant="h6"
+            noWrap
+            component={RouterLink}
+            to="/plant"
+            sx={{
+              fontWeight: 700,
+              color: "inherit",
+              textDecoration: "none",
+              cursor: "pointer",
+              "&:hover": { opacity: 0.9 },
+            }}
+          >
             {t("app.title")}
           </Typography>
           <Typography
@@ -175,6 +188,51 @@ export default function MainLayout() {
         }}
       >
         <Outlet />
+        <Divider sx={{ mt: 3, mb: 2 }} />
+        <Box
+          component="footer"
+          sx={{
+            display: "flex",
+            flexDirection: "column",
+            flexWrap: "wrap",
+            gap: 1,
+            alignItems: "center",
+            justifyContent: "center",
+            color: "text.secondary",
+            textAlign: "center",
+            pb: 3,
+          }}
+        >
+          <Typography variant="caption">© {new Date().getFullYear()} Neue Konzepte</Typography>
+          <Box sx={{ display: "flex", flexWrap: "wrap", gap: 2, justifyContent: "center" }}>
+            <Typography
+              variant="caption"
+              component={RouterLink}
+              to="/privacy"
+              sx={{ color: "inherit", textDecoration: "none", "&:hover": { textDecoration: "underline" } }}
+            >
+              {t("footer.privacy")}
+            </Typography>
+            <Typography
+              variant="caption"
+              component={RouterLink}
+              to="/imprint"
+              sx={{ color: "inherit", textDecoration: "none", "&:hover": { textDecoration: "underline" } }}
+            >
+              {t("footer.imprint")}
+            </Typography>
+            <Typography
+              variant="caption"
+              component="a"
+              href="https://github.com/Leon-Kuehn/Neue-Konzepte"
+              target="_blank"
+              rel="noopener noreferrer"
+              sx={{ color: "inherit", textDecoration: "none", "&:hover": { textDecoration: "underline" } }}
+            >
+              {t("footer.github")}
+            </Typography>
+          </Box>
+        </Box>
       </Box>
 
       <OllamaAssistantButton

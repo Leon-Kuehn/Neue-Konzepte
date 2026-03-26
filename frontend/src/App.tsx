@@ -8,6 +8,8 @@ import ComponentBrowserPage from "./pages/ComponentBrowserPage";
 import HighBayStoragePage from "./pages/HighBayStoragePage";
 import DocumentationPage from "./pages/DocumentationPage";
 import PlantControlPage from "./pages/PlantControlPage";
+import ImprintPage from "./pages/ImprintPage";
+import PrivacyPage from "./pages/PrivacyPage";
 import {
   AppPreferencesProvider,
   useAppPreferences,
@@ -106,6 +108,8 @@ function AppShell() {
               <Route path="/hochregallager" element={<HighBayStoragePage />} />
               <Route path="/plant-control" element={<PlantControlPage />} />
               <Route path="/docs" element={<DocumentationPage />} />
+              <Route path="/imprint" element={<ImprintPage />} />
+              <Route path="/privacy" element={<PrivacyPage />} />
               <Route path="/mqtt" element={<MqttSettingsPage />} />
               <Route path="*" element={<Navigate to="/plant" replace />} />
             </Route>

@@ -28,15 +28,18 @@ function categoryLabel(category: string): string {
 }
 
 export default function ComponentTileGrid({ components, selectedId, onSelect }: Props) {
-  const { t } = useAppPreferences();
+  const { t, accessibility } = useAppPreferences();
 
   return (
     <Grid container spacing={2}>
-      {components.map((comp) => (
+      {components.map((comp) => {
+        const shouldPulseError = accessibility.errorPulse && comp.healthStatus === "error";
+
+        return (
         <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }} key={comp.id}>
           <Card
             onClick={() => onSelect(comp.id)}
-            sx={{
+            sx={(theme) => ({
               cursor: "pointer",
               border: "2px solid",
               borderColor: selectedId === comp.id ? "primary.main" : "transparent",
@@ -45,7 +48,23 @@ export default function ComponentTileGrid({ components, selectedId, onSelect }: 
                 boxShadow: 4,
                 borderColor: "primary.main",
               },
-            }}
+              ...(shouldPulseError
+                ? {
+                    animation: "componentErrorPulse 1.2s ease-in-out infinite",
+                    "@keyframes componentErrorPulse": {
+                      "0%, 100%": {
+                        borderColor:
+                          selectedId === comp.id ? theme.palette.primary.main : "transparent",
+                        backgroundColor: theme.palette.background.paper,
+                      },
+                      "50%": {
+                        borderColor: theme.palette.error.main,
+                        backgroundColor: theme.palette.error.light,
+                      },
+                    },
+                  }
+                : {}),
+            })}
           >
             <CardContent>
               <Typography variant="subtitle1" fontWeight={600}>
@@ -71,7 +90,8 @@ export default function ComponentTileGrid({ components, selectedId, onSelect }: 
             </CardContent>
           </Card>
         </Grid>
-      ))}
+        );
+      })}
     </Grid>
   );
 }

@@ -87,7 +87,7 @@ export default forwardRef<EntryRouteMapHandle, EntryRouteMapProps>(
     }: EntryRouteMapProps,
     ref,
   ) {
-    const { t } = useAppPreferences();
+    const { t, accessibility } = useAppPreferences();
     const [localStates, setLocalStates] = useState<Record<string, HotspotState>>({});
     const [isPortraitMobile, setIsPortraitMobile] = useState(false);
     const [scale, setScale] = useState(1);
@@ -232,10 +232,8 @@ export default forwardRef<EntryRouteMapHandle, EntryRouteMapProps>(
   };
 
   const handleWheel = (e: React.WheelEvent<SVGElement>) => {
-    if (!e.ctrlKey && !e.metaKey) return;
-    
     e.preventDefault();
-    const zoomDelta = e.deltaY > 0 ? -0.2 : 0.2;
+    const zoomDelta = e.deltaY > 0 ? -0.14 : 0.14;
     setScale((prev) => Math.max(0.5, Math.min(prev + zoomDelta, 3)));
   };
 
@@ -316,12 +314,15 @@ export default forwardRef<EntryRouteMapHandle, EntryRouteMapProps>(
               const isHighlighted = highlightedHotspotIds.includes(hotspot.id);
               const isDeemphasized = hasActiveHighlight && !isHighlighted;
               const isHidden = visibleHotspotIds && !visibleHotspotIds.includes(hotspot.id);
+              const hasErrorPulse =
+                currentState === "error" && (simulationEnabled || accessibility.errorPulse);
+              const errorRingRadius = Math.max(iconWidth, iconHeight) / 2 + 5;
 
               return (
                 <g
                   key={hotspot.id}
                   transform={`translate(${hotspot.x}, ${hotspot.y})`}
-                  className={`hotspot hotspot--${currentState}${isHighlighted ? " hotspot--selected" : ""}${isDeemphasized ? " hotspot--deemphasized" : ""}${isHidden ? " hotspot--hidden" : ""}`}
+                  className={`hotspot hotspot--${currentState}${hasErrorPulse ? " hotspot--error-pulse" : ""}${isHighlighted ? " hotspot--selected" : ""}${isDeemphasized ? " hotspot--deemphasized" : ""}${isHidden ? " hotspot--hidden" : ""}`}
                   role="button"
                   tabIndex={0}
                   aria-label={hotspot.ariaLabel ?? hotspot.name ?? hotspot.id}
@@ -329,6 +330,14 @@ export default forwardRef<EntryRouteMapHandle, EntryRouteMapProps>(
                   onClick={() => handleActivate(hotspot)}
                   onKeyDown={(event) => handleKeyDown(event, hotspot)}
                 >
+                  {currentState === "error" && (
+                    <circle
+                      className="hotspot__error-ring"
+                      cx={0}
+                      cy={0}
+                      r={errorRingRadius}
+                    />
+                  )}
                   <g transform={`translate(${-iconWidth / 2}, ${-iconHeight / 2})`}>
                     <g transform={`rotate(${rotation}, ${iconWidth / 2}, ${iconHeight / 2})`}>
                       <Icon

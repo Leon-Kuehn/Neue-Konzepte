@@ -48,7 +48,8 @@ const EntryRoutePanel = forwardRef<EntryRouteMapHandle, EntryRoutePanelProps>(
         const compId = resolveComponentId(hotspot.id);
         const comp = componentById.get(compId);
         if (comp) {
-          result[hotspot.id] = comp.status === "on" ? "on" : "off";
+          result[hotspot.id] =
+            comp.healthStatus === "error" ? "error" : comp.status === "on" ? "on" : "off";
         } else {
           result[hotspot.id] = hotspot.initialState;
         }

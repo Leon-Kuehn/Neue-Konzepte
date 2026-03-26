@@ -16,6 +16,7 @@ export type AccessibilityPreferences = {
   reducedMotion: boolean;
   textScale: AppTextScale;
   highContrast: boolean;
+  errorPulse: boolean;
 };
 
 const THEME_KEY = "ui-theme-mode";
@@ -55,6 +56,7 @@ function getStoredAccessibility(): AccessibilityPreferences {
       reducedMotion: false,
       textScale: "normal",
       highContrast: false,
+      errorPulse: false,
     };
   }
 
@@ -64,12 +66,14 @@ function getStoredAccessibility(): AccessibilityPreferences {
       reducedMotion: parsed.reducedMotion === true,
       textScale: parsed.textScale === "large" ? "large" : "normal",
       highContrast: parsed.highContrast === true,
+      errorPulse: parsed.errorPulse === true,
     };
   } catch {
     return {
       reducedMotion: false,
       textScale: "normal",
       highContrast: false,
+      errorPulse: false,
     };
   }
 }
@@ -84,7 +88,7 @@ function getStoredColorStyle(): AppColorStyle {
 
 function getStoredLanguage(): AppLanguage {
   const raw = localStorage.getItem(LANGUAGE_KEY);
-  if (raw === "de" || raw === "fr") {
+  if (raw === "de" || raw === "fr" || raw === "es") {
     return raw;
   }
   return "en";

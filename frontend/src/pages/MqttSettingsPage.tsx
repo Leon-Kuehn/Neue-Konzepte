@@ -29,6 +29,7 @@ import type {
   AppTextScale,
   AppThemeMode,
 } from "../context/AppPreferencesContext";
+import type { AppLanguage } from "../i18n";
 import {
   disableSimulation,
   enableSimulation,
@@ -84,7 +85,6 @@ export default function MqttSettingsPage() {
       : status === "Error"
         ? t("status.error")
         : t("status.disconnected");
-
   const handleChange = (field: keyof MqttSettings, value: string | number | boolean) => {
     setSettings((prev) => ({ ...prev, [field]: value }));
   };
@@ -203,13 +203,14 @@ export default function MqttSettingsPage() {
                 label={t("settings.language")}
                 select
                 value={language}
-                onChange={(e) => setLanguage(e.target.value as "de" | "en" | "fr")}
+                onChange={(e) => setLanguage(e.target.value as AppLanguage)}
                 fullWidth
                 size="small"
               >
                 <MenuItem value="de">{t("settings.languageGerman")}</MenuItem>
                 <MenuItem value="en">{t("settings.languageEnglish")}</MenuItem>
                 <MenuItem value="fr">{t("settings.languageFrench")}</MenuItem>
+                <MenuItem value="es">{t("settings.languageSpanish")}</MenuItem>
               </TextField>
 
               <Divider />
@@ -240,6 +241,18 @@ export default function MqttSettingsPage() {
                   />
                 }
                 label={t("settings.highContrast")}
+              />
+
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={accessibility.errorPulse}
+                    onChange={(_event, checked) => {
+                      setAccessibility({ errorPulse: checked });
+                    }}
+                  />
+                }
+                label={t("settings.errorPulse")}
               />
 
               <TextField

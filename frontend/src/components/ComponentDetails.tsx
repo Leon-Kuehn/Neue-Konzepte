@@ -417,7 +417,11 @@ export default function ComponentDetails({
           {t("componentDetails.liveStatus")}
         </Typography>
         <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap", mb: 1 }}>
-          <LiveStatusChips status={component.status} online={component.online} />
+          <LiveStatusChips
+            status={component.status}
+            online={component.online}
+            healthStatus={component.healthStatus}
+          />
         </Box>
         {component.healthStatus === "error" && (
           <Alert severity="error" sx={{ mb: 1 }}>
