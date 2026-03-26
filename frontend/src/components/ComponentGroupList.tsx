@@ -139,9 +139,10 @@ export default function ComponentGroupList({
                       selected={isSelected}
                       sx={{
                         mb: 0.75,
-                        border: isSelected ? "1px solid #E30613" : "1px solid transparent",
+                        border: "1px solid",
+                        borderColor: isSelected ? "primary.main" : "transparent",
                         borderRadius: 1.5,
-                        bgcolor: isSelected ? "rgba(227, 6, 19, 0.08)" : "transparent",
+                        bgcolor: isSelected ? "action.selected" : "transparent",
                         alignItems: "stretch",
                         px: 1,
                         py: 0.75,

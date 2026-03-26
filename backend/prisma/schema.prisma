@@ -11,12 +11,13 @@ datasource db {
 
 /// Stores MQTT messages received from IoT plant components.
 model SensorData {
-  id          Int      @id @default(autoincrement())
+  id          Int      @default(autoincrement())
   componentId String   @map("component_id")
   topic       String
   payload     Json
-  receivedAt  DateTime @default(now()) @map("received_at")
+  receivedAt  DateTime @default(now()) @map("received_at") @db.Timestamptz(6)
 
+  @@id([id, receivedAt])
   @@index([componentId])
   @@index([receivedAt])
   @@map("sensor_data")

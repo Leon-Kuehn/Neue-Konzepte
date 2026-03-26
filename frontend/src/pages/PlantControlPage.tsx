@@ -183,7 +183,6 @@ export default function PlantControlPage() {
             <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
               <Button
                 variant="contained"
-                sx={{ bgcolor: "#E30613", "&:hover": { bgcolor: "#c00510" } }}
                 disabled={!simulation.enabled || !selectedSimulationId || simulation.running}
                 onClick={() => runSimulation(selectedSimulationId)}
               >
@@ -297,7 +296,6 @@ export default function PlantControlPage() {
               <Button
                 variant="contained"
                 onClick={handleExecuteOperation}
-                sx={{ bgcolor: "#E30613", "&:hover": { bgcolor: "#c00510" } }}
               >
                 {t("plantControl.sendCommand")}
               </Button>

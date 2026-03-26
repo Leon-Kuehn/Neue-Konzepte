@@ -64,12 +64,13 @@ export default function MainLayout() {
       onClick={() => handleNav(item.path)}
       sx={{
         "&.Mui-selected": {
-          backgroundColor: "rgba(227, 6, 19, 0.08)",
-          borderRight: "3px solid #E30613",
+          backgroundColor: "action.selected",
+          borderRight: "3px solid",
+          borderRightColor: "primary.main",
         },
       }}
     >
-      <ListItemIcon sx={{ color: location.pathname === item.path ? "#E30613" : undefined }}>
+      <ListItemIcon sx={{ color: location.pathname === item.path ? "primary.main" : undefined }}>
         {item.icon}
       </ListItemIcon>
       <ListItemText primary={item.label} />
@@ -93,7 +94,7 @@ export default function MainLayout() {
         position="fixed"
         sx={{
           zIndex: theme.zIndex.drawer + 1,
-          bgcolor: "#E30613",
+          bgcolor: "primary.main",
         }}
       >
         <Toolbar>
