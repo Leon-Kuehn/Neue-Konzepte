@@ -1,365 +1,83 @@
-# Backend – IoT Logistikmodell
+# Backend – IoT Plant Admin
 
-## Überblick
+Dieses Verzeichnis enthält das NestJS-Backend für MQTT-Ingest, Datenpersistenz und REST-API.
 
-Dieses Backend ist Teil eines IoT-Logistiksystems auf Basis von Fischertechnik und Raspberry Pi.
+## Aufgaben des Backends
 
-Es dient dazu, MQTT-Daten der Anlage zu empfangen, zu speichern und über eine REST-API für das Frontend bereitzustellen.
+- MQTT-Nachrichten aus der Anlage empfangen
+- Sensordaten strukturiert in TimescaleDB speichern
+- Historische Daten und Auswertungen per REST bereitstellen
+- Simulationskonfigurationen verwalten
+- Warehouse-Simulator für Testdaten steuern
 
----
+## Einstieg
 
-## Architektur
+### Mit Docker Compose (empfohlen)
 
-Systemübersicht:
-
-
-Fischertechnik Anlage
-↓
-Raspberry Pi
-↓
-MQTT Broker
-↓
-├── Frontend (Live-Daten)
-└── Backend (Historie & Analyse)
-↓
-TimescaleDB (PostgreSQL)
-
-
-### Rollen
-
-| Komponente | Aufgabe |
-|----------|--------|
-| MQTT Broker | verteilt Nachrichten |
-| Backend | speichert & analysiert Daten |
-| Frontend | visualisiert Daten |
-
----
-
-## Technologien
-
-- **NestJS** – Backend Framework
-- **Prisma** – ORM
-- **TimescaleDB (PostgreSQL)** – Datenbank
-- **Docker** – Containerisierung
-- **MQTT (mosquitto)** – Messaging
-
----
-
-## Setup
-
-### Voraussetzungen
-
-- Docker + Docker Compose
-- Node.js (nur für lokale Entwicklung)
-
----
-
-### Starten
-
-
+```bash
 docker compose up --build
+```
 
+Backend-Basis: `http://localhost:3000/api`
 
-Backend läuft dann auf:
+### Lokal (ohne Docker)
 
+```bash
+cd backend
+npm install
+npm run start:dev
+```
 
-http://localhost:3000
+Erforderliche Umgebungsvariablen stehen in `backend/.env.example`.
 
+## Modulübersicht
 
----
+- `src/mqtt/` – MQTT-Verbindung und Topic-Subscription
+- `src/sensor-data/` – Ingest, Listenabfragen, Statistiken, Aktivitätsdaten
+- `src/simulation-config/` – CRUD für Simulationsdefinitionen
+- `src/warehouse-simulator/` – Simulatorsteuerung (start/stop/tick/status)
+- `src/ollama/` – optionaler Chat-Proxy zu lokalem LLM
+- `src/prisma/` – PrismaService + Modul
 
-## Datenmodell
+## API-Überblick
 
-### SensorData
+Alle Endpunkte laufen unter `/api`.
 
-Tabelle: `sensor_data`
+- `GET /api/health`
+- `GET /api/sensor-data`
+- `GET /api/sensor-data/latest`
+- `GET /api/sensor-data/range`
+- `GET /api/sensor-data/stats/:componentId`
+- `GET /api/sensor-data/activity/:componentId`
+- `GET /api/sensor-data/:componentId`
+- `POST /api/sensor-data/ingest`
+- `GET|POST|PUT|DELETE /api/simulations`
+- `GET|POST /api/warehouse-simulator/*`
+- `GET|POST /api/ollama/*` (optional)
 
-| Feld | Typ | Beschreibung |
-|-----|----|-------------|
-| id | Int | Primärschlüssel |
-| component_id | String | z. B. "entry-route" |
-| topic | String | MQTT Topic |
-| payload | JSON | Nachricht |
-| received_at | DateTime | Zeitstempel |
+Für vollständige Endpunktdetails siehe `../docs/API.md`.
 
----
+## MQTT-Verhalten
 
-## MQTT Integration
+Abonnierte Topic-Muster:
 
-### Status
+- `entry-route/#`
+- `hochregallager/#`
+- `plant/#`
 
-- Implementiert ✅
-- Wartet auf echten Broker ⏳
+Nachrichten werden robust verarbeitet: Parse-Fehler einzelner Payloads stoppen den Dienst nicht.
 
----
+## Datenbank
 
-### Verhalten
+Prisma-Schema: `prisma/schema.prisma`  
+Wesentliche Tabellen:
 
-Das Backend:
+- `sensor_data`
+- `simulation_definitions`
 
-- verbindet sich mit `MQTT_BROKER_URL`
-- subscribed auf:
+## Weiterführende Dokumentation
 
-
-entry-route/#
-hochregallager/#
-plant/#
-
-
-- speichert jede Nachricht in der Datenbank
-
----
-
-### Payload Handling
-
-
-try {
-JSON.parse(payload)
-} catch {
-payload als String speichern
-}
-
-
----
-
-### Wichtige Regeln
-
-- Kein eigener MQTT Broker im Backend
-- Verbindung darf nicht zum Absturz führen
-- Reconnect muss funktionieren
-
----
-
-## API Dokumentation
-
-Basis-URL:
-
-
-/api
-
-
----
-
-### Health Check
-
-
-GET /api/health
-
-
-Antwort:
-
-
-{ "status": "ok" }
-
-
----
-
-### Alle Daten
-
-
-GET /api/sensor-data
-
-
----
-
-### Letzte Werte pro Komponente
-
-
-GET /api/sensor-data/latest
-
-
----
-
-### Daten nach Komponente
-
-
-GET /api/sensor-data/:componentId
-
-
-Query:
-
-- `limit` (default 100)
-- `since` (ISO Timestamp)
-
----
-
-### Zeitbereich
-
-
-GET /api/sensor-data/range?from=...&to=...
-
-
----
-
-### Statistiken
-
-
-GET /api/sensor-data/stats/:componentId
-
-
-Antwort:
-
-
-{
-"count": 10,
-"firstTimestamp": "...",
-"lastTimestamp": "...",
-"averageValue": 50,
-"minValue": 10,
-"maxValue": 90
-}
-
-
----
-
-### Aktivität (Zeitbuckets)
-
-
-GET /api/sensor-data/activity/:componentId?interval=minute
-
-
-Antwort:
-
-
-[
-{ "time": "...", "count": 5 }
-]
-
----
-
-### Ollama Chat Proxy
-
-
-POST /api/ollama/chat
-
-
-Beispiel-Request:
-
-
-{
-	"model": "qwen2.5:7b",
-	"stream": false,
-	"messages": [
-		{ "role": "system", "content": "Du bist ein Projektassistent." },
-		{ "role": "user", "content": "Welche Sensor-Endpoints gibt es?" }
-	]
-}
-
-
-Konfiguration über Umgebungsvariablen:
-
-- `OLLAMA_CHAT_ENDPOINT` (default: `http://host.docker.internal:11434/api/chat`)
-- `OLLAMA_MODEL` (optionaler Default, z. B. `qwen2.5:7b`)
-
-
----
-
-## Wichtige Designentscheidungen
-
-### 1. Trennung Live vs. Historie
-
-- Frontend nutzt MQTT direkt (Live)
-- Backend speichert Historie
-
----
-
-### 2. Keine Aktorsteuerung
-
-Das Backend sendet **keine MQTT-Befehle**.
-
-→ Nur passiver Datenempfang
-
----
-
-### 3. Skalierbarkeit
-
-- Zeitbasierte Abfragen
-- Limits für große Datenmengen
-- einfache Erweiterbarkeit
-
----
-
-## Entwicklungshinweise
-
-### Struktur
-
-
-src/
-├── mqtt/
-├── sensor-data/
-├── prisma/
-└── app.module.ts
-
-
----
-
-### Prisma
-
-- Kein `url` mehr im schema (Prisma 7)
-- Config über `prisma.config.ts`
-
----
-
-### Docker
-
-- Backend läuft in Container
-- DB ist eigener Container
-- Kommunikation über Service-Namen
-
----
-
-## Für KI-Agenten
-
-### Wichtige Regeln
-
-❗ NICHT ändern:
-
-- Prisma Schema (ohne Absprache)
-- bestehende API-Endpoints
-- Docker Struktur
-
----
-
-### Erlaubt:
-
-- neue Endpoints
-- neue Services
-- Refactoring innerhalb Module
-
----
-
-### Zu beachten:
-
-- immer Limits verwenden
-- keine unbounded queries
-- keine neuen PrismaClients erstellen
-- immer PrismaService verwenden
-
----
-
-## Aktueller Stand
-
-| Bereich | Status |
-|--------|--------|
-Backend Infrastruktur | ✅ fertig |
-Datenbank | ✅ fertig |
-API | ✅ fertig |
-Statistik | ✅ fertig |
-MQTT Code | ✅ fertig |
-MQTT Verbindung | ⏳ wartet auf Broker |
-
----
-
-## Nächste Schritte
-
-- MQTT Broker anbinden
-- Frontend Integration
-- Visualisierung (Charts)
-
----
-
-## Kontakt / Hinweise
-
-Bei Fragen bitte im Team abstimmen.
-
-Dieses Backend ist stabil und bereit für Integration.
+- Gesamtdokumentation: `../docs/PROJEKTDOKUMENTATION.md`
+- Architektur: `../docs/ARCHITECTURE.md`
+- Setup: `../docs/SETUP.md`
+- Übergabe: `../docs/HANDOVER.md`

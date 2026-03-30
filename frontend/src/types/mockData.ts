@@ -141,11 +141,11 @@ const lightBarriers = buildComponents({
 const ballLoaders = buildComponents({
   role: "actuator",
   category: "pneumatic-unit",
-  count: 6,
+  count: 4,
   namePrefix: "Ball Loader",
   idPrefix: "ball-loader",
   statusOnModulo: 2,
-  onlineOfflineModulo: 6,
+  onlineOfflineModulo: 4,
   baseCycles: 540,
   cyclesStep: 30,
   baseUptime: 190,

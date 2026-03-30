@@ -8,7 +8,7 @@ import { MAP_HOTSPOTS } from "./mapHotspots";
  * - rotating-conveyor-1, rotating-conveyor-2, rotating-conveyor-3
  * - inductive-1, inductive-2, ..., inductive-18 (1-based, not 0-based)
  * - rfid-1, rfid-2, ..., rfid-5
- * - ball-loader-1, ball-loader-2, ..., ball-loader-6
+ * - ball-loader-1, ball-loader-2, ..., ball-loader-4
  * - pusher-1, pusher-2
  * - deposit-place-1, deposit-place-2
  * - lightbarrier-1

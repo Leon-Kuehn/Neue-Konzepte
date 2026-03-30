@@ -9,7 +9,7 @@ Das Logistikmodell basiert auf Siemens-Baugruppen der LOGO!-/ET200-Reihe bzw. ve
 | `conveyor`          | Aktor     | 14                 | Forderbander (kurz und lang) |
 | `rotating-conveyor` | Aktor     | 3                  | Drehforderbander / Weichen |
 | `pusher`            | Aktor     | 2                  | Schieber / Pusher |
-| `pneumatic-unit`    | Aktor     | 6                  | Pneumatische Fulleinheiten / Ball Loader |
+| `pneumatic-unit`    | Aktor     | 4                  | Pneumatische Fulleinheiten / Ball Loader |
 | `crane`             | Aktor     | 1                  | Kran im Hochregallager |
 | `storage`           | Aktor     | 1                  | Hochregallager (highbay-storage-1) |
 | `deposit-place`     | Aktor     | 2                  | Ablageplatze |
@@ -35,27 +35,9 @@ entry-route/#       - Alle Topics der Eingabestrecke
 hochregallager/#    - Alle Topics des Hochregallagers
 ```
 
-## SVG-Anlagenansichten
+## Anlagenansicht
 
-Das Verzeichnis `svg/` enthalt grafische Darstellungen der Anlage:
-
-| Datei                          | Beschreibung |
-|-------------------------------|--------------|
-| `Neue Konzepte.drawio`        | Draw.io-Quelldatei der Gesamtanlage |
-| `Neue Konzepte.drawio.svg`    | Exportiertes SVG der Gesamtanlagenansicht |
-| `TopDown.drawio.svg`          | Draufsicht der Anlage (wird im Frontend als interaktive Karte verwendet) |
-| `binaer-sensor.svg`           | Icon: Binarsensor |
-| `foerderband-kurz.svg`        | Icon: Kurzes Forderband |
-| `foerderband-lang.svg`        | Icon: Langes Forderband |
-| `foerderband-rotating.svg`    | Icon: Drehforderband |
-| `hochregallager.svg`          | Icon: Hochregallager |
-| `input-station.svg`           | Icon: Eingabestation |
-| `lift.svg`                    | Icon: Aufzug / Lift |
-| `nfc-sensor.svg`              | Icon: NFC/RFID-Sensor |
-| `pneumatische-fuell-einheit.svg` | Icon: Pneumatische Fulleinheit |
-| `produkt.svg`                 | Icon: Produkttrager / Werkstuck |
-
-Die Datei `svg/TopDown.drawio.svg` wird vom Frontend als interaktive Karte in der Entry-Route-Ansicht eingebunden. Hotspot-Positionen sind in `frontend/src/entryRoute/hotspots.config.json` definiert.
+Die interaktive Entry-Route-Ansicht wird im Frontend uber die Hotspot-Definitionen in `frontend/src/entryRoute/hotspots.config.json` und die Icon-Komponenten in `frontend/src/entryRoute/icons/` aufgebaut.
 
 ## Hotspot-ID-Zuordnung (Entry-Route-Karte)
 
@@ -68,7 +50,7 @@ Die Hotspot-IDs in `hotspots.config.json` stimmen direkt mit den Komponenten-IDs
 | `rotating-conveyor-1` bis `-3` | gleich    | Drehforderbander |
 | `inductive-1` bis `inductive-18` | gleich  | Induktive Sensoren |
 | `rfid-1` bis `rfid-5` | gleich              | RFID-Sensoren |
-| `ball-loader-1` bis `-6` | gleich           | Ball Loader |
+| `ball-loader-1` bis `-4` | gleich           | Ball Loader |
 | `lightbarrier-1`     | `lightbarrier-1`     | Lichtschranke |
 | `highbay-storage-1`  | `highbay-storage-1`  | Hochregallager |
 

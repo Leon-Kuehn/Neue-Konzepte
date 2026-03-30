@@ -76,7 +76,7 @@ plant/{componentId}/command    - Steuerbefehl an eine Komponente
 plant/{componentId}/telemetry  - Messwerte / Telemetriedaten
 ```
 
-Beispiele fur Komponenten-IDs: `conveyor-1` bis `conveyor-14`, `rotating-conveyor-1` bis `rotating-conveyor-3`, `inductive-1` bis `inductive-18`, `rfid-1` bis `rfid-5`, `ball-loader-1` bis `ball-loader-6`, `input-station-1`, `highbay-storage-1`.
+Beispiele fur Komponenten-IDs: `conveyor-1` bis `conveyor-14`, `rotating-conveyor-1` bis `rotating-conveyor-3`, `inductive-1` bis `inductive-18`, `rfid-1` bis `rfid-5`, `ball-loader-1` bis `ball-loader-4`, `input-station-1`, `highbay-storage-1`.
 
 ## Datenbankschema
 
