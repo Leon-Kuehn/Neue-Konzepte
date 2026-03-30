@@ -1,74 +1,41 @@
 # IoT Plant Admin
 
-A web application for monitoring and managing an IoT logistics plant. Built with React + TypeScript (frontend) and NestJS + Prisma + PostgreSQL (backend).
+Webbasiertes Uberwachungs- und Steuerungssystem fur eine IoT-Logistikanlage auf Basis von Siemens-Automatisierungshardware.
 
-## Project Structure
+Das System besteht aus zwei Hauptkomponenten: einem NestJS-Backend und einem React-Frontend. Die Komponenten kommunizieren uber MQTT (Echtzeitsensordaten) und eine REST-API.
 
-```
-├── frontend/          # React + TypeScript + Vite (MUI)
-│   ├── src/
-│   │   ├── components/    # Reusable UI components
-│   │   ├── pages/         # Page components (PlantOverview, MqttSettings)
-│   │   ├── services/      # MQTT client service
-│   │   ├── types/         # TypeScript interfaces & mock data
-│   │   └── svg/           # Plant top-down SVG
-│   └── package.json
-├── backend/           # NestJS + Prisma + PostgreSQL
-│   ├── src/               # NestJS application source
-│   ├── prisma/            # Prisma schema
-│   ├── Dockerfile         # Multi-stage Docker build
-│   └── package.json
-├── docker-compose.yml # Backend + PostgreSQL services
-└── svg/               # Original SVG source files
-```
-
-## Running the Frontend Locally
+## Schnellstart
 
 ```bash
-cd frontend
-npm install
-npm run dev
+docker compose up --build
 ```
 
-The app runs at [http://localhost:5173](http://localhost:5173).
+Das Frontend ist danach unter https://localhost erreichbar (selbstsigniertes Entwicklungszertifikat).
 
-### Pages
-
-| Route    | Description                                         |
-| -------- | --------------------------------------------------- |
-| `/plant` | Plant overview with interactive SVG, tiles & details |
-| `/mqtt`  | MQTT broker connection settings                     |
-
-## Running the Full Stack with Docker
+Fur die MQTT-Verbindung muss die Adresse des MQTT-Brokers (Raspberry Pi) konfiguriert werden:
 
 ```bash
-# From the project root
-docker compose up -d --build
+MQTT_BROKER_URL=mqtt://<raspberry-pi-ip>:1883 docker compose up --build
 ```
 
-This starts:
+## Dokumentation
 
-- **TimescaleDB (PostgreSQL-compatible)** on port `5432`
-- **NestJS backend** on port `3000` (health check at `GET /health`)
-- **Frontend via Nginx** on [https://localhost](https://localhost) and [http://localhost](http://localhost)
+| Dokument | Inhalt |
+|----------|--------|
+| [docs/README.md](docs/README.md) | Projektubersicht, Komponentenbeschreibung, Technologie-Stack |
+| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Systemarchitektur, Docker-Dienste, MQTT-Topics, Datenbankschema |
+| [docs/SETUP.md](docs/SETUP.md) | Lokale Entwicklungsumgebung, Voraussetzungen, Umgebungsvariablen |
+| [docs/API.md](docs/API.md) | REST-API-Referenz des Backends (alle Endpunkte) |
+| [docs/HARDWARE.md](docs/HARDWARE.md) | Hardware-Komponenten, SVG-Dateien, Pin-Belegung |
+| [docs/HANDOVER.md](docs/HANDOVER.md) | Ubergabenotizen, bekannte Probleme, empfohlene nachste Schritte |
 
-The HTTP endpoint redirects to HTTPS automatically. A self-signed development certificate is included under `frontend/nginx/certs/` and can be replaced later with your own certificate and key.
+## Verzeichnisstruktur
 
-If your browser warns about the certificate, that is expected for the current development setup.
-
-### Running Database Migrations (when models are added)
-
-```bash
-cd backend
-npx prisma migrate dev --name init
 ```
-
-## MQTT
-
-The frontend connects as an MQTT **client** to an external broker (e.g. Mosquitto on a Raspberry Pi) via WebSockets. Configure the broker connection on the `/mqtt` settings page. No broker is bundled with this app.
-
-## Tech Stack
-
-- **Frontend:** React 19, TypeScript, Vite, MUI 7, react-router-dom, mqtt.js
-- **Backend:** NestJS, Prisma, TimescaleDB (PostgreSQL-compatible)
-- **Infrastructure:** Docker, Docker Compose, Nginx
+backend/        NestJS-Backend (REST-API, MQTT-Ingest, Prisma ORM)
+frontend/       React-Frontend (Vite, Material UI)
+docker/         Datenbankinitialisierungsskripte
+svg/            SVG-Quelldateien der Anlagenansichten
+docs/           Projektdokumentation
+docker-compose.yml
+```
