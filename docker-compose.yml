@@ -1,23 +1,44 @@
 services:
-  # Ollama services disabled to save disk space (image is 7-9GB+)
-  # ollama:
-  #   image: ollama/ollama:latest
-  #   restart: unless-stopped
-  #   ports:
-  #     - "11434:11434"
-  #   volumes:
-  #     - ollama_data:/root/.ollama
+  # ─── Ollama LLM-Dienste ─────────────────────────────────────────────────────
+  # Diese Services sind ausschließlich für lokale LLM-Funktionen in diesem
+  # Projekt vorgesehen und nicht für den allgemeinen Einsatz gedacht.
+  #
+  # Modell ändern: OLLAMA_MODEL=<modellname> in der .env-Datei setzen,
+  #   z.B. OLLAMA_MODEL=llama3.2:1b  (Default: qwen2.5:0.5b)
+  #
+  # Speicherpfad/Volume ändern: OLLAMA_DATA_PATH=/pfad/zum/verzeichnis in
+  #   .env setzen. Ohne diese Variable wird das Docker-Volume "ollama_data"
+  #   verwendet.
+  ollama:
+    image: ollama/ollama:latest  # CPU-only: keine GPU-Geräte eingebunden
+    restart: unless-stopped
+    ports:
+      - "11434:11434"
+    volumes:
+      # Modelldaten; Host-Pfad über OLLAMA_DATA_PATH steuerbar
+      # (Default: Docker-Volume "ollama_data")
+      - ${OLLAMA_DATA_PATH:-ollama_data}:/root/.ollama
+    healthcheck:
+      test: ["CMD-SHELL", "ollama list || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
 
-  # ollama-init:
-  #   image: ollama/ollama:latest
-  #   restart: on-failure
-  #   depends_on:
-  #     ollama:
-  #       condition: service_started
-  #   environment:
-  #     OLLAMA_HOST: http://ollama:11434
-  #     OLLAMA_MODEL: ${OLLAMA_MODEL:-qwen2.5:0.5b}
-  #   command: ["pull", "${OLLAMA_MODEL:-qwen2.5:0.5b}"]
+  # ollama-init lädt das Modell beim ersten Start über die Ollama HTTP-API.
+  # Nutzt ein schlankes curl-Image; keine zusätzliche Logik im ollama-Container.
+  ollama-init:
+    image: curlimages/curl:latest
+    restart: on-failure
+    depends_on:
+      ollama:
+        condition: service_healthy
+    environment:
+      OLLAMA_MODEL: ${OLLAMA_MODEL:-qwen2.5:0.5b}
+    command:
+      - sh
+      - -c
+      - 'curl -fS -X POST http://ollama:11434/api/pull -H "Content-Type: application/json" -d "{\"name\":\"$$OLLAMA_MODEL\"}" && echo "Modell geladen: $$OLLAMA_MODEL" || echo "Modell-Pull fehlgeschlagen: $$OLLAMA_MODEL"'
 
   db:
     image: timescale/timescaledb:latest-pg16
@@ -103,4 +124,6 @@ services:
 
 volumes:
   pgdata:
-  # ollama_data:  # Disabled with ollama service
+  # Persistenter Speicher für Ollama-Modelldaten.
+  # Host-Pfad über OLLAMA_DATA_PATH in der .env-Datei überschreibbar.
+  ollama_data:

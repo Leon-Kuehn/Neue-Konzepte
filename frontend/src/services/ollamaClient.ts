@@ -126,25 +126,34 @@ function resolveModel(
   return undefined;
 }
 
+const NO_PROJECT_CONTEXT_REPLY =
+  "Dazu habe ich keine ausreichenden Informationen aus dem Projekt und kann daher nicht antworten.";
+
 function buildSystemPrompt(context: AssistantProjectContext): string {
   return [
-    "You are the internal assistant for the IoT Plant Operations Cockpit.",
-    "You must only use project-local context and internal APIs.",
-    "Do not use public internet sources. Do not reference external websites or unknown docs.",
-    "If data is not present in the provided context, say so and suggest the exact internal endpoint or UI area to check.",
-    "Keep answers concise and operational.",
-    `Preferred response language: ${context.language}`,
+    "Du bist der interne Assistent des IoT-Plant-Operations-Cockpit-Projekts.",
+    "Du darfst ausschließlich auf Fragen antworten, die sich direkt auf dieses Projekt beziehen:",
+    "Code, Architektur, Konfiguration und Dokumentation aus dem Repository sowie Daten aus der aktuellen Benutzereingabe.",
     "",
-    "Internal endpoints and resources:",
+    "Strikte Einschränkungen:",
+    "- Erfinde keine externen Inhalte und erkläre keine Themen außerhalb des Projekts",
+    "  (keine allgemeine Enzyklopädie, kein Rechts- oder Medizinratgeber, keine externen Systeme).",
+    "- Wenn eine Frage nicht durch Projektdateien oder die aktuelle Eingabe gedeckt ist,",
+    `  antworte ausschließlich mit: "${NO_PROJECT_CONTEXT_REPLY}"`,
+    "- Generiere keine API-Keys, erfinde keine vertraulichen Daten und treffe keine Annahmen über externe Systeme.",
+    "- Halte Antworten prägnant und operativ.",
+    `- Bevorzugte Antwortsprache: ${context.language}`,
+    "",
+    "Interne Endpunkte und Ressourcen:",
     ...INTERNAL_ENDPOINT_HINTS.map((line) => `- ${line}`),
     "",
-    "Current runtime context:",
-    `- MQTT connected: ${context.mqtt.connected}`,
-    `- Components total/online/active: ${context.mqtt.totalComponents}/${context.mqtt.onlineComponents}/${context.mqtt.activeComponents}`,
-    `- Simulation enabled: ${context.simulation.enabled}`,
-    `- Simulation scenario: ${context.simulation.scenario}`,
-    `- Simulation speed: ${context.simulation.speed}`,
-    `- Simulation startedAt: ${context.simulation.startedAt ?? "not running"}`,
+    "Aktueller Laufzeit-Kontext:",
+    `- MQTT verbunden: ${context.mqtt.connected}`,
+    `- Komponenten gesamt/online/aktiv: ${context.mqtt.totalComponents}/${context.mqtt.onlineComponents}/${context.mqtt.activeComponents}`,
+    `- Simulation aktiv: ${context.simulation.enabled}`,
+    `- Simulationsszenario: ${context.simulation.scenario}`,
+    `- Simulationsgeschwindigkeit: ${context.simulation.speed}`,
+    `- Simulation gestartet: ${context.simulation.startedAt ?? "nicht aktiv"}`,
   ].join("\n");
 }
 
@@ -272,4 +281,4 @@ export async function getOllamaHealth(): Promise<OllamaHealthResponse> {
   }
 }
 
-export { INTERNAL_ENDPOINT_HINTS };
+export { INTERNAL_ENDPOINT_HINTS, NO_PROJECT_CONTEXT_REPLY };
