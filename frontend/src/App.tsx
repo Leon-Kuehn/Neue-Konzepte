@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ThemeProvider, createTheme, CssBaseline } from "@mui/material";
 import MainLayout from "./components/MainLayout";
@@ -24,13 +24,20 @@ function AppShell() {
     initializeLiveComponentFeed();
   }, []);
 
-  const resolvedThemeMode = useMemo(() => {
-    if (themeMode !== "system") {
-      return themeMode;
-    }
+  const [systemPrefersDark, setSystemPrefersDark] = useState(false);
 
-    return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+  useEffect(() => {
+    if (themeMode !== "system") return;
+    const mq = window.matchMedia("(prefers-color-scheme: dark)");
+    setSystemPrefersDark(mq.matches);
+    const handler = (e: MediaQueryListEvent) => setSystemPrefersDark(e.matches);
+    mq.addEventListener("change", handler);
+    return () => mq.removeEventListener("change", handler);
   }, [themeMode]);
+
+  const resolvedThemeMode = themeMode === "system"
+    ? systemPrefersDark ? "dark" : "light"
+    : themeMode;
 
   const theme = useMemo(
     () => {
